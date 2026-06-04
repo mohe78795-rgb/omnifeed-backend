@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>قائمة Omni Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; padding: 20px; direction: rtl; }
+        h1 { color: #00e676; text-align: center; margin-bottom: 25px; font-size: 28px; }
+        .search-box { width: 100%; padding: 14px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #333; background: #1e1e1e; color: white; box-sizing: border-box; font-size: 16px; }
+        .search-box:focus { border-color: #00e676; outline: none; }
+        .card { background: linear-gradient(145deg, #1e1e1e, #252525); padding: 20px; margin: 15px 0; border-radius: 15px; border-right: 5px solid #00e676; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; }
+        h2 { margin: 0 0 10px 0; font-size: 22px; color: #fff; }
+        p { color: #b3b3b3; margin: 0; font-size: 18px; font-weight: bold; }
+        .price-num { color: #00e676; font-size: 20px; }
+        .category-tag { position: absolute; left: 15px; top: 15px; background: #333; color: #b3b3b3; padding: 4px 10px; border-radius: 20px; font-size: 12px; border: 1px solid #444; }
+    </style>
+</head>
+<body>
+    <h1>قائمة Omni Feed</h1>
+    <input type="text" id="search" class="search-box" placeholder="ابحث عن منتج..." onkeyup="filterProducts()">
+    <div id="data">جاري تحميل البيانات...</div>
+
+    <script>
+        function loadData() {
+            // جلب البيانات السحابية من الرابط النسبي
+            fetch('/products')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('data');
+                if(!data || data.length === 0) {
+                    container.innerHTML = '<p>لا توجد منتجات حالياً.</p>';
+                    return;
+                }
+                container.innerHTML = data.map(p => `
+                    <div class="card">
+                        <span class="category-tag">${p.category || 'عام'}</span>
+                        <h2>${p.name}</h2>
+                        <p>السعر: <span class="price-num">${p.price}</span> ريال</p>
+                    </div>
+                `).join('');
+            }).catch(err => {
+                document.getElementById('data').innerHTML = '<p style="color:red; text-align:center;">حدث خطأ أثناء اتصال السيرفر السحابي</p>';
+            });
+        }
+
+        function filterProducts() {
+            let val = document.getElementById('search').value.toLowerCase();
+            let cards = document.querySelectorAll('.card');
+            cards.forEach(c => {
+                let title = c.querySelector('h2').innerText.toLowerCase();
+                let category = c.querySelector('.category-tag').innerText.toLowerCase();
+                c.style.display = (title.includes(val) || category.includes(val)) ? "" : "none";
+            });
+        }
+        
+        loadData();
+    </script>
+</body>
+</html>

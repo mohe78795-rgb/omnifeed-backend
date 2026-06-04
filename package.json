@@ -1,8 +1,7 @@
-   ```json
 {
   "name": "omnifeed-backend",
   "version": "1.0.0",
-  "description": "OmniFeed Price Backend Server",
+  "description": "OmniFeed Backend",
   "main": "index.js",
   "scripts": {
     "start": "json-server --watch db.json --port 10000 --host 0.0.0.0"

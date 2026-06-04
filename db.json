@@ -1,0 +1,7 @@
+{
+  "products": [
+    { "id": "1", "name": "رز", "price": "300", "category": "حبوب" },
+    { "id": "2", "name": "سكر", "price": "800", "category": "حلويات" },
+    { "id": "3", "name": "زيت", "price": "2200", "category": "زيوت" }
+  ]
+}

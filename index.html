@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تموينات ابو حسين - نظام الأقسام المتكامل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7f9fa;
+            user-select: none;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .transition-all {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        .animate-slide-left {
+            animation: slideLeft 0.3s ease-out forwards;
+        }
+        .toast-notification {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: #1f2937;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 13px;
+            z-index: 100;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-slate-100">
+
+    <div id="toast" class="toast-notification"></div>
+
+    <div class="w-full max-w-md bg-white h-screen shadow-2xl relative flex flex-col justify-between overflow-hidden">
+        
+        <header class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-40 px-4 py-3">
+            <div class="flex items-center justify-between">
+                
+                <button id="back-button" onclick="window.history.back()" class="hidden w-10 h-10 rounded-full bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all flex items-center justify-center border border-gray-100">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+
+                <button id="favorite-button" onclick="toggleFavorites()" class="text-gray-600 hover:text-red-500 transition-all p-1">
+                    <i id="heart-icon" class="fa-regular fa-heart text-2xl"></i>
+                </button>
+                
+                <div class="flex flex-col items-center">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <div class="w-10 h-10 rounded-full border border-emerald-800 flex items-center justify-center bg-emerald-50">
+                            <i class="fa-solid fa-store text-emerald-800 text-lg"></i>
+                        </div>
+                        <div class="text-right">
+                            <h1 id="main-title" class="text-emerald-800 font-extrabold text-lg leading-tight">تموينات</h1>
+                            <p id="main-subtitle" class="text-xs text-gray-500 tracking-wider">أبو حسين</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <button onclick="toggleSearch()" class="text-gray-600 hover:text-emerald-800 transition-all p-1">
+                        <i class="fa-solid fa-magnifying-glass text-xl"></i>
+                    </button>
+                    <button class="text-gray-600 hover:text-emerald-800 transition-all p-1">
+                        <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="search-bar" class="hidden mt-3 transition-all">
+                <div class="relative">
+                    <input type="text" id="search-input" onkeyup="filterProducts()" placeholder="ابحث عن منتجك المفضل..." class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-emerald-700 text-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-gray-400"></i>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow overflow-y-auto no-scrollbar pb-24">
+            
+            <div id="view-home" class="app-view">
+                <div id="home-widgets">
+                    <div class="bg-[#4a5d3e] text-white py-2 px-4 text-center text-sm relative flex items-center justify-center space-x-2 space-x-reverse">
+                        <span>وفر 10% عند الدفع أونلاين : استخدم كود</span>
+                        <span class="font-bold border-dashed border border-white px-2 py-0.5 rounded cursor-pointer hover:bg-white hover:text-[#4a5d3e] transition-all" onclick="copyCode('App10')">App10</span>
+                        <button onclick="this.parentElement.remove()" class="absolute left-3 text-white/80 hover:text-white">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 p-3">
+                        <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex items-start space-x-2 space-x-reverse">
+                            <div class="bg-blue-50 p-2 rounded-lg text-blue-600">
+                                <i class="fa-solid fa-credit-card text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-gray-800">%100 دفع آمن</h4>
+                                <p class="text-[10px] text-gray-500 leading-tight">نضمن لك حماية البيانات</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex items-start space-x-2 space-x-reverse">
+                            <div class="bg-amber-50 p-2 rounded-lg text-amber-600">
+                                <i class="fa-solid fa-rotate-left text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-gray-800">إرجاع سهل</h4>
+                                <p class="text-[10px] text-gray-500 leading-tight">يمكنك إرجاع الطلب بسهولة</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative px-3 mb-4">
+                        <div class="overflow-hidden rounded-xl h-44 relative shadow-md">
+                            <div id="slide-1" class="absolute inset-0 transition-all duration-500 flex bg-gradient-to-l from-orange-100 to-amber-50">
+                                <div class="w-1/2 p-4 flex flex-col justify-center">
+                                    <span class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full w-max mb-1">الأكثر مبيعاً</span>
+                                    <h3 class="text-base font-extrabold text-orange-950">منتجات طازجة ومميزة</h3>
+                                    <p class="text-xs text-orange-800 mt-1">أفضل جودة مختارة خصيصاً لكم</p>
+                                    <button onclick="selectCategory('food')" class="mt-3 bg-orange-600 text-white text-xs px-4 py-1.5 rounded-lg w-max shadow-md hover:bg-orange-700 transition-all">تسوق الآن</button>
+                                </div>
+                                <div class="w-1/2 relative flex items-center justify-center">
+                                    <div class="absolute w-24 h-24 bg-amber-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                                    <i class="fa-solid fa-basket-shopping text-orange-500 text-6xl drop-shadow-md"></i>
+                                </div>
+                            </div>
+
+                            <div id="slide-2" class="absolute inset-0 transition-all duration-500 flex bg-[#4d6a45] text-white translate-x-full">
+                                <div class="w-1/2 p-4 flex flex-col justify-center z-10">
+                                    <span class="bg-[#a8c379] text-emerald-950 text-[10px] font-bold px-2 py-0.5 rounded-full w-max mb-1">عروض التمينات</span>
+                                    <h3 class="text-lg font-black leading-tight text-yellow-300">أقسام متنوعة<br>تناسب احتياجك</h3>
+                                    <button onclick="navigateToView('offers')" class="mt-3 bg-yellow-400 text-emerald-950 font-bold text-xs px-4 py-1.5 rounded-lg w-max shadow-md hover:bg-yellow-300 transition-all">اكتشفها الآن</button>
+                                </div>
+                                <div class="w-1/2 relative overflow-hidden flex items-center justify-center">
+                                    <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-emerald-800 rounded-full opacity-50"></div>
+                                    <div class="relative z-10 flex space-x-2 space-x-reverse items-end mt-4">
+                                        <div class="w-10 h-20 bg-yellow-500 rounded-md shadow-md flex items-center justify-center text-lg text-white"><i class="fa-solid fa-apple-whole"></i></div>
+                                        <div class="w-12 h-16 bg-red-600 rounded-md shadow-md flex items-center justify-center text-lg text-white"><i class="fa-solid fa-box"></i></div>
+                                        <div class="w-8 h-12 bg-blue-500 rounded-md shadow-md flex items-center justify-center text-lg text-white"><i class="fa-solid fa-mobile-screen"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center space-x-1.5 space-x-reverse mt-2">
+                            <span id="dot-1" onclick="switchSlide(1)" class="w-6 h-1.5 rounded-full bg-emerald-800 cursor-pointer transition-all"></span>
+                            <span id="dot-2" onclick="switchSlide(2)" class="w-2 h-1.5 rounded-full bg-gray-300 cursor-pointer transition-all"></span>
+                        </div>
+                    </div>
+
+                    <div class="px-4 mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">تصفح حسب المجلدات</h3>
+                        <div class="grid grid-cols-4 gap-3">
+                            <button onclick="selectCategory('food')" class="flex flex-col items-center focus:outline-none group bg-amber-50 p-2 rounded-xl border border-amber-100">
+                                <div class="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center text-white shadow-md transform group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-utensils text-sm"></i>
+                                </div>
+                                <span class="text-[11px] font-bold mt-2 text-gray-700">غذائية</span>
+                                <span class="text-[9px] text-gray-400">(20)</span>
+                            </button>
+
+                            <button onclick="selectCategory('consuming')" class="flex flex-col items-center focus:outline-none group bg-blue-50 p-2 rounded-xl border border-blue-100">
+                                <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-md transform group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-box-open text-sm"></i>
+                                </div>
+                                <span class="text-[11px] font-bold mt-2 text-gray-700">استهلاكية</span>
+                                <span class="text-[9px] text-gray-400">(20)</span>
+                            </button>
+
+                            <button onclick="selectCategory('vegetables')" class="flex flex-col items-center focus:outline-none group bg-green-50 p-2 rounded-xl border border-green-100">
+                                <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white shadow-md transform group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-carrot text-sm"></i>
+                                </div>
+                                <span class="text-[11px] font-bold mt-2 text-gray-700">خضروات</span>
+                                <span class="text-[9px] text-gray-400">(20)</span>
+                            </button>
+
+                            <button onclick="selectCategory('school')" class="flex flex-col items-center focus:outline-none group bg-purple-50 p-2 rounded-xl border border-purple-100">
+                                <div class="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white shadow-md transform group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-pencil text-sm"></i>
+                                </div>
+                                <span class="text-[11px] font-bold mt-2 text-gray-700">مدرسية</span>
+                                <span class="text-[9px] text-gray-400">(20)</span>
+                            </button>
+
+                            <button onclick="selectCategory('credit')" class="flex flex-col items-center focus:outline-none group bg-red-50 p-2 rounded-xl border border-red-100 mt-2">
+                                <div class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white shadow-md transform group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-money-bill-wave text-sm"></i>
+                                </div>
+                                <span class="text-[11px] font-bold mt-2 text-gray-700">رصيد</span>
+                                <span class="text-[9px] text-gray-400">(20)</span>
+                            </button>
+
+                            <button onclick="selectCategory('phones')" class="flex flex-col items-center focus:outline-none group bg-cyan-50 p-2 rounded-xl border border-cyan-100 mt-2">
+                                <div class="w-12 h-12 rounded-full bg-cyan-600 flex items-center justify-center text-white shadow-md transform group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-mobile-screen-button text-sm"></i>
+                                </div>
+                                <span class="text-[11px] font-bold mt-2 text-gray-700">هواتف</span>
+                                <span class="text-[9px] text-gray-400">(20)</span>
+                            </button>
+
+                            <button onclick="selectCategory('toys')" class="flex flex-col items-center focus:outline-none group bg-pink-50 p-2 rounded-xl border border-pink-100 mt-2">
+                                <div class="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white shadow-md transform group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-gamepad text-sm"></i>
+                                </div>
+                                <span class="text-[11px] font-bold mt-2 text-gray-700">ألعاب</span>
+                                <span class="text-[9px] text-gray-400">(20)</span>
+                            </button>
+
+                            <button onclick="selectCategory('spices')" class="flex flex-col items-center focus:outline-none group bg-orange-50 p-2 rounded-xl border border-orange-100 mt-2">
+                                <div class="w-12 h-12 rounded-full bg-orange-700 flex items-center justify-center text-white shadow-md transform group-hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-pepper-hot text-sm"></i>
+                                </div>
+                                <span class="text-[11px] font-bold mt-2 text-gray-700">بهارات</span>
+                                <span class="text-[9px] text-gray-400">(20)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="products-view" class="px-4 mt-2">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 id="category-title" class="text-base font-bold text-gray-800">اختر أحد المجلدات أعلاه للتسوق</h3>
+                        <span id="items-count" class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">0 منتج</span>
+                    </div>
+                    <div id="products-grid" class="grid grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+
+            <div id="view-offers" class="app-view hidden p-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fa-solid fa-tags text-amber-500 ml-2"></i>أقوى عروض التموينات الحالية</h3>
+                <div id="offers-grid" class="grid grid-cols-2 gap-3"></div>
+            </div>
+
+            <div id="view-profile" class="app-view hidden p-6 text-center">
+                <div class="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-300 shadow-sm">
+                    <i class="fa-solid fa-user text-4xl text-emerald-800"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-gray-800 mb-1">حساب العميل</h3>
+                <p class="text-xs text-gray-500 mb-6">مرحباً بك في تطبيق تموينات أبو حسين</p>
+                
+                <div class="space-y-3 text-right">
+                    <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <span class="text-sm font-bold text-gray-700"><i class="fa-solid fa-clipboard-list ml-2 text-emerald-700"></i>طلباتي السابقة</span>
+                        <i class="fa-solid fa-chevron-left text-xs text-gray-400"></i>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <span class="text-sm font-bold text-gray-700"><i class="fa-solid fa-location-dot ml-2 text-emerald-700"></i>عناوين التوصيل</span>
+                        <i class="fa-solid fa-chevron-left text-xs text-gray-400"></i>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <span class="text-sm font-bold text-gray-700"><i class="fa-solid fa-headset ml-2 text-emerald-700"></i>الدعم الفني والشكاوي</span>
+                        <i class="fa-solid fa-chevron-left text-xs text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="bg-white border-t border-gray-200 py-2 px-2 shadow-xl fixed bottom-0 left-0 right-0 max-w-md mx-auto z-50">
+            <div class="grid grid-cols-5 gap-1">
+                <button id="nav-home" onclick="navigateToView('home')" class="nav-btn flex flex-col items-center justify-center text-emerald-800 font-bold focus:outline-none">
+                    <i class="fa-solid fa-house text-xl"></i>
+                    <span class="text-[11px] mt-1">الرئيسية</span>
+                </button>
+                
+                <button id="nav-categories" onclick="navigateToView('home')" class="nav-btn flex flex-col items-center justify-center text-gray-500 hover:text-emerald-800 font-semibold focus:outline-none">
+                    <i class="fa-solid fa-grip text-xl"></i>
+                    <span class="text-[11px] mt-1">الأقسام</span>
+                </button>
+                
+                <button id="nav-offers" onclick="navigateToView('offers')" class="nav-btn flex flex-col items-center justify-center text-gray-500 hover:text-emerald-800 font-semibold focus:outline-none">
+                    <i class="fa-solid fa-tags text-xl"></i>
+                    <span class="text-[11px] mt-1">العروض</span>
+                </button>
+                
+                <button onclick="toggleCartDrawer()" class="flex flex-col items-center justify-center text-emerald-600 hover:text-emerald-800 font-bold relative focus:outline-none">
+                    <div class="relative flex flex-col items-center">
+                        <i class="fa-brands fa-whatsapp text-2xl text-green-600"></i>
+                        <span id="cart-badge" class="absolute -top-2.5 -left-2.5 bg-red-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white shadow-sm">0</span>
+                    </div>
+                    <span class="text-[11px] mt-1">طلب واتساب</span>
+                </button>
+                
+                <button id="nav-profile" onclick="navigateToView('profile')" class="nav-btn flex flex-col items-center justify-center text-gray-500 hover:text-emerald-800 font-semibold focus:outline-none">
+                    <i class="fa-solid fa-user text-xl"></i>
+                    <span class="text-[11px] mt-1">حسابي</span>
+                </button>
+            </div>
+        </nav>
+
+        <div id="cart-drawer" class="fixed inset-0 bg-black/50 z-50 hidden transition-all flex justify-start">
+            <div class="absolute inset-0" onclick="toggleCartDrawer()"></div>
+            <div class="w-full max-w-sm bg-white h-full relative z-10 flex flex-col shadow-2xl animate-slide-left">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-green-700 text-white">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <i class="fa-brands fa-whatsapp text-xl"></i>
+                        <span class="font-bold">قائمة طلبات الواتساب الحالية</span>
+                    </div>
+                    <button onclick="toggleCartDrawer()" class="text-white hover:text-red-200">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <div id="cart-items-container" class="flex-grow overflow-y-auto p-4 space-y-3"></div>
+
+                <div class="p-4 border-t border-gray-100 bg-gray-50 space-y-3">
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>إجمالي المنتجات:</span>
+                        <span id="cart-subtotal" class="font-bold">0.00 ج.م</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-emerald-800">
+                        <span>خصم التطبيق (10%):</span>
+                        <span id="cart-discount" class="font-bold">0.00 ج.م</span>
+                    </div>
+                    <hr class="border-gray-200">
+                    <div class="flex justify-between text-base font-bold text-gray-800">
+                        <span>الحساب الكلي:</span>
+                        <span id="cart-total">0.00 ج.م</span>
+                    </div>
+                    <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white text-center py-2.5 rounded-xl font-bold hover:bg-green-700 transition-all shadow-md flex items-center justify-center space-x-2 space-x-reverse mt-2">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span>إرسال الطلب عبر الواتساب</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const categoriesInfo = {
+            food: { name: 'مواد غذائية', icon: 'fa-utensils', color: 'text-amber-500' },
+            consuming: { name: 'سلع استهلاكيه', icon: 'fa-box-open', color: 'text-blue-500' },
+            vegetables: { name: 'خضروات طازجة', icon: 'fa-carrot', color: 'text-green-500' },
+            school: { name: 'أدوات مدرسية', icon: 'fa-pencil', color: 'text-purple-500' },
+            credit: { name: 'شحن باقات ورصيد', icon: 'fa-money-bill-wave', color: 'text-red-500' },
+            phones: { name: 'مستلزمات هواتف', icon: 'fa-mobile-screen-button', color: 'text-cyan-600' },
+            toys: { name: 'ألعاب أطفال', icon: 'fa-gamepad', color: 'text-pink-500' },
+            spices: { name: 'بهارات وتوابل', icon: 'fa-pepper-hot', color: 'text-orange-700' }
+        };
+
+        const products = [];
+        Object.keys(categoriesInfo).forEach((catKey) => {
+            for (let i = 1; i <= 20; i++) {
+                products.push({
+                    id: products.length + 1,
+                    name: `${categoriesInfo[catKey].name} - صنف مميز رقم ${i}`,
+                    price: Math.floor(Math.random() * 80) + 15,
+                    category: catKey,
+                    isNew: i % 5 === 0,
+                    isDiscount: i % 4 === 0,
+                    oldPrice: i % 4 === 0 ? Math.floor(Math.random() * 30) + 100 : null,
+                    imgIcon: categoriesInfo[catKey].icon,
+                    color: categoriesInfo[catKey].color
+                });
+            }
+        });
+
+        let cart = [];
+        let currentOpenCategory = null; 
+        let lastBackPress = 0; 
+
+        window.addEventListener('DOMContentLoaded', () => {
+            showToast("مرحبا بكم في تموينات ابو حسين");
+            window.history.replaceState({ view: 'home', cat: null }, '');
+        });
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        window.addEventListener('popstate', (event) => {
+            if (event.state) {
+                renderViewByState(event.state.view, event.state.cat);
+            } else {
+                const currentTime = new Date().getTime();
+                if (currentTime - lastBackPress < 2000) {
+                    if(window.Android) { window.Android.closeApp(); } 
+                    else { showToast("جاري إغلاق التطبيق..."); }
+                } else {
+                    lastBackPress = currentTime;
+                    showToast("اضغط تراجع مرة أخرى للخروج");
+                    window.history.pushState({ view: 'home', cat: null }, '');
+                }
+            }
+        });
+
+        function navigateToView(viewName) {
+            currentOpenCategory = null;
+            window.history.pushState({ view: viewName, cat: null }, '');
+            renderViewByState(viewName, null);
+        }
+
+        function selectCategory(cat) {
+            currentOpenCategory = cat;
+            window.history.pushState({ view: 'home', cat: cat }, '');
+            renderViewByState('home', cat);
+        }
+
+        function renderViewByState(view, cat) {
+            document.querySelectorAll('.app-view').forEach(el => el.classList.add('hidden'));
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-800', 'font-bold');
+                btn.classList.add('text-gray-500', 'font-semibold');
+            });
+
+            if (view === 'home') {
+                document.getElementById('view-home').classList.remove('hidden');
+                if (cat) {
+                    document.getElementById('home-widgets').classList.add('hidden');
+                    document.getElementById('favorite-button').classList.add('hidden');
+                    document.getElementById('back-button').classList.remove('hidden');
+                    document.getElementById('main-title').innerText = categoriesInfo[cat].name;
+                    document.getElementById('main-subtitle').innerText = "مجلد يحتوي على 20 منتج";
+                    document.getElementById('category-title').innerText = `منتجات قسم ${categoriesInfo[cat].name}`;
+                    displayProducts(products.filter(p => p.category === cat));
+                    document.getElementById('nav-categories').classList.add('text-emerald-800', 'font-bold');
+                } else {
+                    document.getElementById('home-widgets').classList.remove('hidden');
+                    document.getElementById('favorite-button').classList.remove('hidden');
+                    document.getElementById('back-button').classList.add('hidden');
+                    document.getElementById('main-title').innerText = "تموينات";
+                    document.getElementById('main-subtitle').innerText = "أبو حسين";
+                    document.getElementById('category-title').innerText = 'اختر أحد المجلدات أعلاه للتسوق';
+                    document.getElementById('products-grid').innerHTML = '';
+                    document.getElementById('items-count').innerText = `0 سلع`;
+                    document.getElementById('nav-home').classList.add('text-emerald-800', 'font-bold');
+                }
+            } else if (view === 'offers') {
+                document.getElementById('view-offers').classList.remove('hidden');
+                document.getElementById('back-button').classList.remove('hidden');
+                document.getElementById('favorite-button').classList.add('hidden');
+                document.getElementById('main-title').innerText = "العروض الحالية";
+                document.getElementById('main-subtitle').innerText = "أفضل الأسعار المنافسة";
+                document.getElementById('nav-offers').classList.add('text-emerald-800', 'font-bold');
+                displayOffers();
+            } else if (view === 'profile') {
+                document.getElementById('view-profile').classList.remove('hidden');
+                document.getElementById('back-button').classList.remove('hidden');
+                document.getElementById('favorite-button').classList.add('hidden');
+                document.getElementById('main-title').innerText = "حسابي الفردي";
+                document.getElementById('main-subtitle').innerText = "إدارة البيانات والطلبات";
+                document.getElementById('nav-profile').classList.add('text-emerald-800', 'font-bold');
+            }
+            document.querySelector('main').scrollTop = 0;
+        }
+
+        function displayProducts(filteredProducts) {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            document.getElementById('items-count').innerText = `${filteredProducts.length} سلع`;
+
+            filteredProducts.forEach(prod => {
+                grid.innerHTML += `
+                    <div class="bg-white border border-gray-100 rounded-2xl p-3 shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all">
+                        ${prod.isNew ? '<span class="absolute top-2 right-2 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full z-10">جديد</span>' : ''}
+                        ${prod.isDiscount ? '<span class="absolute top-2 right-2 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full z-10">عرض</span>' : ''}
+                        
+                        <div class="h-28 bg-gray-50 rounded-xl flex items-center justify-center mb-2">
+                            <i class="fa-solid ${prod.imgIcon} text-4xl ${prod.color}"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-700 leading-tight min-h-[32px]">${prod.name}</h4>
+                            <div class="flex items-center space-x-1 space-x-reverse mt-1">
+                                <span class="text-sm font-extrabold text-emerald-800">${prod.price} ج.م</span>
+                                ${prod.isDiscount ? `<span class="text-[10px] text-gray-400 line-through">${prod.oldPrice} ج.م</span>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="addToCart(${prod.id})" class="mt-3 w-full bg-emerald-800 text-white text-xs py-2 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center space-x-1 space-x-reverse">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                            <span>إضافة للطلب</span>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function displayOffers() {
+            const grid = document.getElementById('offers-grid');
+            const discountItems = products.filter(p => p.isDiscount);
+            grid.innerHTML = '';
+            
+            discountItems.forEach(prod => {
+                grid.innerHTML += `
+                    <div class="bg-white border border-red-100 rounded-2xl p-3 shadow-sm flex flex-col justify-between relative group">
+                        <span class="absolute top-2 right-2 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full z-10">خصم حصرى</span>
+                        <div class="h-28 bg-gray-50 rounded-xl flex items-center justify-center mb-2">
+                            <i class="fa-solid ${prod.imgIcon} text-4xl ${prod.color}"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-700 leading-tight min-h-[32px]">${prod.name}</h4>
+                            <div class="flex items-center space-x-1 space-x-reverse mt-1">
+                                <span class="text-sm font-extrabold text-red-600">${prod.price} ج.م</span>
+                                <span class="text-[10px] text-gray-400 line-through">${prod.oldPrice} ج.م</span>
+                            </div>
+                        </div>
+                        <button onclick="addToCart(${prod.id})" class="mt-3 w-full bg-red-600 text-white text-xs py-2 rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center space-x-1 space-x-reverse">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                            <span>إضافة للعرض</span>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            const exist = cart.find(item => item.id === id);
+            if (exist) {
+                exist.qty++;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            updateCartUI();
+            showToast("تم إضافة الصنف للطلب السريع");
+        }
+
+        function updateCartUI() {
+            const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+            document.getElementById('cart-badge').innerText = totalItems;
+
+            const container = document.getElementById('cart-items-container');
+            container.innerHTML = '';
+
+            let subtotal = 0;
+            cart.forEach(item => {
+                subtotal += (item.price * item.qty);
+                container.innerHTML += `
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid ${item.imgIcon} ${item.color}"></i>
+                            </div>
+                            <div class="max-w-[140px]">
+                                <h5 class="text-xs font-bold text-gray-800 truncate">${item.name}</h5>
+                                <span class="text-[11px] text-gray-500">${item.price} ج.م × ${item.qty}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1 space-x-reverse">
+                            <button onclick="changeQty(${item.id}, -1)" class="w-6 h-6 bg-gray-100 text-gray-800 rounded-md text-xs font-bold">-</button>
+                            <span class="text-xs font-bold px-1">${item.qty}</span>
+                            <button onclick="changeQty(${item.id}, 1)" class="w-6 h-6 bg-gray-100 text-gray-800 rounded-md text-xs font-bold">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if(cart.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center text-xs py-10">لم يتم اختيار أي سلع للطلب بعد</p>';
+            }
+
+            let discount = subtotal * 0.10; 
+            let total = subtotal - discount;
+
+            document.getElementById('cart-subtotal').innerText = `${subtotal.toFixed(2)} ج.م`;
+            document.getElementById('cart-discount').innerText = `${discount.toFixed(2)} ج.م`;
+            document.getElementById('cart-total').innerText = `${total.toFixed(2)} ج.م`;
+        }
+
+        function changeQty(id, num) {
+            const item = cart.find(p => p.id === id);
+            if(item) {
+                item.qty += num;
+                if(item.qty <= 0) {
+                    cart = cart.filter(p => p.id !== id);
+                }
+            }
+            updateCartUI();
+        }
+
+        function sendToWhatsApp() {
+            if(cart.length === 0) return showToast('قائمة طلباتك فارغة حالياً!');
+            
+            let phoneNumber = "967737528057"; 
+            let message = " السلام عليكم ورحمة الله، أريد طلب السلع التالية من التطبيق:\n\n";
+            
+            let subtotal = 0;
+            cart.forEach((item, index) => {
+                let itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+                message += `${index + 1}) *${item.name}*\n    الكمية: ${item.qty} ✖ السعر: ${item.price} ج.م | الإجمالي: ${itemTotal} ج.م\n\n`;
+            });
+
+            let discount = subtotal * 0.10;
+            let total = subtotal - discount;
+
+            message += `-------------------------\n`;
+            message += ` المجموع الفرعي: ${subtotal.toFixed(2)} ج.م\n`;
+            message += ` الخصم المطبق (10%): ${discount.toFixed(2)} ج.م\n`;
+            message += ` *الإجمالي الكلي النهائي: ${total.toFixed(2)} ج.م*\n\n`;
+            message += `شكراً لكم، بانتظار تأكيد التوصيل!`;
+
+            let encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+        }
+
+        function toggleCartDrawer() {
+            document.getElementById('cart-drawer').classList.toggle('hidden');
+        }
+
+        function toggleSearch() {
+            document.getElementById('search-bar').classList.toggle('hidden');
+        }
+
+        function filterProducts() {
+            const val = document.getElementById('search-input').value.toLowerCase();
+            if(val === "") {
+                renderViewByState('home', currentOpenCategory);
+                return;
+            }
+            document.getElementById('home-widgets').classList.add('hidden');
+            document.getElementById('back-button').classList.remove('hidden');
+            document.getElementById('category-title').innerText = 'نتائج البحث الحالية';
+            const filtered = products.filter(p => p.name.toLowerCase().includes(val));
+            displayProducts(filtered);
+        }
+
+        function switchSlide(num) {
+            const s1 = document.getElementById('slide-1');
+            const s2 = document.getElementById('slide-2');
+            const d1 = document.getElementById('dot-1');
+            const d2 = document.getElementById('dot-2');
+
+            if(num === 1) {
+                s1.classList.remove('translate-x-full');
+                s2.classList.add('translate-x-full');
+                d1.className = "w-6 h-1.5 rounded-full bg-emerald-800 cursor-pointer transition-all";
+                d2.className = "w-2 h-1.5 rounded-full bg-gray-300 cursor-pointer transition-all";
+            } else {
+                s1.classList.add('translate-x-full');
+                s2.classList.remove('translate-x-full');
+                d1.className = "w-2 h-1.5 rounded-full bg-gray-300 cursor-pointer transition-all";
+                d2.className = "w-6 h-1.5 rounded-full bg-emerald-800 cursor-pointer transition-all";
+            }
+        }
+
+        function copyCode(code) {
+            navigator.clipboard.writeText(code);
+            showToast(`تم نسخ كود الخصم الفعال: ${code}`);
+        }
+
+        function toggleFavorites() {
+            const icon = document.getElementById('heart-icon');
+            icon.classList.toggle('fa-regular');
+            icon.classList.toggle('fa-solid');
+            icon.classList.toggle('text-red-500');
+        }
+    </script>
+</body>
+</html>

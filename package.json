@@ -2,11 +2,12 @@
   "name": "omnifeed-backend",
   "version": "1.0.0",
   "description": "OmniFeed Backend",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "json-server --watch db.json --port 10000 --host 0.0.0.0"
+    "start": "node server.js"
   },
   "dependencies": {
+    "express": "^4.18.2",
     "json-server": "^0.17.4"
   }
 }

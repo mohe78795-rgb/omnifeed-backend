@@ -3,20 +3,25 @@ const jsonServer = require('json-server');
 const path = require('path');
 
 const app = express();
-const router = jsonServer.router('db.json'); // قاعدة البيانات
+const router = jsonServer.router('db.json');
 const middlewares = jsonServer.defaults();
 
-// 1. تقديم ملفات الموقع (Static Files)
+// استخدام middlewares الخاصة بـ json-server
+app.use(middlewares);
+
+// تقديم ملفات الموقع الثابتة (مثل main.html)
 app.use(express.static(__dirname));
 
-// 2. استخدام JSON Server للبيانات (ستكون متاحة تحت مسار /api)
-app.use('/api', middlewares, router);
+// استخدام JSON Server للبيانات تحت مسار /api
+app.use('/api', router);
 
-// 3. توجيه الرابط الرئيسي لصفحة main.html
+// توجيه الرابط الرئيسي لصفحة main.html
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'main.html'));
 });
 
-// 4. تشغيل السيرفر
+// تشغيل السيرفر على المنفذ المخصص من Render
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`السيرفر يعمل على المنفذ ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`السيرفر يعمل على المنفذ ${PORT}`);
+});

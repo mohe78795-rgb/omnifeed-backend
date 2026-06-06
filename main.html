@@ -23,7 +23,6 @@
 
     <script>
         function loadData() {
-            // تم تحديث الرابط ليتوافق مع السيرفر: /api/products
             fetch('/api/products')
             .then(res => res.json())
             .then(data => {

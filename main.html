@@ -23,8 +23,8 @@
 
     <script>
         function loadData() {
-            // جلب البيانات السحابية من الرابط النسبي
-            fetch('/products')
+            // تم تحديث الرابط ليتوافق مع السيرفر: /api/products
+            fetch('/api/products')
             .then(res => res.json())
             .then(data => {
                 const container = document.getElementById('data');
@@ -40,7 +40,7 @@
                     </div>
                 `).join('');
             }).catch(err => {
-                document.getElementById('data').innerHTML = '<p style="color:red; text-align:center;">حدث خطأ أثناء اتصال السيرفر السحابي</p>';
+                document.getElementById('data').innerHTML = '<p style="color:red; text-align:center;">حدث خطأ أثناء الاتصال بالسيرفر</p>';
             });
         }
 

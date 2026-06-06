@@ -23,6 +23,7 @@
 
     <script>
         function loadData() {
+            // الرابط الصحيح الذي طلبته
             fetch('/api/products')
             .then(res => res.json())
             .then(data => {

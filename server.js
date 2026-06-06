@@ -1,15 +1,12 @@
-const express = require('express');
-const path = require('path');
-const app = express();
+const jsonServer = require('json-server');
+const server = jsonServer.create();
+const router = jsonServer.router('db.json');
+const middlewares = jsonServer.defaults();
+const port = process.env.PORT || 3000;
 
-// هذا السطر يخبر السيرفر أن يقرأ ملفاتك (main.html, etc) من المجلد الحالي
-app.use(express.static(__dirname));
+server.use(middlewares);
+server.use(router);
 
-// هذا السطر يوجه أي شخص يفتح رابط موقعك إلى صفحة main.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'main.html'));
+server.listen(port, () => {
+  console.log(`JSON Server is running on port ${port}`);
 });
-
-// تشغيل السيرفر
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('السيرفر يعمل!'));

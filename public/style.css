@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+body { font-family: 'Cairo', sans-serif; margin: 0; }
+.auth-bg { background: radial-gradient(circle at top right, #064e3b, #020617); }
+.glass-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 1.5rem; padding: 1.2rem; width: 100%; text-align: center; color: white; outline: none; transition: 0.3s; }
+.glass-input:focus { border-color: #fbbf24; }
+.btn-gold { background: linear-gradient(135deg, #fbbf24, #d97706); color: #020617; border: none; cursor: pointer; }
+.btn-gold:active { transform: scale(0.95); }
+.glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
+.nav-btn { color: #64748b; display: flex; flex-direction: column; align-items: center; transition: 0.3s; padding: 10px; }
+.nav-btn.active { color: #10b981; }
+.hidden { display: none; }
+.animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.no-scrollbar::-webkit-scrollbar { display: none; }

@@ -3,12 +3,17 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const app = express();
-const PORT = 3000;
+
+// التعديل 1: جعل المنفذ ديناميكي ليتوافق مع منصة Render تلقائياً
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
 
-// التعديل: الإشارة إلى مجلد public لخدمة ملفات الواجهة
+// التعديل 2: رفع حد حجم البيانات المستقبلة إلى 50 ميجابايت لاستقبال صور معرض الهاتف (Base64)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// الإشارة إلى مجلد public لخدمة ملفات الواجهة
 app.use(express.static(path.join(__dirname, 'public')));
 
 const DB_PATH = './db.json', 
@@ -30,7 +35,7 @@ const writeJ = (p, d) => fs.writeFileSync(p, JSON.stringify(d, null, 2));
 app.get('/api/settings', (req, res) => res.json(readJ(SETTINGS_PATH)));
 app.post('/api/settings', (req, res) => { writeJ(SETTINGS_PATH, req.body); res.json({success:true}); });
 
-// API Products
+// API Products (تستقبل الآن حقل img كنص Base64 مأخوذ من الهاتف)
 app.get('/api/products', (req, res) => res.json(readJ(DB_PATH)));
 app.post('/api/products', (req, res) => {
     let data = readJ(DB_PATH);
@@ -67,17 +72,15 @@ app.post('/api/users/update-balance', (req, res) => {
     } else res.status(404).send("User Not Found");
 });
 
-// API Orders (إرسال الطلب ومعالجة المخزون)
+// API Orders
 app.post('/api/orders', (req, res) => {
     let users = readJ(USERS_PATH), prods = readJ(DB_PATH), orders = readJ(ORDERS_PATH);
     let user = users.active_users.find(u => u.uuid === req.body.uuid);
 
     if (user && user.balance >= req.body.totalAmount) {
-        // خصم الرصيد
         user.balance -= req.body.totalAmount;
         user.history.push({ t: "طلب منتجات", a: -req.body.totalAmount, d: getTime() });
 
-        // تحديث المخزون (بناءً على العناصر المرسلة)
         if (req.body.rawItems) {
             req.body.rawItems.forEach(ri => {
                 let p = prods.find(x => x.name === ri.n);
@@ -111,7 +114,8 @@ app.get('/api/admin/stats', (req, res) => {
     res.json({ totalSales: total, orderCount: orders.length });
 });
 
-// لوحة تحكم الأدمن (main.html يجب أن يكون في المجلد الرئيسي)
+// لوحة تحكم الأدمن
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'main.html')));
 
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Abu Hussein Server Running on port ${PORT}`));
+// التعديل 3: سطر التشغيل المتوافق مع البيئة السحابية لـ Render
+app.listen(PORT, () => console.log(`🚀 Abu Hussein Server Running on port ${PORT}`));

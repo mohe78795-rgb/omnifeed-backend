@@ -31,4 +31,17 @@ app.get('/api/admin/stats', (req, res) => {
     let total = orders.filter(o=>o.status==="✅ تم").reduce((sum, o) => sum + (parseInt(o.totalAmount) || 0), 0);
     res.json({ totalSales: total, orderCount: orders.length });
 });
+// مسار استقبال الطلبات الجديدة من الزبائن
+app.post('/api/orders/add', (req, res) => {
+    let orders = readJ(ORDERS_PATH);
+    // إضافة الطلب مع الوقت الحالي
+    orders.unshift({ ...req.body, time: getTime() });
+    writeJ(ORDERS_PATH, orders);
+    res.json({ success: true });
+});
+
+// مسار لجلب الطلبات للوحة تحكم الإدارة
+app.get('/api/orders', (req, res) => {
+    res.json(readJ(ORDERS_PATH));
+});
 app.listen(PORT, () => console.log(`🚀 Server Running on ${PORT}`));

@@ -44,4 +44,24 @@ app.post('/api/orders/add', (req, res) => {
 app.get('/api/orders', (req, res) => {
     res.json(readJ(ORDERS_PATH));
 });
+// --- مسارات إدارة الزبائن الجديدة ---
+
+// جلب قائمة الزبائن
+app.get('/api/users', (req, res) => res.json(readJ(USERS_PATH)));
+
+// تعديل رصيد الزبون
+app.post('/api/users/update', (req, res) => {
+    const { phone, balance } = req.body;
+    let data = readJ(USERS_PATH);
+    // البحث عن المستخدم في مصفوفة active_users
+    let user = data.active_users.find(u => u.phone === phone);
+    
+    if (user) {
+        user.balance = balance; 
+        writeJ(USERS_PATH, data);
+        res.json({ success: true, message: "تم تحديث الرصيد بنجاح" });
+    } else {
+        res.status(404).json({ success: false, message: "المستخدم غير موجود" });
+    }
+});
 app.listen(PORT, () => console.log(`🚀 Server Running on ${PORT}`));

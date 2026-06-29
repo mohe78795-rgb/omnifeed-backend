@@ -176,14 +176,14 @@ async function processBalanceOrder() {
     if (state.cart.length === 0) return toast("⚠️ الحقيبة فارغة");
     const total = state.cart.reduce((s, i) => s + (parseInt(i.price) * i.qty), 0);
     if (state.user.bal < total) return toast("❌ الرصيد غير كافٍ");
-    
+
     // تجهيز بيانات الطلب
-    const o = { 
-        id: Math.random().toString(36).substr(2, 5).toUpperCase(), 
-        total: total, 
-        status: '🛠️ جديد', 
-        date: new Date().toLocaleDateString('ar-EG'), 
-        items: [...state.cart] 
+    const o = {
+        id: Math.random().toString(36).substr(2, 5).toUpperCase(),
+        total: total,
+        status: '🛠️ جديد',
+        date: new Date().toLocaleDateString('ar-EG'),
+        items: [...state.cart]
     };
 
     // إرسال الطلب للسيرفر
@@ -200,7 +200,7 @@ async function processBalanceOrder() {
     state.orders.unshift(o);
     localStorage.setItem('abu_orders_v29', JSON.stringify(state.orders));
     localStorage.setItem('abu_user_v29', JSON.stringify(state.user));
-    
+
     state.cart = []; ui(); triggerPrestigeNotif(); changeView('orders', null);
     toast("✅ تم إرسال الطلب بنجاح");
 }
@@ -259,4 +259,3 @@ function toggleFav(id) { if (state.favs.includes(id)) state.favs = state.favs.fi
 function logout() { localStorage.removeItem('abu_user_v29'); location.reload(); }
 function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3000); }
 if (state.user) unlockApp();
-

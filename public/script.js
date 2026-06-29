@@ -12,9 +12,9 @@ let state = {
 window.onload = () => {
     setTimeout(() => {
         document.getElementById('splash').style.opacity = '0';
-        setTimeout(() => { 
+        setTimeout(() => {
             document.getElementById('splash').style.display = 'none';
-            if (state.user) { unlockApp(); } 
+            if (state.user) { unlockApp(); }
             else { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex'); }
         }, 800);
     }, 1500);
@@ -38,7 +38,7 @@ function handleSignup() {
 function handleLogin() {
     const p = document.getElementById('login-phone').value, ps = document.getElementById('login-pass').value;
     const saved = JSON.parse(localStorage.getItem('abu_user_v29'));
-    if(saved && saved.phone === p && saved.pass === ps) { state.user = saved; unlockApp(); } 
+    if(saved && saved.phone === p && saved.pass === ps) { state.user = saved; unlockApp(); }
     else toast("❌ خطأ في البيانات");
 }
 
@@ -114,8 +114,8 @@ function add(p) {
 
 function updateQty(id, delta) {
     const i = state.cart.find(x => x.id == id);
-    if (i) { 
-        i.qty += delta; 
+    if (i) {
+        i.qty += delta;
         if (i.qty <= 0) state.cart = state.cart.filter(x => x.id != id);
         renderCart(); badge();
     }
@@ -172,15 +172,35 @@ function sendWhatsAppToStore() {
     window.open(`https://wa.me/${STORE_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function processBalanceOrder() {
+async function processBalanceOrder() {
     if (state.cart.length === 0) return toast("⚠️ الحقيبة فارغة");
     const total = state.cart.reduce((s, i) => s + (parseInt(i.price) * i.qty), 0);
     if (state.user.bal < total) return toast("❌ الرصيد غير كافٍ");
+    
+    // تجهيز بيانات الطلب
+    const o = { 
+        id: Math.random().toString(36).substr(2, 5).toUpperCase(), 
+        total: total, 
+        status: '🛠️ جديد', 
+        date: new Date().toLocaleDateString('ar-EG'), 
+        items: [...state.cart] 
+    };
+
+    // إرسال الطلب للسيرفر
+    try {
+        await fetch(`${API}/api/orders/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(o)
+        });
+    } catch(e) { console.log("خطأ في الاتصال بالسيرفر"); }
+
+    // تحديث النظام محلياً
     state.user.bal -= total;
-    const o = { id: Math.random().toString(36).substr(2, 5).toUpperCase(), total, status: 'تم الاستلام', date: new Date().toLocaleDateString('ar-EG'), items: [...state.cart] };
     state.orders.unshift(o);
     localStorage.setItem('abu_orders_v29', JSON.stringify(state.orders));
     localStorage.setItem('abu_user_v29', JSON.stringify(state.user));
+    
     state.cart = []; ui(); triggerPrestigeNotif(); changeView('orders', null);
     toast("✅ تم إرسال الطلب بنجاح");
 }
@@ -239,3 +259,4 @@ function toggleFav(id) { if (state.favs.includes(id)) state.favs = state.favs.fi
 function logout() { localStorage.removeItem('abu_user_v29'); location.reload(); }
 function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3000); }
 if (state.user) unlockApp();
+

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تموينات أبو حسين | الإدارة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background: #05070a; color: white; font-family: sans-serif; }</style>
+</head>
+<body class="p-6">
+    <h1 class="text-2xl font-bold text-emerald-500 mb-6">لوحة تحكم أبو حسين</h1>
+    <div id="stats" class="grid grid-cols-2 gap-4 mb-6">
+        <div class="bg-gray-900 p-4 rounded-xl border border-emerald-500/30">المبيعات: <span id="sales">0</span></div>
+    </div>
+    <script>
+        fetch('/api/admin/stats').then(r=>r.json()).then(d => {
+            document.getElementById('sales').innerText = d.totalSales + " YER";
+        });
+    </script>
+</body>
+</html>

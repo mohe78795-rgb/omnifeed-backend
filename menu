@@ -1,0 +1,23 @@
+#!/bin/bash
+clear
+echo "======================================"
+echo "   🛡️  لوحة تحكم أبو حسين الذكية  🛡️"
+echo "======================================"
+echo "1. فتح/استعراض ملفات المشروع (Backend)"
+echo "2. الدخول إلى مجلد الواجهة (Public)"
+echo "3. نسخ محتويات الواجهة إلى ذاكرة الهاتف"
+echo "4. تعديل سريع على index.html"
+echo "5. رفع التحديثات الجديدة للمتجر (./up)"
+echo "0. خروج"
+echo "======================================"
+read -p "اختر رقماً (0-5): " choice
+
+case $choice in
+    1) cd ~/omnifeed-backend && ls ;;
+    2) cd ~/omnifeed-backend/public && ls ;;
+    3) cp -r ~/omnifeed-backend/public/* /sdcard/YTM/ && echo "✅ تم النسخ إلى YTM" ;;
+    4) nano ~/omnifeed-backend/public/index.html ;;
+    5) ./up ;;
+    0) exit ;;
+    *) echo "❌ خيار غير صحيح" ;;
+esac

@@ -1,174 +1,174 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>إدارة أبو حسين | الإصدار الحادي عشر</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم تموينات أبو حسين | التحكم الذكي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        :root { --gold: #fbbf24; --bg: #010413; --glass: rgba(255, 255, 255, 0.03); }
-        body { font-family: 'Cairo', sans-serif; background: var(--bg); color: white; min-height: 100vh; overflow-x: hidden; }
-        .glass { background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .tab-content { display: none; animation: fadeIn 0.4s ease-out; } .tab-active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-active { color: var(--gold); border-bottom: 3px solid var(--gold); background: rgba(251, 191, 36, 0.05); }
-        #lock-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: flex; align-items: center; justify-content: center; }
-        .order-card { border-radius: 2rem; border-right: 8px solid #fbbf24; transition: 0.3s; }
-        .order-card:hover { transform: scale(1.01); background: rgba(255,255,255,0.05); }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+        body { font-family: 'Cairo', sans-serif; background: #05070a; color: white; }
+        .royal-input { 
+            width: 100%; background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 1.2rem; padding: 1.2rem; 
+            color: white; outline: none; text-align: right; font-size: 14px;
+        }
+        .royal-input:focus { border-color: #10b981; }
+        .btn-royal { 
+            background: linear-gradient(135deg, #10b981, #059669); 
+            color: #000; border: none; transition: 0.3s; font-weight: 900;
+        }
+        .btn-royal:active { transform: scale(0.96); }
+        .luxury-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 2rem; padding: 1.5rem; shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
-<body class="pb-24">
+<body class="p-4 max-w-2xl mx-auto pb-20">
 
-    <!-- صوت التنبيه -->
-    <audio id="order-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+    <!-- الهيدر العلوي -->
+    <header class="flex justify-between items-center my-6 border-b border-white/5 pb-4">
+        <div class="text-right">
+            <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1">لوحة الإدارة الرئيسية</span>
+            <h1 class="text-2xl font-black text-white">التحكم الذكي بالمتجر</h1>
+        </div>
+        <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 text-xl">
+            <i class="fas fa-sliders"></i>
+        </div>
+    </header>
 
-    <div id="lock-screen">
-        <div class="text-center p-8 glass rounded-[3rem] border border-amber-500/20 max-w-xs w-full">
-            <h1 class="text-xl font-black mb-6 text-amber-500">CONTROL CENTER</h1>
-            <input type="password" id="admin-pass" placeholder="كلمة المرور" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-center mb-4 text-white">
-            <button onclick="login()" class="w-full bg-amber-500 text-black py-4 rounded-2xl font-black shadow-xl">دخول</button>
+    <!-- بطاقة الإحصائيات السريعة -->
+    <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="luxury-card text-center">
+            <i class="fas fa-chart-line text-emerald-500 text-xl mb-2"></i>
+            <p class="text-xs text-slate-400">إجمالي المبيعات</p>
+            <h3 id="stat-sales" class="text-xl font-black mt-1 text-emerald-400">0 YER</h3>
+        </div>
+        <div class="luxury-card text-center">
+            <i class="fas fa-boxes-stacked text-blue-500 text-xl mb-2"></i>
+            <p class="text-xs text-slate-400">عدد الطلبات</p>
+            <h3 id="stat-orders" class="text-xl font-black mt-1 text-white">0</h3>
         </div>
     </div>
 
-    <header class="p-6 glass sticky top-0 z-[100] border-b border-white/5 flex justify-between items-center">
-        <div><h1 class="text-lg font-black text-amber-500">إدارة أبو حسين <span class="text-white text-[10px] opacity-50">V11</span></h1><p id="live-time" class="text-[8px] text-slate-500 font-bold uppercase"></p></div>
-        <div class="bg-emerald-500/10 p-2 px-4 rounded-2xl border border-emerald-500/20 text-center"><p id="stat-sales" class="text-xs font-black text-emerald-400">0</p><span class="text-[6px] text-white/30 uppercase font-bold">أرباح اليوم</span></div>
-    </header>
-
-    <nav class="flex justify-around bg-slate-900/50 p-2 mx-4 mt-4 rounded-2xl backdrop-blur-md sticky top-24 z-[90] border border-white/5 overflow-x-auto no-scrollbar">
-        <button onclick="showTab('tab-orders', this)" class="nav-btn nav-active p-3 text-[9px] font-black flex-1"><i class="fas fa-box-open mb-1 block"></i>الطلبات</button>
-        <button onclick="showTab('tab-archive', this)" class="nav-btn p-3 text-[9px] font-bold text-slate-500 flex-1"><i class="fas fa-history mb-1 block"></i>الأرشيف</button>
-        <button onclick="showTab('tab-store', this)" class="nav-btn p-3 text-[9px] font-bold text-slate-500 flex-1"><i class="fas fa-th-large mb-1 block"></i>المتجر</button>
-        <button onclick="showTab('tab-users', this)" class="nav-btn p-3 text-[9px] font-bold text-slate-500 flex-1"><i class="fas fa-users mb-1 block"></i>العملاء</button>
-        <button onclick="showTab('tab-ui', this)" class="nav-btn p-3 text-[9px] font-bold text-slate-500 flex-1"><i class="fas fa-magic mb-1 block"></i>الواجهة</button>
-    </nav>
-
-    <main class="p-4 space-y-6">
-        <!-- تبويب الطلبات الحالية -->
-        <section id="tab-orders" class="tab-content tab-active space-y-4">
-            <div id="active-orders-container" class="space-y-4"></div>
-        </section>
-
-        <!-- تبويب الأرشيف -->
-        <section id="tab-archive" class="tab-content space-y-4">
-            <h2 class="text-xs font-bold text-slate-500 uppercase px-2 tracking-widest">السجل القديم</h2>
-            <div id="archive-orders-container" class="space-y-3 opacity-60"></div>
-        </section>
-
-        <!-- تبويب المتجر -->
-        <section id="tab-store" class="tab-content space-y-6">
-            <div class="glass p-6 rounded-[2.5rem] border border-emerald-500/20">
-                <input id="p-name" placeholder="اسم المنتج" class="w-full p-3 rounded-xl text-xs mb-2">
-                <div class="grid grid-cols-2 gap-2 mb-2">
-                    <input id="p-price" type="number" placeholder="السعر" class="p-3 rounded-xl text-xs font-bold text-amber-500">
-                    <input id="p-stock" type="number" placeholder="المخزون" class="p-3 rounded-xl text-xs">
-                </div>
-                <input id="p-img" placeholder="رابط الصورة" class="w-full p-3 rounded-xl text-xs mb-3">
-                <button onclick="addProduct()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs">حفظ الصنف</button>
+    <!-- قسم إضافة منتج جديد (من معرض الصور) -->
+    <section class="luxury-card space-y-5">
+        <h2 class="text-lg font-black text-white border-r-4 border-emerald-500 pr-3 mb-4">إضافة منتج جديد للمتجر</h2>
+        
+        <form id="add-product-form" class="space-y-4" onsubmit="handleFormSubmit(event)">
+            <div>
+                <input type="text" id="p-name" class="royal-input" placeholder="اسم المنتج (مثال: علف تسمين)" required>
             </div>
-            <div id="admin-product-list" class="space-y-2"></div>
-        </section>
-
-        <!-- تبويب العملاء -->
-        <section id="tab-users" class="tab-content space-y-4">
-            <input type="text" id="user-search" oninput="loadUsers()" placeholder="بحث عن عميل..." class="w-full p-3 glass rounded-xl text-xs border-white/10 mb-4">
-            <div id="users-list" class="space-y-3"></div>
-        </section>
-
-        <!-- تبويب الواجهة -->
-        <section id="tab-ui" class="tab-content space-y-4">
-            <div class="glass p-6 rounded-[2.5rem]">
-                <label class="text-[9px] text-slate-500 font-bold uppercase block mb-2">رسالة Popup ترحيبية</label>
-                <input id="ui-popup" class="w-full p-4 rounded-2xl text-xs mb-4" placeholder="اتركها فارغة لإخفائها">
-                <label class="text-[9px] text-slate-500 font-bold uppercase block mb-2">شريط الأخبار</label>
-                <textarea id="ui-news" class="w-full p-4 rounded-2xl text-xs h-24 mb-4"></textarea>
-                <button onclick="saveUISettings()" class="w-full bg-purple-600 text-white py-4 rounded-2xl font-black">تحديث التطبيق الآن 🚀</button>
+            <div class="grid grid-cols-2 gap-3">
+                <input type="number" id="p-price" class="royal-input" placeholder="السعر (YER)" required>
+                <input type="text" id="p-cat" class="royal-input" placeholder="القسم (مثال: أعلاف، معلبات)" required>
             </div>
-        </section>
-    </main>
+            <div class="grid grid-cols-2 gap-3">
+                <input type="number" id="p-stock" class="royal-input" placeholder="الكمية المتوفرة بالمخزن" value="10">
+                <input type="text" id="p-unit" class="royal-input" placeholder="الوحدة (حبة، كيس، كرتون)" value="حبة">
+            </div>
+
+            <!-- حقل معرض الصور الذكي -->
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-400 block pr-2">صورة المنتج من معرض الهاتف:</label>
+                <input type="file" id="p-img-file" accept="image/*" class="royal-input" style="padding: 0.8rem;" required>
+            </div>
+
+            <button type="submit" class="btn-royal w-full py-4 rounded-xl text-md shadow-lg mt-2 flex items-center justify-center gap-2">
+                <i class="fas fa-plus-circle"></i> رفع وحفظ المنتج بالمتجر
+            </button>
+        </form>
+    </section>
+
+    <!-- شريط الإشعارات الصغير -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-6 py-3 rounded-full text-xs font-black hidden shadow-2xl z-50"></div>
 
     <script>
-        let lastOrderCount = 0;
-        function login() { if(document.getElementById('admin-pass').value === '1234') { document.getElementById('lock-screen').style.display = 'none'; init(); } }
-        function showTab(id, btn) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('tab-active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active', 'text-amber-500'));
-            document.getElementById(id).classList.add('tab-active');
-            btn.classList.add('nav-active', 'text-amber-500');
-            if(id==='tab-orders') loadOrders();
-            if(id==='tab-archive') loadOrders();
-            if(id==='tab-store') loadAdminProducts();
-            if(id==='tab-users') loadUsers();
-            if(id==='tab-ui') loadUISettings();
+        // جلب إحصائيات المتجر عند الفتح
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                const data = await res.json();
+                document.getElementById('stat-sales').innerText = data.totalSales.toLocaleString() + " YER";
+                document.getElementById('stat-orders').innerText = data.orderCount;
+            } catch (e) {
+                console.error("خطأ في جلب الإحصائيات");
+            }
         }
 
-        async function init() {
-            const res = await fetch('/api/admin/stats'); const d = await res.json();
-            document.getElementById('stat-sales').innerText = d.totalSales.toLocaleString() + " YER";
-            loadOrders();
-            setInterval(loadOrders, 10000); // تحديث تلقائي للطلبات كل 10 ثوانٍ
-            setInterval(() => { document.getElementById('live-time').innerText = new Date().toLocaleString('ar-YE'); }, 1000);
+        // تحويل صورة معرض الهاتف إلى نص Base64
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
         }
 
-        async function loadOrders() {
-            const res = await fetch('/api/orders_list'); const data = await res.json();
-            const activeCont = document.getElementById('active-orders-container');
-            const archiveCont = document.getElementById('archive-orders-container');
+        // معالجة إرسال الفورم وحفظ المنتج
+        async function handleFormSubmit(event) {
+            event.preventDefault();
             
-            // تنبيه صوتي للطلبات الجديدة
-            if(data.length > lastOrderCount && lastOrderCount !== 0) { document.getElementById('order-sound').play(); }
-            lastOrderCount = data.length;
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const cat = document.getElementById('p-cat').value;
+            const stock = document.getElementById('p-stock').value;
+            const unit = document.getElementById('p-unit').value;
+            const imgFile = document.getElementById('p-img-file').files[0];
 
-            activeCont.innerHTML = ''; archiveCont.innerHTML = '';
-            data.reverse().forEach(o => {
-                const isFinished = o.status.includes('تم') || o.status.includes('ملغي');
-                const html = `
-                <div class="glass p-5 order-card mb-2">
-                    <div class="flex justify-between mb-2"><h4 class="text-sm font-black">${o.clientName}</h4><span class="text-amber-500 font-black text-xs">${o.totalAmount}</span></div>
-                    <div class="text-[9px] text-slate-500 mb-3">${o.time} | <b class="text-amber-400">${o.status}</b></div>
-                    <div class="bg-white/5 p-3 rounded-2xl text-[10px] mb-4">${o.items.join(' + ')}</div>
-                    <div class="flex gap-2">
-                        ${!isFinished ? `
-                        <button onclick="updateStatus('${o.orderId}','🛠️ تجهيز')" class="flex-1 bg-blue-600/20 text-blue-400 py-2 rounded-xl text-[9px] font-bold">تجهيز</button>
-                        <button onclick="updateStatus('${o.orderId}','✅ تم')" class="flex-1 bg-emerald-600/20 text-emerald-400 py-2 rounded-xl text-[9px] font-bold">تم</button>
-                        ` : `<button onclick="deleteOrder('${o.orderId}')" class="flex-1 bg-red-600/10 text-red-400 py-2 rounded-xl text-[9px]">حذف نهائي</button>`}
-                        ${o.location ? `<a href="https://www.google.com/maps?q=${o.location.lat},${o.location.lng}" target="_blank" class="w-10 glass rounded-xl flex items-center justify-center text-blue-400"><i class="fas fa-map-marker-alt"></i></a>` : ''}
-                    </div>
-                </div>`;
-                if(isFinished) archiveCont.innerHTML += html; else activeCont.innerHTML += html;
-            });
+            if(!imgFile) return showToast("⚠️ يرجى اختيار صورة من المعرض");
+
+            showToast("⚙️ جاري معالجة ورفع الصورة...");
+
+            try {
+                // تحويل صورة الهاتف تلقائياً
+                const base64Image = await convertFileToBase64(imgFile);
+
+                const productData = {
+                    name,
+                    price: parseInt(price),
+                    cat,
+                    stock: parseInt(stock),
+                    unit,
+                    img: base64Image // إرسال الصورة مأخوذة بالكامل من الهاتف
+                };
+
+                const response = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productData)
+                });
+
+                const result = await response.json();
+
+                if(result.success) {
+                    showToast("✅ تم حفظ المنتج وصورته بالمتجر بنجاح!");
+                    document.getElementById('add-product-form').reset();
+                    loadStats(); // تحديث الإحصائيات
+                } else {
+                    showToast("❌ فشل حفظ المنتج");
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast("❌ حدث خطأ في الاتصال بالسيرفر");
+            }
         }
 
-        async function updateStatus(id, s) { await fetch('/api/orders/update-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id, status:s})}); loadOrders(); }
-        async function deleteOrder(id) { if(confirm('حذف للأبد؟')) { await fetch('/api/orders/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}); loadOrders(); } }
-
-        async function loadAdminProducts() {
-            const res = await fetch('/api/products'); const data = await res.json();
-            const list = document.getElementById('admin-product-list'); list.innerHTML = '';
-            data.reverse().forEach(p => {
-                list.innerHTML += `<div class="glass p-3 rounded-2xl flex items-center gap-3 mb-2"><img src="${p.img}" class="w-10 h-10 rounded-lg object-cover"><div class="flex-1"><p class="text-[10px] font-bold">${p.name}</p><p class="text-[8px] text-amber-500">${p.price} YER | المخزن: ${p.stock}</p></div><button onclick="deleteProduct('${p.id}')" class="text-red-500 p-2"><i class="fas fa-trash"></i></button></div>`;
-            });
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3500);
         }
-        async function addProduct() {
-            const d = { name:document.getElementById('p-name').value, price:parseInt(document.getElementById('p-price').value), stock:parseInt(document.getElementById('p-stock').value), img:document.getElementById('p-img').value, cat:"عام" };
-            await fetch('/api/products',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); loadAdminProducts();
-        }
-        async function deleteProduct(id) { await fetch('/api/products/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}); loadAdminProducts(); }
 
-        async function loadUsers() {
-            const res = await fetch('/api/users'); const data = await res.json();
-            const list = document.getElementById('users-list'); list.innerHTML = '';
-            const search = document.getElementById('user-search').value.toLowerCase();
-            data.active_users.filter(u => u.name.toLowerCase().includes(search)).forEach(u => {
-                list.innerHTML += `<div class="glass p-4 rounded-2xl flex justify-between items-center mb-2"><div><p class="font-black text-sm">${u.name}</p><p class="text-[8px] opacity-30">${u.uuid}</p></div><div class="text-left"><p class="text-amber-500 font-black text-xs">${u.balance.toLocaleString()} YER</p><button onclick="editBalance('${u.uuid}')" class="text-blue-400 text-[9px] font-bold underline">شحن</button></div></div>`;
-            });
-        }
-        async function editBalance(id) { let b = prompt("المبلغ الجديد:"); if(b){ await fetch('/api/users/update-balance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uuid:id, balance:b})}); loadUsers(); } }
-
-        async function loadUISettings() { const res=await fetch('/api/settings'); const d=await res.json(); document.getElementById('ui-news').value=d.news; document.getElementById('ui-popup').value=d.popup||""; }
-        async function saveUISettings() { const d={ news:document.getElementById('ui-news').value, popup:document.getElementById('ui-popup').value, banners:["https://i.postimg.cc/D8RhYN2t/image.png"] }; await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); alert('تم التحديث!'); }
+        // تشغيل الإحصائيات تلقائياً عند فتح اللوحة
+        window.onload = loadStats;
     </script>
 </body>
 </html>

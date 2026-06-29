@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": "13",
+    "name": "زبادي نانا",
+    "price": 100,
+    "oldPrice": 120,
+    "cat": "الألبان والأجبان",
+    "img": "https://i.postimg.cc/N9sVTDD4/image.png",
+    "stock": 80,
+    "unit": "علبة",
+    "isAvailable": true
+  },
+  {
+    "id": "1782311349137",
+    "stock": null,
+    "oldPrice": 0,
+    "unit": "حبة",
+    "name": "شبس ",
+    "price": 200,
+    "img": "https://i.postimg.cc/9QbgstFD/1250023-IMG-E2290-no-bg.png",
+    "cat": "عام"
+  },
+  {
+    "id": "1782734322029",
+    "stock": null,
+    "oldPrice": 0,
+    "unit": "حبة",
+    "name": "مكرونة المائدة",
+    "price": 100,
+    "img": "https://i.postimg.cc/FsY49YMR/In-Shot-20260629-143613385.png",
+    "cat": "عام"
+  }
+]
+

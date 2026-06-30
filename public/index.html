@@ -1,220 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>تموينات أبو حسين | Smart Prestige</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>تحديثات أبو حسين – موعد التوصيل</title>
 </head>
-<body class="bg-[#05070a] text-white overflow-x-hidden select-none">
+<body style="margin:0;padding:0;background:#f7f8fa;font-family:Arial,Helvetica,sans-serif;color
+:#333;">
+<!-- Wrapper -->
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:
+600px;margin:0 auto;">
+  <tr>
+    <td style="background:#ffffff;padding:20px 0;">
+      <!-- Header with Logo -->
+      <table width="100%" style="border-bottom:1px solid #e0e0e0;">
+        <tr>
+          <td align="center">
+            <img src="https://yourlogo.com/logo.png" alt="تموينات أبو حسين" width="120" style="
+display:block;margin:0 auto;">
+          </td>
+        </tr>
+      </table>
 
-    <!-- صوت الكاشير -->
-    <audio id="snd-cashier" src="https://assets.mixkit.co/active_storage/sfx/592/592-preview.mp3" preload="auto"></audio>
-    <audio id="snd-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2358-preview.mp3" preload="auto"></audio>
+      <!-- Body -->
+      <table width="100%" style="padding:20px;">
+        <!-- Greeting -->
+        <tr>
+          <td style="font-size:18px;font-weight:bold;color:#222;">
+            مرحبًا <span style="color:#0066cc;">[اسم العميل]</span>،
+          </td>
+        </tr>
 
-    <!-- إشعار علوي ذكي -->
-    <div id="top-push-notif" class="fixed top-[-150px] left-4 right-4 z-[6000] bg-[#1a1c25]/95 backdrop-blur-xl border border-white/10 p-5 rounded-[2rem] shadow-2xl flex items-center gap-4 transition-all duration-500">
-        <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg text-white text-xl"><i class="fas fa-comment-dots"></i></div>
-        <div class="flex-1 text-right border-r border-white/10 pr-4">
-            <h4 class="text-emerald-500 font-black text-[10px] uppercase tracking-widest leading-none mb-1">رسالة النظام</h4>
-            <p id="notif-text" class="text-sm font-bold text-white">تم استلام طلبك وبدأنا في التجهيز!</p>
-        </div>
-    </div>
+        <!-- Countdown Section -->
+        <tr>
+          <td style="padding-top:15px;">
+            <p style="font-size:16px;margin:0;">مستعد للتوصيل خلال:</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;">
+              <tr>
+                <td align="center" style="padding:8px;background:#0066cc;color:#fff;font-weight
+:bold;font-size:18px;border-radius:4px;">
+                  <span id="days">00</span> أيام
+                </td>
+                <td align="center" style="padding:8px;background:#0066cc;color:#fff;font
+-weight:bold;font-size:18px;border-radius:4px;">
+                  <span id="hours">00</span> ساعات
+                </td>
+                <td align="center" style="padding:8px;background:#0066cc;color:#fff;font-weight:bold;font-size:18
+px;border-radius:4px;">
+                  <span id="minutes">00</span> دقائق
+                </td>
+                <td align="center" style="padding:8px;background:#0066cc;color:#fff;font-weight:bold;font-size:18
+px;border-radius:4px;">
+                  <span id="seconds">00</span> ثواني
+                </td>
+              </tr>
+            </table>
+            <!-- ملاحظة: يتم تحديث العدّاد من خلال نظام البريد الإلكتروني أوُ تُستبدل القيم بقيم
+ حقيقية عند إرسال الرسالة -->
+          </td>
+        </tr>
 
-    <!-- نافذة طلب الموقع -->
-    <div id="location-modal" class="fixed inset-0 z-[5500] hidden flex items-center justify-center p-6 bg-black/90 backdrop-blur-md">
-        <div class="w-full max-w-sm bg-[#0a101e] rounded-[3rem] p-10 border border-white/10 text-center space-y-6 animate-slideUp shadow-3xl">
-            <div class="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-500 text-4xl animate-pulse"><i class="fas fa-location-dot"></i></div>
-            <h3 class="text-2xl font-black">موقع التوصيل</h3>
-            <p class="text-slate-400 text-sm leading-relaxed">يرجى السماح للحصول على موقعك لضمان وصول الطلب لباب منزلك بدقة متناهية.</p>
-            <div class="grid gap-3 pt-4">
-                <button onclick="triggerGPSProcess()" class="btn-royal py-4 rounded-2xl font-black text-lg shadow-xl">موافق، إرسال موقعي</button>
-                <button onclick="closeLocationModal()" class="w-full py-3 text-slate-500 font-bold text-sm uppercase">إلغاء</button>
-            </div>
-        </div>
-    </div>
+        <!-- Updates Section -->
+        <tr>
+          <td style="padding-top:25px;">
+            <h2 style="font-size:20px;margin:0;color:#222;">تحديثات جديدة:</h2>
+            <ul style="margin:10px 0 0 20px;padding:0;color:#555;">
+              <li style="margin-bottom:6px;">✅ تمت إضافة منتجات جديدة للمجموعة «المنزليات».</li
+>
+              <li style="margin-bottom:6px;">📦 توفّر شحن مباشر لتوصيل الطلبات خلال 24 ساعة.</li
+>
+              <li style="margin-bottom:6px;">💳 إمكانية الدفع عن طريق نقاط الاشتراك المتراكمة.</
+li>
+              <li style="margin-bottom:6px;">🔔 تذكير أسبوعي بمستحقات الرصيد المجاني.</li>
+            </ul>
+          </td>
+        </tr>
 
-    <!-- شاشة التمهيد -->
-    <div id="splash" class="fixed inset-0 z-[3000] bg-[#05070a] flex flex-col items-center justify-center transition-all duration-1000">
-        <div class="relative w-24 h-24 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center shadow-2xl animate-bounce"><i class="fas fa-store text-white text-4xl"></i></div>
-        <h1 class="text-2xl font-black mt-6 tracking-[8px] uppercase">أبو حسين</h1>
-    </div>
+        <!-- Call‑to‑Action -->
+        <tr>
+          <td style="padding-top:20px;text-align:center;">
+            <a href="https://www.abuhussain.com/cart" target="_blank"
+               style="display:inline-block;padding:12px 28px;background:#0066cc;color:#fff;text
+-decoration:none;border-radius:5px;font-size:16px;">
+              استعرض سلة الطلبات
+            </a>
+          </td>
+        </tr>
 
-    <!-- واجهة الدخول -->
-    <section id="auth-screen" class="fixed inset-0 z-[1500] hidden flex flex-col items-center justify-center p-8 bg-[#05070a]">
-        <div class="w-full max-w-sm space-y-10 animate-slideUp text-center">
-            <h1 class="text-4xl font-black mb-2">دخول</h1>
-            <p class="text-emerald-500 font-bold text-[10px] uppercase tracking-[4px]">Sovereign Market Access</p>
-            <div id="login-box" class="space-y-4">
-                <input type="tel" id="login-phone" class="royal-input" placeholder="رقم الهاتف">
-                <input type="password" id="login-pass" class="royal-input" placeholder="كلمة المرور">
-                <button onclick="handleLogin()" class="btn-royal w-full py-5 rounded-2xl font-black text-lg shadow-xl">دخول</button>
-                <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 font-bold mt-4 uppercase underline">إنشاء حساب جديد</button>
-            </div>
-            <div id="signup-box" class="hidden space-y-4">
-                <input type="text" id="reg-name" class="royal-input" placeholder="الاسم الكامل">
-                <input type="tel" id="reg-phone" class="royal-input" placeholder="رقم الهاتف">
-                <input type="password" id="reg-pass" class="royal-input" placeholder="كلمة المرور">
-                <button onclick="handleSignup()" class="btn-royal w-full py-5 rounded-2xl font-black shadow-xl">تفعيل</button>
-                <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 font-bold mt-4">لديك حساب؟ دخول</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- التطبيق الرئيسي -->
-    <div id="main-app" class="hidden opacity-0 transition-all duration-1000">
-        
-        <header class="fixed top-0 left-0 right-0 z-[100] px-6 py-6 bg-[#05070a]/90 backdrop-blur-xl border-b border-white/5 flex justify-between items-center shadow-lg">
-            <div class="flex items-center gap-3">
-                <div id="u-avatar" class="w-11 h-11 bg-emerald-500 text-black rounded-xl flex items-center justify-center font-black text-lg">..</div>
-                <div class="flex flex-col text-right">
-                    <span class="text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-1">تموينات</span>
-                    <h1 class="text-lg font-black text-white leading-none tracking-tight">أبو حسين</h1>
-                </div>
-            </div>
-            <div id="u-balance-top" class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-500 font-black text-[10px] shadow-inner">0 YER</div>
-        </header>
-
-        <main class="pt-28 p-5 pb-44 space-y-12 text-right">
-            <!-- الاستكشاف -->
-            <div id="view-home" class="view-content space-y-10 animate-fadeIn">
-                <div id="wallet-card" class="p-8 rounded-[3rem] bg-gradient-to-br from-[#0a101e] to-[#05070a] border border-emerald-500/10 shadow-3xl relative overflow-hidden group">
-                    <canvas id="gold-particles" class="absolute inset-0 z-0"></canvas>
-                    <div class="relative z-10 text-right"><p class="text-slate-500 text-[10px] font-black uppercase tracking-[5px] mb-3">الرصيد المتاح</p><div class="flex items-baseline gap-2"><span id="u-balance" class="text-5xl font-black text-white tracking-tighter">0</span><span class="text-xs font-bold text-emerald-500 uppercase">Yer</span></div></div>
-                </div>
-
-                <div class="relative px-1">
-                    <input type="text" id="home-search" oninput="searchInHome()" placeholder="ابحث عما تريد.." class="w-full py-4 px-6 pr-12 bg-white/5 border border-white/5 rounded-2xl outline-none focus:border-emerald-500/50 transition-all text-sm font-bold text-right shadow-inner text-white">
-                    <i class="fas fa-search absolute right-6 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                </div>
-
-                <div id="cat-list" class="flex gap-3 overflow-x-auto no-scrollbar py-1"></div>
-                <div class="grid grid-cols-2 gap-4" id="products-grid"></div>
-            </div>
-
-            <!-- العروض -->
-            <div id="view-offers" class="view-content hidden space-y-8 animate-fadeIn">
-                <h2 class="text-2xl font-[900] px-2 border-r-4 border-emerald-500 pr-4 italic">حصري الآن 🔥</h2>
-                <div class="rounded-[2.5rem] overflow-hidden border border-white/5 shadow-3xl"><video controls class="w-full aspect-video scale-105" poster="https://i.postimg.cc/g2b3dzzB/IMG-20260608-053600.png"><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video></div>
-            </div>
-
-            <!-- السلة -->
-            <div id="view-cart" class="view-content hidden space-y-8 animate-fadeIn">
-                <h2 class="text-3xl font-black px-2 tracking-tighter text-white">حقيبة المشتريات</h2>
-                <div id="cart-list" class="space-y-3 min-h-[300px]"></div>
-                <div class="p-8 bg-[#0a101e] rounded-[3.5rem] border border-white/5 space-y-6 shadow-3xl mb-12">
-                    <div class="flex justify-between items-center text-lg px-2"><span class="text-slate-400 font-bold uppercase text-[10px]">المجموع النهائي</span><span id="cart-total" class="text-3xl font-black text-emerald-400 tracking-tighter">0 YER</span></div>
-                    <div class="grid gap-3">
-                        <button onclick="processBalanceOrder()" class="btn-royal w-full py-5 rounded-2xl font-black text-lg shadow-xl">تأكيد المشتريات من الرصيد</button>
-                        <button onclick="openLocationModal()" class="w-full py-5 bg-[#25d366]/10 text-[#25d366] border border-[#25d366]/20 rounded-2xl font-[900] flex items-center justify-center gap-3 active:scale-95 transition-all"><i class="fab fa-whatsapp text-2xl"></i> طلب عبر واتساب</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- طلباتي -->
-            <div id="view-orders" class="view-content hidden space-y-8 animate-fadeIn">
-                <h2 class="text-3xl font-black px-2 tracking-tighter">سجل العمليات</h2>
-                <div id="orders-list" class="space-y-6"></div>
-            </div>
-
-            <!-- حسابي -->
-            <div id="view-account" class="view-content hidden space-y-8 animate-fadeIn pt-2">
-                <!-- كرت الهوية الشخصية -->
-                <div class="relative w-full rounded-[4rem] p-10 bg-gradient-to-b from-[#0a101e] to-transparent text-center border border-white/5 shadow-2xl overflow-hidden">
-                    <div class="w-32 h-32 bg-slate-900 border-2 border-emerald-500/20 rounded-full flex items-center justify-center mx-auto shadow-3xl text-6xl text-emerald-500 relative mb-6">
-                        <i class="fas fa-user-gear"></i>
-                        <div class="absolute inset-0 bg-emerald-500 blur-[40px] opacity-10 rounded-full"></div>
-                    </div>
-                    <div class="space-y-1">
-                        <h2 id="acc-name-display" class="text-xl font-[900] text-white tracking-tight uppercase">..</h2>
-                        <p id="acc-phone-display" class="text-emerald-500 font-bold text-[14px] tracking-[2px]">..</p>
-                    </div>
-                </div>
-
-                <!-- أزرار التحكم الجديدة -->
-                <div class="grid grid-cols-2 gap-3 px-4">
-                    <button class="luxury-card" onclick="toast('قريباً')">
-                        <i class="fas fa-money-bill-transfer"></i>
-                        <span>إيداع أموال</span>
-                    </button>
-                    <button class="luxury-card" onclick="toast('قريباً')">
-                        <i class="fas fa-cog"></i>
-                        <span>الإعدادات</span>
-                    </button>
-                    <button class="luxury-card" onclick="toast('قريباً')">
-                        <i class="fas fa-user-lock"></i>
-                        <span>الأمان</span>
-                    </button>
-                    <button class="luxury-card" onclick="toast('قريباً')">
-                        <i class="fas fa-file-contract"></i>
-                        <span>الشروط</span>
-                    </button>
-                    <button class="luxury-card" onclick="toast('الإصدار 30.0')">
-                        <i class="fas fa-circle-info"></i>
-                        <span>حول</span>
-                    </button>
-                    <a href="https://wa.me/967737528057" class="luxury-card">
-                        <i class="fab fa-whatsapp text-green-500"></i>
-                        <span>الشكاوي</span>
-                    </a>
-                </div>
-
-                <!-- أزرار الخدمات المباشرة -->
-                <div class="px-4 space-y-3">
-                    <a href="tel:967737528057" class="luxury-btn-full">
-                        <i class="fas fa-phone-volume text-blue-500"></i>
-                        <span>اتصال مباشر بالمحل</span>
-                    </a>
-                    <a href="https://www.google.com/maps" target="_blank" class="luxury-btn-full">
-                        <i class="fas fa-map-location-dot text-emerald-500"></i>
-                        <span>موقعنا الدقيق على الخريطة</span>
-                    </a>
-                    <button onclick="logout()" class="luxury-btn-full !bg-red-500/5 !border-red-500/10 !text-red-500 mt-6">
-                        <i class="fas fa-power-off"></i>
-                        <span>تسجيل الخروج من الحساب</span>
-                    </button>
-                </div>
-
-                <footer class="pt-10 pb-10 text-center opacity-40">
-                    <p class="text-[10px] font-black uppercase tracking-[3px]">أتمتة وتطوير محمد موسى معجم</p>
-                    <p class="text-[9px] font-bold mt-1">omnifeed.ye@gmail.com</p>
-                </footer>
-            </div>
-        </main>
-
-        <!-- بار التنقل -->
-        <nav class="fixed bottom-0 left-0 right-0 h-24 bg-[#0a0d14]/95 backdrop-blur-2xl border-t border-white/5 grid grid-cols-5 items-center z-[500] px-4 shadow-3xl">
-            <button id="nav-home" onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-house-chimney"></i><span>استكشاف</span></button>
-            <button id="nav-offers" onclick="changeView('offers', this)" class="nav-item"><i class="fas fa-bolt-lightning"></i><span>عروض</span></button>
-            <div class="relative h-full flex justify-center">
-                <button onclick="changeView('cart', null)" class="btn-fab-royal absolute -top-8 active:scale-90 transition-all">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span id="cart-badge" class="absolute top-2 right-2 bg-red-500 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black hidden border-2 border-black">0</span>
-                </button>
-            </div>
-            <button id="nav-orders" onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-file-invoice"></i><span>طلباتي</span></button>
-            <button id="nav-account" onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-gear"></i><span>حسابي</span></button>
-        </nav>
-    </div>
-
-    <!-- درج التفاصيل -->
-    <div id="sheet-overlay" class="fixed inset-0 bg-black/95 z-[1100] hidden" onclick="closeSheet()"></div>
-    <div id="product-sheet" class="fixed bottom-[-100%] left-0 right-0 z-[1200] bg-[#05070a] border-t border-white/10 rounded-t-[4rem] p-10 transition-all duration-700 shadow-3xl text-right">
-        <div class="w-16 h-1 bg-white/10 rounded-full mx-auto mb-10"></div>
-        <img id="sh-img" class="w-full h-80 object-cover rounded-[3rem] mb-10 shadow-2xl">
-        <div class="flex justify-between items-start mb-12">
-            <div><h2 id="sh-name" class="text-3xl font-black text-white"></h2><span class="text-emerald-500 text-xs font-black uppercase mt-2 block tracking-widest">تجهيز فوري ⚡</span></div>
-            <div class="text-left flex flex-col items-end"><span id="sh-price" class="text-3xl font-black text-emerald-400"></span><span class="text-[10px] text-slate-500 font-bold mt-1 uppercase">YER</span></div>
-        </div>
-        <button id="sh-add-btn" class="btn-royal w-full py-6 rounded-full text-xl font-black shadow-xl">إضافة للسلة +</button>
-    </div>
-
-    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[7000] bg-emerald-500 text-black px-10 py-4 hidden font-black text-xs rounded-full shadow-2xl animate-slideDown"></div>
-
-    <audio id="snd-success" src="https://assets.mixkit.co/active_storage/sfx/1919/1919-preview.mp3" preload="auto"></audio>
-    <script src="script.js"></script>
+        <!-- Footer -->
+        <tr>
+          <td style="font-size:12px;color:#999;padding-top:30px;">
+            © 2024 أبو حسين – جميع الحقوق محفوظة<br>
+            <a href="https://www.abuhussain.com/unsubscribe" style="color:#0066cc;text
+-decoration:none;">إلغاء الاشتراك</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
 </body>
 </html>

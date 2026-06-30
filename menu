@@ -65,14 +65,16 @@ while true; do
             sleep 1
             ;;
         6) 
-            echo -e "${PURPLE}📥 الصق كود الـ CSS للمستخدم، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"
+            echo -e "${PURPLE}📥 الصق كود الـ CSS للمستخدم، then اضغط [Enter] ثم [Ctrl+D]:${NC}"
             cat > ~/omnifeed-backend/public/style.css
             echo -e "${GREEN}✅ تم التحديث بنجاح!${NC}"
             sleep 1
             ;;
         555) 
-            ./up 
-            read -p "اضغط Enter للعودة..."
+            echo -e "${GREEN}🚀 جاري تشغيل سكريبت الرفع المباشر...${NC}"
+            # تشغيل ملف الرفع باستخدام مساره الكامل والمباشر
+            cd ~/omnifeed-backend && ./up
+            read -p "اضغط Enter للعودة للوحة التحكم..."
             ;;
         44) 
             echo -e "${BLUE}📥 الصق كود الـ HTML الخاص بملف الأدمن، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"

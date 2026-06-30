@@ -6,18 +6,66 @@ echo "======================================"
 echo "1. فتح/استعراض ملفات المشروع (Backend)"
 echo "2. الدخول إلى مجلد الواجهة (Public)"
 echo "3. نسخ محتويات الواجهة إلى ذاكرة الهاتف"
-echo "4. تعديل سريع على index.html"
-echo "5. رفع التحديثات الجديدة للمتجر (./up)"
+echo "4. تحديث سريع ومباشر لملف index.html"
+echo "5. تحديث سريع ومباشر لملف script.js"
+echo "6. تحديث سريع ومباشر لملف style.css"
+echo "555. رفع التحديثات الجديدة للمتجر (./up)"
+echo "44. تحديث سريع ومباشر لملف index.html (الأدمن)"
+echo "55. تحديث سريع ومباشر لملف script.js (الأدمن)"
+echo "66. تحديث سريع ومباشر لملف style.css (الأدمن)"
 echo "0. خروج"
 echo "======================================"
-read -p "اختر رقماً (0-5): " choice
+read -p "اختر رقماً (0-66): " choice
 
 case $choice in
-    1) cd ~/omnifeed-backend && ls ;;
-    2) cd ~/omnifeed-backend/public && ls ;;
-    3) cp -r ~/omnifeed-backend/public/* /sdcard/YTM/ && echo "✅ تم النسخ إلى YTM" ;;
-    4) nano ~/omnifeed-backend/public/index.html ;;
-    5) ./up ;;
-    0) exit ;;
-    *) echo "❌ خيار غير صحيح" ;;
+    1) 
+        cd ~/omnifeed-backend
+        ls
+        ;;
+    2) 
+        cd ~/omnifeed-backend/public
+        ls
+        ;;
+    3) 
+        cp -r ~/omnifeed-backend/public/* /sdcard/YTM/ && echo "✅ تم النسخ إلى YTM" 
+        ;;
+    4) 
+        echo "📥 الصق كود الـ HTML (المستخدم) الجديد هنا، ثم اضغط [Enter] متبوعاً بـ Ctrl+D للحفظ:"
+        cat > ~/omnifeed-backend/public/index.html
+        echo "✅ تم تحديث وحفظ ملف index.html بنجاح!"
+        ;;
+    5) 
+        echo "📥 الصق كود الـ JavaScript (المستخدم) الجديد هنا، ثم اضغط [Enter] متبوعاً بـ Ctrl+D للحفظ:"
+        cat > ~/omnifeed-backend/public/script.js
+        echo "✅ تم تحديث وحفظ ملف script.js بنجاح!"
+        ;;
+    6) 
+        echo "📥 الصق كود الـ CSS (المستخدم) الجديد هنا، ثم اضغط [Enter] متبوعاً بـ Ctrl+D للحفظ:"
+        cat > ~/omnifeed-backend/public/style.css
+        echo "✅ تم تحديث وحفظ ملف style.css بنجاح!"
+        ;;
+    555) 
+        ./up 
+        ;;
+    44) 
+        echo "📥 الصق كود الـ HTML (الأدمن) الجديد هنا، ثم اضغط [Enter] متبوعاً بـ Ctrl+D للحفظ:"
+        cat > ~/omnifeed-backend/public/admin/index.html
+        echo "✅ تم تحديث وحفظ ملف index.html الخاص بالأدمن!"
+        ;;
+    55) 
+        echo "📥 الصق كود الـ JavaScript (الأدمن) الجديد هنا، ثم اضغط [Enter] متبوعاً بـ Ctrl+D للحفظ:"
+        cat > ~/omnifeed-backend/public/admin/script.js
+        echo "✅ تم تحديث وحفظ ملف script.js الخاص بالأدمن!"
+        ;;
+    66) 
+        echo "📥 الصق كود الـ CSS (الأدمن) الجديد هنا، ثم اضغط [Enter] متبوعاً بـ Ctrl+D للحفظ:"
+        cat > ~/omnifeed-backend/public/admin/style.css
+        echo "✅ تم تحديث وحفظ ملف style.css الخاص بالأدمن!"
+        ;;
+    0) 
+        return 2> /dev/null || exit 
+        ;;
+    *) 
+        echo "❌ خيار غير صحيح" 
+        ;;
 esac

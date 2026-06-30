@@ -1,91 +1,81 @@
 const API = "https://0zk30qr9iu.onrender.com";
 
-// تبديل الأقسام
-function showSec(id) {
-    document.querySelectorAll('.admin-sec').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+async function initAdmin() {
+    fetchOrders();
+    fetchUsers();
+    setInterval(fetchOrders, 10000); // تحديث كل 10 ثواني
 }
 
-// جلب البيانات من السيرفر
-async function fetchAdminData() {
+async function fetchOrders() {
     try {
-        // 1. جلب الإحصائيات
-        const statsRes = await fetch(`${API}/api/admin/stats`);
-        const stats = await statsRes.json();
-        document.getElementById('stat-sales').innerText = stats.totalSales.toLocaleString() + " YER";
-        document.getElementById('stat-orders').innerText = stats.totalOrders;
-        document.getElementById('stat-users').innerText = stats.totalUsers;
-        document.getElementById('stat-stars').innerText = stats.totalStars;
-
-        // 2. جلب الطلبات الحية
-        const ordersRes = await fetch(`${API}/api/admin/orders`);
-        const orders = await ordersRes.json();
-        renderAdminOrders(orders);
-
-    } catch (e) {
-        toast("❌ فشل الاتصال بالسيرفر");
-    }
-}
-
-function renderAdminOrders(orders) {
-    const list = document.getElementById('admin-orders-list');
-    list.innerHTML = orders.map(o => `
-        <div class="admin-order-card">
-            <div>
-                <h4 class="font-black text-emerald-500">طلب #${o.id}</h4>
-                <p class="text-xs text-slate-400">الزبون: ${o.userPhone} | المبلغ: ${o.total} YER</p>
-                <div class="mt-2 text-[10px] text-white/50">
-                    ${o.items.map(i => `${i.name} (x${i.qty})`).join(' , ')}
+        const res = await fetch(`${API}/api/orders`);
+        const orders = await res.json();
+        document.getElementById('total-orders-count').innerText = orders.length;
+        const list = document.getElementById('admin-orders-list');
+        
+        list.innerHTML = orders.reverse().map(o => `
+            <div class="glass p-6 rounded-[2rem] hover:border-emerald-500/50 transition-all group">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span class="text-[10px] text-emerald-500 font-black uppercase">طلب رقم #${o.id}</span>
+                        <h4 class="text-lg font-black mt-1">${o.total.toLocaleString()} YER</h4>
+                    </div>
+                    <span class="bg-emerald-500/10 text-emerald-500 px-4 py-1 rounded-full text-[10px] font-black">${o.date}</span>
                 </div>
+                <div class="space-y-2 mb-6">
+                    ${o.items.map(i => `<div class="flex justify-between text-xs text-slate-400 font-bold"><span>${i.name}</span><span>x${i.qty}</span></div>`).join('')}
+                </div>
+                <button class="w-full py-3 bg-white/5 hover:bg-emerald-500 hover:text-black rounded-xl text-xs font-black transition-all">تغيير الحالة إلى (تم التجهيز)</button>
             </div>
-            <div class="flex gap-3">
-                <select onchange="updateOrderStatus('${o.id}', this.value)" class="bg-black/40 text-xs p-2 rounded-lg outline-none">
-                    <option value="0" ${o.statusStep == 0 ? 'selected' : ''}>تم الاستلام</option>
-                    <option value="1" ${o.statusStep == 1 ? 'selected' : ''}>جاري التجهيز</option>
-                    <option value="2" ${o.statusStep == 2 ? 'selected' : ''}>مع السائق</option>
-                    <option value="3" ${o.statusStep == 3 ? 'selected' : ''}>تم التوصيل</option>
-                </select>
-                <button onclick="deleteOrder('${o.id}')" class="text-red-500 p-2"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-    `).join('');
+        `).join('');
+    } catch(e) {}
 }
 
-// تحديث حالة الطلب وإرسالها للسيرفر ليراها المستخدم فوراً
-async function updateOrderStatus(orderId, step) {
+async function fetchUsers() {
     try {
-        const res = await fetch(`${API}/api/orders/update-status`, {
+        const res = await fetch(`${API}/api/users`);
+        const data = await res.json();
+        document.getElementById('total-users-count').innerText = data.active_users.length;
+        
+        let totalCash = 0;
+        const container = document.getElementById('users-list');
+        
+        container.innerHTML = data.active_users.map(u => {
+            totalCash += (u.balance || 0);
+            return `
+                <div class="glass p-5 rounded-3xl border-r-4 border-emerald-500">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-black text-sm">${u.name}</h4>
+                        <span class="text-[10px] text-slate-500">${u.phone}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-emerald-500 font-black">${(u.balance || 0).toLocaleString()} <small>YER</small></span>
+                        <button onclick="editBalance('${u.phone}', '${u.name}')" class="p-2 hover:text-emerald-500 transition-colors"><i class="fas fa-edit"></i></button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('total-balance-all').innerText = totalCash.toLocaleString();
+    } catch (e) {}
+}
+
+async function editBalance(phone, name) {
+    const newBal = prompt(`تعديل رصيد الزبون: ${name}\nأدخل المبلغ الجديد:`);
+    if (newBal === null || isNaN(newBal)) return;
+    
+    try {
+        const res = await fetch(`${API}/api/users/update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: orderId, step: step })
+            body: JSON.stringify({ phone: phone, balance: parseFloat(newBal) })
         });
-        if (res.ok) toast("✅ تم تحديث حالة الطلب");
-    } catch (e) { toast("❌ فشل التحديث"); }
+        
+        if (res.ok) {
+            alert("✅ تم تحديث الرصيد بنجاح");
+            fetchUsers();
+        }
+    } catch (e) { alert("❌ خطأ في الاتصال"); }
 }
 
-// تحديث إعدادات المتجر (الأخبار والحالة)
-async function updateSettings() {
-    const status = document.getElementById('set-status').value;
-    const news = document.getElementById('set-news').value;
-
-    try {
-        const res = await fetch(`${API}/api/admin/settings`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status, news })
-        });
-        if (res.ok) toast("✅ تم حفظ الإعدادات بنجاح");
-    } catch (e) { toast("❌ فشل الاتصال"); }
-}
-
-function toast(m) {
-    const t = document.getElementById('toast');
-    t.innerText = m; t.classList.remove('hidden');
-    setTimeout(() => t.classList.add('hidden'), 3000);
-}
-
-// التحديث التلقائي للبيانات كل 30 ثانية لمراقبة الطلبات الجديدة
-setInterval(fetchAdminData, 30000);
-window.onload = fetchAdminData;
+initAdmin();

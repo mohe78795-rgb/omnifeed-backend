@@ -1,12 +1,79 @@
-body { -webkit-tap-highlight-color: transparent; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.royal-input { width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.5rem; padding: 1.2rem; color: white; outline: none; }
+body { font-family: 'Cairo', sans-serif; background: #05070a; -webkit-tap-highlight-color: transparent; color: white; }
+
+.royal-input { 
+    width: 100%; background: rgba(255, 255, 255, 0.02); 
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    border-radius: 1.5rem; padding: 1.5rem; 
+    color: white; outline: none; text-align: center; font-size: 14px;
+}
 .royal-input:focus { border-color: #10b981; }
-.btn-royal { background: linear-gradient(135deg, #10b981, #059669); color: #000; transition: 0.3s; }
-.btn-royal:active { transform: scale(0.95); }
-.nav-item { display: flex; flex-direction: column; align-items: center; color: #6b7280; font-size: 10px; font-weight: 800; gap: 4px; }
+
+.btn-royal { 
+    background: linear-gradient(135deg, #10b981, #059669); 
+    color: #000; border: none; transition: 0.3s; 
+}
+.btn-royal:active { transform: scale(0.96); }
+
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #4b5563; transition: 0.4s; gap: 4px; }
 .nav-item.active { color: #10b981; }
+.nav-item.active i { transform: translateY(-4px); text-shadow: 0 0 20px rgba(16,185,129,0.5); }
+.nav-item span { font-size: 10px; font-weight: 700; }
+
+.btn-fab-royal { 
+    width: 68px; height: 68px; 
+    background: linear-gradient(135deg, #10b981, #064e3b); 
+    border-radius: 50%; display: flex; items-center; justify-content: center; 
+    color: #000; font-size: 1.7rem; border: 5px solid #05070a;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+/* بطاقات الحساب الفخمة (Grid) */
+.luxury-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.8rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: 0.3s;
+}
+.luxury-card i { font-size: 1.3rem; color: #10b981; }
+.luxury-card span { font-size: 11px; font-weight: 900; color: #e2e8f0; }
+.luxury-card:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.05); }
+
+/* أزرار الحساب العريضة */
+.luxury-btn-full { 
+    background: rgba(255, 255, 255, 0.02); 
+    border: 1px solid rgba(255, 255, 255, 0.05); 
+    padding: 1.6rem; border-radius: 2rem; 
+    display: flex; align-items: center; 
+    justify-content: center; gap: 1.2rem; 
+    font-weight: 800; font-size: 14px; 
+    width: 100%; transition: 0.3s;
+}
+.luxury-btn-full:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.05); }
+
+/* التايم لاين */
+.timeline { display: flex; justify-content: space-between; position: relative; margin-top: 20px; padding: 0 10px; }
+.timeline::before { content: ''; position: absolute; top: 12px; left: 30px; right: 30px; height: 1px; border-top: 2px dashed rgba(255,255,255,0.1); z-index: 1; }
+.step { display: flex; flex-direction: column; align-items: center; z-index: 2; width: 25%; }
+.dot { width: 24px; height: 24px; background: #1a1c25; border: 2px solid #1a1c25; border-radius: 50%; display: flex; items-center; justify-content: center; font-size: 8px; color: #333; }
+.step.active .dot { background: #10b981; border-color: #10b981; color: #000; box-shadow: 0 0 15px rgba(16,185,129,0.4); }
+.step-label { font-size: 8px; font-weight: 900; color: #333; text-transform: uppercase; white-space: nowrap; margin-top: 8px; }
+.step.active .step-label { color: #10b981; }
+
+.invoice-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 2rem; padding: 25px; }
+.invoice-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.shadow-3xl { box-shadow: 0 35px 70px rgba(0, 0, 0, 0.9); }
 @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-.animate-slideUp { animation: slideUp 0.8s ease-out; }
+.animate-slideUp { animation: slideUp 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.animate-fadeIn { animation: fadeIn 0.5s ease; }
+.animate-fadeIn { animation: fadeIn 0.6s ease-out; }
+
+.fav-btn { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.3); backdrop-blur-md; display: flex; items-center; justify-content: center; color: white; transition: 0.3s; z-index: 5; }
+.fav-btn.active { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+

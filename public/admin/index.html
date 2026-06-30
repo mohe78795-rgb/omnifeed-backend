@@ -2,76 +2,31 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sovereign Admin | لوحة تحكم أبو حسين</title>
-    <!-- Tailwind CSS -->
+    <title>لوحة تحكم الإدارة | تموينات أبو حسين</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts (Cairo) -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- CSS Style File -->
-    <link rel="stylesheet" href="admin-style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="p-4 md:p-10">
-
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-        <div>
-            <h1 class="text-4xl font-[900] tracking-tighter text-emerald-500 uppercase">لوحة الإدارة الملكية</h1>
-            <p class="text-slate-500 font-bold mt-1 text-sm uppercase tracking-widest">Tamweenat Abu Hussein Control Hub</p>
-        </div>
-        <div class="flex gap-4">
-            <div class="glass px-6 py-3 rounded-2xl flex items-center gap-3">
-                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
-                <span class="text-xs font-black">السيرفر متصل</span>
-            </div>
-        </div>
+<body class="bg-[#05070a] text-white p-6">
+    <header class="flex justify-between items-center mb-10 border-b border-white/10 pb-6">
+        <h1 class="text-2xl font-black text-emerald-500">لوحة إدارة الطلبات</h1>
+        <div id="status-badge" class="px-4 py-1 bg-emerald-500/20 text-emerald-500 rounded-full text-xs font-bold animate-pulse">مُتصل بالسيرفر</div>
     </header>
 
-    <!-- قسم الإحصائيات (Stats) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div class="glass stat-card p-8 rounded-[2.5rem]">
-            <p class="text-slate-400 font-bold text-xs uppercase mb-2">إجمالي الطلبات</p>
-            <h2 id="total-orders-count" class="text-5xl font-black">0</h2>
-        </div>
-        <div class="glass stat-card p-8 rounded-[2.5rem]">
-            <p class="text-slate-400 font-bold text-xs uppercase mb-2">الزبائن المسجلين</p>
-            <h2 id="total-users-count" class="text-5xl font-black">0</h2>
-        </div>
-        <div class="glass stat-card p-8 rounded-[2.5rem]">
-            <p class="text-slate-400 font-bold text-xs uppercase mb-2">سيولة النظام (YER)</p>
-            <h2 id="total-balance-all" class="text-5xl font-black text-emerald-500">0</h2>
-        </div>
+    <!-- الطلبات -->
+    <div id="admin-orders-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- الطلبات ستظهر هنا برمجياً -->
     </div>
 
-    <!-- المحتوى الرئيسي -->
-    <div class="grid lg:grid-cols-3 gap-10">
-        
-        <!-- قسم الطلبات الواردة -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="flex justify-between items-center px-2">
-                <h3 class="text-xl font-black flex items-center gap-3">
-                    <i class="fas fa-shopping-cart text-emerald-500"></i> الطلبات الجديدة
-                </h3>
-                <button onclick="fetchOrders()" class="text-xs bg-white/5 px-4 py-2 rounded-lg hover:bg-emerald-500/20 transition-all">تحديث يدوي</button>
-            </div>
-            <div id="admin-orders-list" class="grid gap-4">
-                <!-- الطلبات ستظهر هنا برمجياً -->
-            </div>
-        </div>
-
-        <!-- قسم إدارة الزبائن -->
-        <div class="space-y-6">
-            <h3 class="text-xl font-black flex items-center gap-3">
-                <i class="fas fa-users text-emerald-500"></i> إدارة الحسابات
-            </h3>
-            <div id="users-list" class="space-y-4">
-                <!-- الزبائن سيظهرون هنا برمجياً -->
-            </div>
-        </div>
+    <!-- الزبائن -->
+    <h2 class="text-xl font-black text-white mt-12 mb-6 border-b border-white/10 pb-4">إدارة الزبائن</h2>
+    <div id="users-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- الزبائن ستظهر هنا برمجياً -->
     </div>
 
-    <!-- ملف الجافاسكربت -->
-    <script src="admin-script.js"></script>
+    <!-- صوت تنبيه الطلب الجديد -->
+    <audio id="snd-alert" src="https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3"></audio>
+
+    <script src="script.js"></script>
 </body>
 </html>
+

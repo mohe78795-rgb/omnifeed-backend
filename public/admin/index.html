@@ -2,21 +2,22 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Sovereign Admin | لوحة التحكم</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Admin | لوحة تحكم أبو حسين</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Cairo', sans-serif; background: #020617; color: white; }
-        .glass { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); backdrop-blur-xl; }
-        .stat-card { background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0) 100%); }
-    </style>
+    <!-- Google Fonts (Cairo) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- CSS Style File -->
+    <link rel="stylesheet" href="admin-style.css">
 </head>
 <body class="p-4 md:p-10">
 
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div>
-            <h1 class="text-4xl font-[900] tracking-tighter text-emerald-500">لوحة الإدارة الملكية</h1>
+            <h1 class="text-4xl font-[900] tracking-tighter text-emerald-500 uppercase">لوحة الإدارة الملكية</h1>
             <p class="text-slate-500 font-bold mt-1 text-sm uppercase tracking-widest">Tamweenat Abu Hussein Control Hub</p>
         </div>
         <div class="flex gap-4">
@@ -27,36 +28,50 @@
         </div>
     </header>
 
-    <!-- Stats -->
+    <!-- قسم الإحصائيات (Stats) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div class="glass stat-card p-8 rounded-[2.5rem]">
             <p class="text-slate-400 font-bold text-xs uppercase mb-2">إجمالي الطلبات</p>
-            <h2 id="total-orders-count" class="text-4xl font-black">0</h2>
+            <h2 id="total-orders-count" class="text-5xl font-black">0</h2>
         </div>
         <div class="glass stat-card p-8 rounded-[2.5rem]">
             <p class="text-slate-400 font-bold text-xs uppercase mb-2">الزبائن المسجلين</p>
-            <h2 id="total-users-count" class="text-4xl font-black">0</h2>
+            <h2 id="total-users-count" class="text-5xl font-black">0</h2>
         </div>
         <div class="glass stat-card p-8 rounded-[2.5rem]">
-            <p class="text-slate-400 font-bold text-xs uppercase mb-2">سيولة المحفظة</p>
-            <h2 id="total-balance-all" class="text-4xl font-black text-emerald-500">0</h2>
+            <p class="text-slate-400 font-bold text-xs uppercase mb-2">سيولة النظام (YER)</p>
+            <h2 id="total-balance-all" class="text-5xl font-black text-emerald-500">0</h2>
         </div>
     </div>
 
+    <!-- المحتوى الرئيسي -->
     <div class="grid lg:grid-cols-3 gap-10">
-        <!-- قسم الطلبات -->
+        
+        <!-- قسم الطلبات الواردة -->
         <div class="lg:col-span-2 space-y-6">
-            <h3 class="text-xl font-black flex items-center gap-3"><i class="fas fa-shopping-cart text-emerald-500"></i> الطلبات الجديدة</h3>
-            <div id="admin-orders-list" class="grid gap-4"></div>
+            <div class="flex justify-between items-center px-2">
+                <h3 class="text-xl font-black flex items-center gap-3">
+                    <i class="fas fa-shopping-cart text-emerald-500"></i> الطلبات الجديدة
+                </h3>
+                <button onclick="fetchOrders()" class="text-xs bg-white/5 px-4 py-2 rounded-lg hover:bg-emerald-500/20 transition-all">تحديث يدوي</button>
+            </div>
+            <div id="admin-orders-list" class="grid gap-4">
+                <!-- الطلبات ستظهر هنا برمجياً -->
+            </div>
         </div>
 
-        <!-- قسم الزبائن -->
+        <!-- قسم إدارة الزبائن -->
         <div class="space-y-6">
-            <h3 class="text-xl font-black flex items-center gap-3"><i class="fas fa-users text-emerald-500"></i> إدارة الحسابات</h3>
-            <div id="users-list" class="space-y-4"></div>
+            <h3 class="text-xl font-black flex items-center gap-3">
+                <i class="fas fa-users text-emerald-500"></i> إدارة الحسابات
+            </h3>
+            <div id="users-list" class="space-y-4">
+                <!-- الزبائن سيظهرون هنا برمجياً -->
+            </div>
         </div>
     </div>
 
+    <!-- ملف الجافاسكربت -->
     <script src="admin-script.js"></script>
 </body>
 </html>

@@ -2,30 +2,94 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة تحكم الإدارة | تموينات أبو حسين</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم أبو حسين | Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-style.css">
 </head>
-<body class="bg-[#05070a] text-white p-6">
-    <header class="flex justify-between items-center mb-10 border-b border-white/10 pb-6">
-        <h1 class="text-2xl font-black text-emerald-500">لوحة إدارة الطلبات</h1>
-        <div id="status-badge" class="px-4 py-1 bg-emerald-500/20 text-emerald-500 rounded-full text-xs font-bold animate-pulse">مُتصل بالسيرفر</div>
-    </header>
+<body class="bg-[#05070a] text-white">
 
-    <!-- الطلبات -->
-    <div id="admin-orders-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- الطلبات ستظهر هنا برمجياً -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- القائمة الجانبية -->
+        <aside class="w-64 bg-[#0a101e] border-l border-white/5 flex flex-col">
+            <div class="p-8 text-center border-b border-white/5">
+                <h1 class="text-2xl font-black text-emerald-500">أبو حسين</h1>
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Admin Panel V32</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="showSec('sec-dash')" class="nav-btn active"><i class="fas fa-chart-pie"></i> الإحصائيات</button>
+                <button onclick="showSec('sec-orders')" class="nav-btn"><i class="fas fa-shopping-cart"></i> الطلبات الحية</button>
+                <button onclick="showSec('sec-users')" class="nav-btn"><i class="fas fa-users"></i> إدارة المستخدمين</button>
+                <button onclick="showSec('sec-prods')" class="nav-btn"><i class="fas fa-box"></i> المنتجات</button>
+                <button onclick="showSec('sec-settings')" class="nav-btn"><i class="fas fa-cog"></i> إعدادات المتجر</button>
+            </nav>
+            <div class="p-4 border-t border-white/5">
+                <button onclick="location.href='index.html'" class="w-full py-3 bg-red-500/10 text-red-500 rounded-xl text-xs font-black">خروج</button>
+            </div>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="flex-1 overflow-y-auto p-8">
+            
+            <!-- قسم الإحصائيات -->
+            <section id="sec-dash" class="admin-sec space-y-8">
+                <div class="grid grid-cols-4 gap-6">
+                    <div class="stat-card">
+                        <p>إجمالي المبيعات</p>
+                        <h2 id="stat-sales">0 YER</h2>
+                    </div>
+                    <div class="stat-card">
+                        <p>طلبات اليوم</p>
+                        <h2 id="stat-orders">0</h2>
+                    </div>
+                    <div class="stat-card text-emerald-500">
+                        <p>المستخدمين</p>
+                        <h2 id="stat-users">0</h2>
+                    </div>
+                    <div class="stat-card text-yellow-500">
+                        <p>النجوم الموزعة</p>
+                        <h2 id="stat-stars">0</h2>
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم الطلبات الحية -->
+            <section id="sec-orders" class="admin-sec hidden space-y-6">
+                <h2 class="text-2xl font-black">الطلبات الواردة</h2>
+                <div id="admin-orders-list" class="grid gap-4">
+                    <!-- الطلبات تظهر هنا برمجياً -->
+                </div>
+            </section>
+
+            <!-- قسم إعدادات المتجر -->
+            <section id="sec-settings" class="admin-sec hidden space-y-6">
+                <h2 class="text-2xl font-black">تحكم النظام</h2>
+                <div class="bg-[#0a101e] p-8 rounded-[2rem] border border-white/5 space-y-6">
+                    <div class="flex justify-between items-center p-6 bg-black/20 rounded-2xl">
+                        <div>
+                            <h4 class="font-bold">حالة المتجر الآن</h4>
+                            <p class="text-xs text-slate-500">عند الإغلاق لن يتمكن الزبائن من الطلب</p>
+                        </div>
+                        <select id="set-status" class="bg-emerald-500 text-black font-black px-6 py-2 rounded-xl outline-none">
+                            <option value="open">مفتوح (Open)</option>
+                            <option value="closed">مغلق (Closed)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-emerald-500 uppercase">شريط الأخبار (العروض)</label>
+                        <input type="text" id="set-news" class="admin-input" placeholder="اكتب عرضاً يظهر للجميع في الأعلى..">
+                    </div>
+                    <button onclick="updateSettings()" class="w-full py-4 bg-emerald-500 text-black font-black rounded-2xl shadow-lg">حفظ التغييرات</button>
+                </div>
+            </section>
+
+        </main>
     </div>
 
-    <!-- الزبائن -->
-    <h2 class="text-xl font-black text-white mt-12 mb-6 border-b border-white/10 pb-4">إدارة الزبائن</h2>
-    <div id="users-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- الزبائن ستظهر هنا برمجياً -->
-    </div>
+    <div id="toast" class="fixed bottom-10 left-10 z-[5000] bg-emerald-500 text-black px-8 py-3 rounded-full font-black text-xs hidden"></div>
 
-    <!-- صوت تنبيه الطلب الجديد -->
-    <audio id="snd-alert" src="https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3"></audio>
-
-    <script src="script.js"></script>
+    <script src="admin-script.js"></script>
 </body>
 </html>

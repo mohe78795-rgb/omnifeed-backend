@@ -1,9 +1,33 @@
 body { font-family: 'Cairo', sans-serif; }
-.order-card { 
-    background: #0a101e; 
-    border: 1px solid rgba(255, 255, 255, 0.05); 
-    border-radius: 2rem; 
-    padding: 20px; 
+
+.admin-sec { animation: fadeIn 0.5s ease; }
+
+.nav-btn {
+    width: 100%; padding: 1rem; border-radius: 1rem;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; font-weight: bold; color: #4b5563;
     transition: 0.3s;
 }
-.order-card:hover { border-color: #10b981; }
+.nav-btn:hover { background: rgba(255,255,255,0.02); color: white; }
+.nav-btn.active { background: #10b981; color: black; }
+
+.stat-card {
+    background: #0a101e; padding: 2rem; border-radius: 2rem;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.stat-card p { font-size: 10px; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; opacity: 0.5; }
+.stat-card h2 { font-size: 1.8rem; font-weight: 900; }
+
+.admin-input {
+    width: 100%; background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 1rem; border-radius: 1rem; color: white; outline: none;
+}
+
+/* بطاقة الطلب في لوحة التحكم */
+.admin-order-card {
+    background: #0a101e; padding: 1.5rem; border-radius: 1.5rem;
+    border-right: 4px solid #10b981; display: flex; justify-content: space-between; align-items: center;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

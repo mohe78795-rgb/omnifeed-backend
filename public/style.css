@@ -1,151 +1,39 @@
-css
-/* ------------------------------------------------------------- */
-/*  style.css – اصدار مُحسّن ومهيّأ للواجهة *تموينات أبو حسين*  */
-/* ------------------------------------------------------------- */
+:root { --emerald: #10b981; --dark: #05070a; --card: #0a101e; }
+body { font-family: 'Cairo', sans-serif; background: var(--dark); color: white; -webkit-tap-highlight-color: transparent; }
 
-body{
-    font-family: 'Cairo', sans-serif;
-    background:#05070a;
-    -webkit-tap-highlight-color:transparent;
-    color:#fff;
-}
+/* شريط الإعلانات (V31) */
+@keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+.animate-marquee { display: inline-block; animation: marquee 15s linear infinite; }
 
-/* --------------- INPUTS & BUTTONS --------------------------- */
-.royal-input{
-    width:100%;
-    background:rgba(255,255,255,.02);
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:1.5rem;
-    padding:1.5rem;
-    color:#fff;
-    outline:none;
-    text-align:center;
-    font-size:14px;
-}
-.royal-input:focus{border-color:#10b981;}
+/* المدخلات والأزرار */
+.royal-input { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; padding: 1.3rem; color: white; outline: none; text-align: center; font-size: 14px; transition: 0.3s; }
+.royal-input:focus { border-color: var(--emerald); background: rgba(16,185,129,0.02); }
+.btn-royal { background: linear-gradient(135deg, var(--emerald), #059669); color: #000; border: none; transition: 0.3s; box-shadow: 0 10px 20px rgba(16,185,129,0.2); }
+.btn-royal:active { transform: scale(0.96); }
 
-.btn-royal{
-    background:linear-gradient(135deg,#10b981,#059669);
-    color:#000;
-    border:none;
-    transition:.3s;
-}
-.btn-royal:active{transform:scale(.96);}
+/* الملاحة */
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #4b5563; gap: 4px; transition: 0.3s; }
+.nav-item.active { color: var(--emerald); }
+.nav-item i { font-size: 1.3rem; }
+.nav-item span { font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.btn-fab-royal { width: 70px; height: 70px; background: linear-gradient(135deg, var(--emerald), #064e3b); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-size: 1.8rem; border: 6px solid var(--dark); box-shadow: 0 15px 30px rgba(16,185,129,0.3); }
 
-/* ---------- NAVIGATION ITEMS ----------------------------- */
-.nav-item{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    color:#4b5563;
-    transition:.4s;
-    gap:4px;
-}
-.nav-item.active{color:#10b981;}
-.nav-item.active i{transform:translateY(-4px);text-shadow:0 0 20px rgba(16,185,129,.5);}
-.nav-item span{font-size:10px;font-weight:700;}
+/* كروت الطلبات المتقدمة (V32) */
+.order-card { background: var(--card); border: 1px solid rgba(255,255,255,0.05); border-radius: 2.5rem; padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+.timeline { display: flex; justify-content: space-between; position: relative; margin: 20px 0; }
+.timeline::before { content: ''; position: absolute; top: 12px; left: 10%; right: 10%; height: 2px; background: rgba(255,255,255,0.05); }
+.step { position: relative; z-index: 2; text-align: center; width: 25%; }
+.dot { width: 24px; height: 24px; background: #1a1c25; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #444; border: 2px solid transparent; }
+.step.active .dot { background: var(--emerald); color: black; border-color: white; box-shadow: 0 0 15px var(--emerald); }
+.step.active .step-label { color: var(--emerald); }
+.step-label { font-size: 8px; margin-top: 6px; font-weight: 900; color: #333; text-transform: uppercase; }
 
-/* ---------- FAB BUTTON ------------------------------------------------ */
-.btn-fab-royal{
-    width:68px;height:68px;
-    background:linear-gradient(135deg,#10b981,#064e3b);
-    border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    color:#000;font-size:1.7rem;border:5px solid #05070a;
-    box-shadow:0 10px 25px rgba(16,185,129,.3);
-}
+/* الحساب */
+.luxury-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.8rem; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.3s; }
+.luxury-card i { color: var(--emerald); font-size: 1.3rem; }
+.luxury-card span { font-size: 11px; font-weight: 900; }
 
-/* --------- CARD • لوريـــكميو -------------------------------------- */
-.luxury-card{
-    background:rgba(255,255,255,.02);
-    border:1px solid rgba(255,255,255,.05);
-    border-radius:1.8rem;
-    padding:1.5rem;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:10px;
-    transition:.3s;
-}
-.luxury-card i{font-size:1.3rem;color:#10b981;}
-.luxury-card span{font-size:11px;font-weight:900;color:#e2e8f0;}
-.luxury-card:active{transform:scale(.95);background:rgba(255,255,255,.05);}
-
-/* --------------- BUTTON • عريض ---------------------------------------- */
-.luxury-btn-full{
-    background:rgba(255,255,255,.02);
-    border:1px solid rgba(255,255,255,.05);
-    padding:1.6rem;border-radius:2rem;
-    display:flex;align-items:center;justify-content:center;
-    gap:1.2rem;font-weight:800;font-size:14px;
-    width:100%;transition:.3s;
-}
-.luxury-btn-full:active{transform:scale(.98);background:rgba(255,255,255,.05);}
-
-/* --------------- TIMELINE ------------------------------------------------- */
-.timeline{
-    display:flex;justify-content:space-between;
-    position:relative;margin-top:20px;padding:0 10px;
-}
-.timeline::before{
-    content:'';position:absolute;
-    top:12px;left:30px;right:30px;height:1px;
-    border-top:2px dashed rgba(255,255,255,.1);
-}
-.step{
-    display:flex;flex-direction:column;
-    align-items:center;z-index:2;width:25%;
-}
-.dot{
-    width:24px;height:24px;background:#1a1c25;
-    border:2px solid #1a1c25;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:8px;color:#333;
-}
-.step.active .dot{
-    background:#10b981;border-color:#10b981;color:#000;
-    box-shadow:0 0 15px rgba(16,185,129,.4);
-}
-.step-label{
-    font-size:8px;font-weight:900;
-    color:#333;text-transform:uppercase;
-    white-space:nowrap;margin-top:8px;
-}
-.step.active .step-label{color:#10b981;}
-
-/* ---------- INVOICE CARDS ------------------------------------------ */
-.invoice-card{
-    background:rgba(255,255,255,.02);
-    border:1px solid rgba(255,255,255,.05);
-    border-radius:2rem;padding:25px;
-}
-.invoice-item{
-    display:flex;justify-content:space-between;
-    padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);
-}
-
-/* ---------- SCROLLBAR HIDDEN ------------------------ */
-.no-scrollbar::-webkit-scrollbar{display:none;}
-.shadow-3xl{box-shadow:0 35px 70px rgba(0,0,0,.9);}
-.animate-slideUp{
-    animation:slideUp .8s cubic-bezier(.19,1,.22,.5);}
-@keyframes slideUp{
-    from{opacity:0;transform:translateY(40px);}
-    to{opacity:1;transform:translateY(0);}
-}
-.animate-fadeIn{
-    animation:fadeIn .6s ease-out;
-}
-@keyframes fadeIn{
-    from{opacity:0;}
-    to{opacity:1;}
-}
-.fav-btn{
-    position:absolute;top:12px;right:12px;
-    width:32px;height:32px;border-radius:50%;
-    background:rgba(0,0,0,.3);backdrop-filter:blur(4px);
-    display:flex;align-items:center;justify-content:center;
-    color:#fff;transition:.3s;z-index:5;
-}
-.fav-btn.active{color:#ef4444;background:rgba(239,68,68,.1);}               ```
+.store-closed { filter: grayscale(1) brightness(0.5); pointer-events: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slideUp { animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1); }

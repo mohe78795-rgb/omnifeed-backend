@@ -1,33 +1,36 @@
-body { font-family: 'Cairo', sans-serif; }
+body { font-family: 'Cairo', sans-serif; background: #05070a; -webkit-tap-highlight-color: transparent; }
 
-.admin-sec { animation: fadeIn 0.5s ease; }
+/* تأثيرات الـ Royal */
+.btn-royal { 
+    background: linear-gradient(135deg, #10b981, #059669); 
+    color: #000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+.btn-royal:active { transform: scale(0.95); }
 
-.nav-btn {
-    width: 100%; padding: 1rem; border-radius: 1rem;
-    display: flex; align-items: center; gap: 12px;
-    font-size: 14px; font-weight: bold; color: #4b5563;
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #4b5563; transition: 0.4s; gap: 4px; }
+.nav-item.active { color: #10b981; }
+.nav-item.active i { transform: translateY(-4px); text-shadow: 0 0 15px rgba(16,185,129,0.5); }
+.nav-item span { font-size: 10px; font-weight: 900; }
+
+.luxury-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     transition: 0.3s;
 }
-.nav-btn:hover { background: rgba(255,255,255,0.02); color: white; }
-.nav-btn.active { background: #10b981; color: black; }
+.luxury-card:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.05); }
+.luxury-card span { font-size: 11px; font-weight: 900; color: #e2e8f0; }
 
-.stat-card {
-    background: #0a101e; padding: 2rem; border-radius: 2rem;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-.stat-card p { font-size: 10px; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; opacity: 0.5; }
-.stat-card h2 { font-size: 1.8rem; font-weight: 900; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.shadow-3xl { box-shadow: 0 35px 70px rgba(0, 0, 0, 0.9); }
 
-.admin-input {
-    width: 100%; background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.05);
-    padding: 1rem; border-radius: 1rem; color: white; outline: none;
-}
+@keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slideUp { animation: slideUp 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
 
-/* بطاقة الطلب في لوحة التحكم */
-.admin-order-card {
-    background: #0a101e; padding: 1.5rem; border-radius: 1.5rem;
-    border-right: 4px solid #10b981; display: flex; justify-content: space-between; align-items: center;
-}
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-fadeIn { animation: fadeIn 0.5s ease-out; }

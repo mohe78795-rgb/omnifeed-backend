@@ -6,153 +6,143 @@
     <title>تموينات أبو حسين | Smart Prestige</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#05070a] text-white overflow-x-hidden select-none font-['Cairo']">
+<body class="bg-[#05070a] text-white overflow-x-hidden select-none">
 
-    <!-- Sounds -->
     <audio id="snd-cashier" src="https://assets.mixkit.co/active_storage/sfx/592/592-preview.mp3" preload="auto"></audio>
     <audio id="snd-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2358-preview.mp3" preload="auto"></audio>
 
-    <!-- Top Notification -->
-    <div id="top-push-notif" class="fixed top-[-150px] left-4 right-4 z-[6000] bg-[#1a1c25]/95 backdrop-blur-xl border border-emerald-500/20 p-5 rounded-[2rem] shadow-2xl flex items-center gap-4 transition-all duration-500">
-        <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg text-black text-xl"><i class="fas fa-bell"></i></div>
+    <!-- إشعار علوي -->
+    <div id="top-push-notif" class="fixed top-[-150px] left-4 right-4 z-[6000] bg-[#1a1c25]/95 backdrop-blur-xl border border-white/10 p-5 rounded-[2rem] shadow-2xl flex items-center gap-4 transition-all duration-500">
+        <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg text-white text-xl"><i class="fas fa-comment-dots"></i></div>
         <div class="flex-1 text-right border-r border-white/10 pr-4">
-            <h4 class="text-emerald-500 font-black text-[10px] uppercase tracking-widest leading-none mb-1">تنبيه النظام</h4>
-            <p id="notif-text" class="text-sm font-bold text-white">تم تحديث حالة طلبك بنجاح!</p>
+            <h4 class="text-emerald-500 font-black text-[10px] uppercase tracking-widest leading-none mb-1">رسالة النظام</h4>
+            <p id="notif-text" class="text-sm font-bold text-white">تم استلام طلبك!</p>
         </div>
     </div>
 
-    <!-- Splash Screen -->
-    <div id="splash" class="fixed inset-0 z-[8000] bg-[#05070a] flex flex-col items-center justify-center transition-all duration-1000">
-        <div class="relative w-28 h-28 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(16,185,129,0.3)] animate-pulse">
-            <i class="fas fa-store text-black text-5xl"></i>
-        </div>
-        <h1 class="text-3xl font-black mt-8 tracking-[10px] uppercase text-emerald-500">ABU HUSSEIN</h1>
-        <div class="mt-4 flex gap-1">
-            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
-            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-        </div>
+    <!-- شاشة التمهيد -->
+    <div id="splash" class="fixed inset-0 z-[3000] bg-[#05070a] flex flex-col items-center justify-center transition-all duration-1000">
+        <div class="relative w-24 h-24 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center shadow-2xl animate-bounce"><i class="fas fa-store text-white text-4xl"></i></div>
+        <h1 class="text-2xl font-black mt-6 tracking-[8px] uppercase">أبو حسين</h1>
     </div>
 
-    <!-- Auth Screen -->
-    <section id="auth-screen" class="fixed inset-0 z-[7000] hidden flex flex-col items-center justify-center p-8 bg-[#05070a]">
-        <div class="w-full max-w-sm space-y-8 animate-slideUp text-center">
-            <div class="mb-10">
-                <h1 class="text-5xl font-black mb-2 text-white">دخول</h1>
-                <p class="text-emerald-500 font-bold text-[10px] uppercase tracking-[5px]">Premium Market Access</p>
-            </div>
+    <!-- واجهة الدخول والتسجيل -->
+    <section id="auth-screen" class="fixed inset-0 z-[1500] hidden flex flex-col items-center justify-center p-8 bg-[#05070a]">
+        <div class="w-full max-w-sm space-y-10 animate-slideUp text-center">
+            <h1 class="text-4xl font-black mb-2">دخول</h1>
+            <p class="text-emerald-500 font-bold text-[10px] uppercase tracking-[4px]">Sovereign Market Access</p>
             
             <div id="login-box" class="space-y-4">
-                <div class="relative">
-                    <i class="fas fa-phone absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500/50"></i>
-                    <input type="tel" id="login-phone" class="royal-input pr-12" placeholder="رقم الهاتف">
-                </div>
-                <div class="relative">
-                    <i class="fas fa-lock absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500/50"></i>
-                    <input type="password" id="login-pass" class="royal-input pr-12" placeholder="كلمة المرور">
-                </div>
-                <button onclick="handleLogin()" class="btn-royal w-full py-5 rounded-2xl font-black text-lg shadow-xl mt-4">دخول آمن</button>
-                <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 font-bold mt-6 uppercase tracking-widest hover:text-emerald-500 transition-colors">إنشاء حساب جديد</button>
+                <input type="tel" id="login-phone" class="royal-input" placeholder="رقم الهاتف">
+                <input type="password" id="login-pass" class="royal-input" placeholder="كلمة المرور">
+                <button onclick="handleLogin()" class="btn-royal w-full py-5 rounded-2xl font-black text-lg shadow-xl">دخول</button>
+                <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 font-bold mt-4 uppercase underline">إنشاء حساب جديد</button>
             </div>
 
             <div id="signup-box" class="hidden space-y-4">
                 <input type="text" id="reg-name" class="royal-input" placeholder="الاسم الكامل">
                 <input type="tel" id="reg-phone" class="royal-input" placeholder="رقم الهاتف">
                 <input type="password" id="reg-pass" class="royal-input" placeholder="كلمة المرور">
-                <button onclick="handleSignup()" class="btn-royal w-full py-5 rounded-2xl font-black shadow-xl">تفعيل العضوية</button>
-                <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 font-bold mt-4">لديك حساب؟ سجل دخولك</button>
+                <button onclick="handleSignup()" class="btn-royal w-full py-5 rounded-2xl font-black shadow-xl">تفعيل الحساب</button>
+                <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 font-bold mt-4 underline uppercase">لديك حساب؟ دخول</button>
             </div>
         </div>
     </section>
 
-    <!-- Main App -->
+    <!-- التطبيق الرئيسي -->
     <div id="main-app" class="hidden opacity-0 transition-all duration-1000">
-        
-        <header class="fixed top-0 left-0 right-0 z-[100] px-6 py-5 bg-[#05070a]/80 backdrop-blur-2xl border-b border-white/5 flex justify-between items-center">
+        <header class="fixed top-0 left-0 right-0 z-[100] px-6 py-6 bg-[#05070a]/90 backdrop-blur-xl border-b border-white/5 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div id="u-avatar" class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 text-black rounded-2xl flex items-center justify-center font-black text-xl shadow-lg shadow-emerald-500/20">..</div>
+                <div id="u-avatar" class="w-11 h-11 bg-emerald-500 text-black rounded-xl flex items-center justify-center font-black text-lg">..</div>
                 <div class="flex flex-col text-right">
-                    <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-1">مرحباً بك</span>
-                    <h1 id="user-display-name" class="text-lg font-black text-white leading-none">أبو حسين</h1>
+                    <span class="text-[8px] font-black text-emerald-500 uppercase leading-none mb-1">تموينات</span>
+                    <h1 class="text-lg font-black text-white leading-none">أبو حسين</h1>
                 </div>
             </div>
-            <div id="u-balance-top" class="px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-500 font-black text-xs shadow-inner">0 YER</div>
+            <div id="u-balance-top" class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-500 font-black text-[10px]">0 YER</div>
         </header>
 
-        <main class="pt-28 p-5 pb-32 space-y-10">
-            <!-- Home View -->
-            <div id="view-home" class="view-content space-y-8 animate-fadeIn">
-                <div id="wallet-card" class="p-8 rounded-[3rem] bg-gradient-to-br from-[#0f172a] to-[#05070a] border border-white/5 shadow-3xl relative overflow-hidden group">
-                    <div class="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <main class="pt-28 p-5 pb-32">
+            <!-- الاستكشاف -->
+            <div id="view-home" class="view-content space-y-10 animate-fadeIn">
+                <div class="p-8 rounded-[3rem] bg-gradient-to-br from-[#0a101e] to-[#05070a] border border-emerald-500/10 shadow-3xl relative overflow-hidden">
+                    <canvas id="gold-particles" class="absolute inset-0 z-0"></canvas>
                     <div class="relative z-10 text-right">
-                        <p class="text-slate-500 text-[10px] font-black uppercase tracking-[4px] mb-2">رصيد محفظتك</p>
-                        <div class="flex items-baseline gap-2">
-                            <span id="u-balance" class="text-5xl font-black text-white tracking-tighter">0</span>
-                            <span class="text-sm font-bold text-emerald-500">YER</span>
-                        </div>
+                        <p class="text-slate-500 text-[10px] font-black uppercase tracking-[5px] mb-3">الرصيد المتاح</p>
+                        <div class="flex items-baseline gap-2"><span id="u-balance" class="text-5xl font-black text-white tracking-tighter">0</span><span class="text-xs font-bold text-emerald-500 uppercase">Yer</span></div>
                     </div>
                 </div>
 
-                <!-- Search -->
-                <div class="relative group">
-                    <input type="text" id="home-search" oninput="searchInHome()" placeholder="عن ماذا تبحث اليوم؟" class="w-full py-5 px-6 pr-14 bg-white/5 border border-white/5 rounded-[2rem] outline-none focus:border-emerald-500/30 focus:bg-white/10 transition-all text-sm font-bold text-right text-white">
-                    <i class="fas fa-search absolute right-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-500 transition-colors"></i>
+                <div class="relative">
+                    <input type="text" id="home-search" oninput="searchInHome()" placeholder="ابحث عما تريد.." class="w-full py-4 px-6 pr-12 bg-white/5 border border-white/5 rounded-2xl outline-none focus:border-emerald-500 text-sm font-bold text-right text-white">
+                    <i class="fas fa-search absolute right-6 top-1/2 -translate-y-1/2 text-slate-500"></i>
                 </div>
 
-                <!-- Categories -->
-                <div id="cat-list" class="flex gap-3 overflow-x-auto no-scrollbar py-2"></div>
-
-                <!-- Products -->
+                <div id="cat-list" class="flex gap-3 overflow-x-auto no-scrollbar py-1"></div>
                 <div class="grid grid-cols-2 gap-4" id="products-grid"></div>
             </div>
 
-            <!-- Cart View -->
-            <div id="view-cart" class="view-content hidden space-y-6 animate-fadeIn">
-                <h2 class="text-3xl font-black px-2">حقيبة الطلبات</h2>
-                <div id="cart-list" class="space-y-4 min-h-[40vh]"></div>
-                <div class="p-8 bg-[#0a101e] rounded-[3rem] border border-white/10 space-y-6 shadow-3xl">
-                    <div class="flex justify-between items-center"><span class="text-slate-400 font-bold text-xs">الإجمالي المستحق</span><span id="cart-total" class="text-3xl font-black text-emerald-400">0 YER</span></div>
-                    <div class="grid gap-3">
-                        <button onclick="processBalanceOrder()" class="btn-royal w-full py-5 rounded-2xl font-black text-lg">تأكيد ودفع من الرصيد</button>
-                        <button onclick="openLocationModal()" class="w-full py-5 bg-[#25d366]/10 text-[#25d366] border border-[#25d366]/20 rounded-2xl font-black flex items-center justify-center gap-3"><i class="fab fa-whatsapp text-2xl"></i> طلب عبر واتساب</button>
-                    </div>
+            <!-- السلة -->
+            <div id="view-cart" class="view-content hidden space-y-8 animate-fadeIn">
+                <h2 class="text-3xl font-black px-2 tracking-tighter">حقيبة المشتريات</h2>
+                <div id="cart-list" class="space-y-4"></div>
+                <div class="p-8 bg-[#0a101e] rounded-[3.5rem] border border-white/5 space-y-6">
+                    <div class="flex justify-between items-center"><span class="text-slate-400 font-bold uppercase text-[10px]">الإجمالي</span><span id="cart-total" class="text-3xl font-black text-emerald-400">0 YER</span></div>
+                    <button onclick="processBalanceOrder()" class="btn-royal w-full py-5 rounded-2xl font-black text-lg">تأكيد المشتريات</button>
+                    <button onclick="openLocationModal()" class="w-full py-5 bg-[#25d366]/10 text-[#25d366] rounded-2xl font-black flex items-center justify-center gap-2"><i class="fab fa-whatsapp"></i> طلب واتساب</button>
                 </div>
             </div>
 
-            <!-- Other views follow the same professional structure... -->
+            <!-- طلباتي -->
+            <div id="view-orders" class="view-content hidden space-y-8 animate-fadeIn">
+                <h2 class="text-3xl font-black px-2">سجل العمليات</h2>
+                <div id="orders-list" class="space-y-6"></div>
+            </div>
+
+            <!-- حسابي -->
+            <div id="view-account" class="view-content hidden space-y-8 animate-fadeIn">
+                <div class="relative w-full rounded-[3rem] p-10 bg-[#0a101e] text-center border border-white/5">
+                    <div class="w-24 h-24 bg-slate-900 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-4xl text-emerald-500 mb-4 shadow-2xl"><i class="fas fa-user-shield"></i></div>
+                    <h2 id="acc-name-display" class="text-xl font-black text-white">..</h2>
+                    <p id="acc-phone-display" class="text-emerald-500 font-bold text-xs tracking-widest">..</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 px-2">
+                    <button class="luxury-card" onclick="changeView('orders')"><i class="fas fa-history"></i><span>طلباتي</span></button>
+                    <button class="luxury-card" onclick="changeView('cart')"><i class="fas fa-shopping-bag"></i><span>السلة</span></button>
+                    <button class="luxury-card" onclick="toast('قريباً')"><i class="fas fa-wallet"></i><span>شحن رصيد</span></button>
+                    <button class="luxury-card" onclick="logout()"><i class="fas fa-power-off text-red-500"></i><span>خروج</span></button>
+                </div>
+            </div>
         </main>
 
-        <!-- Navbar -->
-        <nav class="fixed bottom-6 left-6 right-6 h-20 bg-[#111827]/90 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] grid grid-cols-5 items-center z-[500] px-2 shadow-2xl">
-            <button id="nav-home" onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-grid-2"></i><span>الرئيسية</span></button>
-            <button id="nav-offers" onclick="changeView('offers', this)" class="nav-item"><i class="fas fa-fire"></i><span>عروض</span></button>
-            <div class="relative flex justify-center">
-                <button onclick="changeView('cart', null)" class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-black text-2xl -translate-y-8 shadow-[0_15px_30px_rgba(16,185,129,0.4)] active:scale-90 transition-all">
-                    <i class="fas fa-shopping-basket"></i>
-                    <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-6 h-6 rounded-full flex items-center justify-center font-black border-4 border-[#111827] hidden">0</span>
-                </button>
-            </div>
-            <button id="nav-orders" onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt"></i><span>طلباتي</span></button>
-            <button id="nav-account" onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-circle"></i><span>حسابي</span></button>
+        <!-- بار التنقل -->
+        <nav class="fixed bottom-0 left-0 right-0 h-24 bg-[#0a0d14]/95 backdrop-blur-2xl border-t border-white/5 grid grid-cols-4 items-center z-[500] px-4">
+            <button id="nav-home" onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-house-chimney"></i><span>استكشاف</span></button>
+            <button id="nav-orders" onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-file-invoice"></i><span>طلباتي</span></button>
+            <button id="nav-cart" onclick="changeView('cart', this)" class="nav-item relative">
+                <i class="fas fa-shopping-bag"></i>
+                <span id="cart-badge" class="absolute top-0 right-1/2 translate-x-4 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black hidden">0</span>
+                <span>السلة</span>
+            </button>
+            <button id="nav-account" onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-gear"></i><span>حسابي</span></button>
         </nav>
     </div>
 
-    <!-- Modals & Sheets (Product details, Location, etc) -->
-    <div id="sheet-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1100] hidden" onclick="closeSheet()"></div>
-    <div id="product-sheet" class="fixed bottom-[-100%] left-0 right-0 z-[1200] bg-[#0a101e] border-t border-white/10 rounded-t-[3.5rem] p-8 transition-all duration-700 shadow-3xl text-right">
-        <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8"></div>
-        <img id="sh-img" class="w-full h-72 object-cover rounded-[2.5rem] mb-6 shadow-2xl">
-        <div class="flex justify-between items-start mb-10 px-2">
-            <div><h2 id="sh-name" class="text-3xl font-black text-white"></h2><span class="text-emerald-500 text-[10px] font-black uppercase mt-1 block tracking-widest">متوفر للتوصيل الفوري</span></div>
-            <div class="text-left"><span id="sh-price" class="text-3xl font-black text-emerald-400"></span><p class="text-[10px] text-slate-500 font-bold uppercase">YER</p></div>
-        </div>
-        <button id="sh-add-btn" class="btn-royal w-full py-6 rounded-3xl text-xl font-black shadow-xl">إضافة للسلة</button>
+    <!-- درج المنتج -->
+    <div id="sheet-overlay" class="fixed inset-0 bg-black/95 z-[1100] hidden" onclick="closeSheet()"></div>
+    <div id="product-sheet" class="fixed bottom-[-100%] left-0 right-0 z-[1200] bg-[#05070a] border-t border-white/10 rounded-t-[3rem] p-10 transition-all duration-700 text-right">
+        <div class="w-16 h-1 bg-white/10 rounded-full mx-auto mb-8"></div>
+        <img id="sh-img" class="w-full h-64 object-cover rounded-[2rem] mb-6 shadow-2xl">
+        <h2 id="sh-name" class="text-2xl font-black text-white"></h2>
+        <p id="sh-price" class="text-xl font-black text-emerald-400 mb-6"></p>
+        <button id="sh-add-btn" class="btn-royal w-full py-5 rounded-2xl font-black">إضافة للسلة +</button>
     </div>
 
-    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[9000] bg-emerald-500 text-black px-8 py-4 hidden font-black text-sm rounded-2xl shadow-2xl animate-slideDown"></div>
+    <div id="toast" class="fixed bottom-28 left-1/2 -translate-x-1/2 z-[8000] bg-emerald-500 text-black px-8 py-3 rounded-full font-black text-xs hidden shadow-2xl"></div>
 
     <script src="script.js"></script>
 </body>

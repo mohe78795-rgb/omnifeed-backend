@@ -1,3 +1,11 @@
 {
-  "active_users": []
+  "active_users": [
+    {
+      "name": "أبو حسين (المدير)",
+      "phone": "777000000",
+      "pass": "123456",
+      "balance": 50000,
+      "joinDate": "30/06/2026"
+    }
+  ]
 }

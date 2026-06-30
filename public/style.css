@@ -1,92 +1,11 @@
-/* الإعدادات الأساسية */
-body {
-    font-family: 'Cairo', sans-serif;
-    background: #05070a;
-    -webkit-tap-highlight-color: transparent;
-    color: white;
-}
-
-/* المدخلات الملكية */
-.royal-input { 
-    width: 100%; 
-    background: rgba(255, 255, 255, 0.02); 
-    border: 1px solid rgba(255, 255, 255, 0.08); 
-    border-radius: 1.5rem; 
-    padding: 1.5rem; 
-    color: white; 
-    outline: none; 
-    text-align: center; 
-    font-size: 14px;
-    transition: 0.3s;
-}
-.royal-input:focus { border-color: #10b981; background: rgba(16, 185, 129, 0.05); }
-
-/* الأزرار الملكية */
-.btn-royal { 
-    background: linear-gradient(135deg, #10b981, #059669); 
-    color: #000; 
-    border: none; 
-    transition: 0.3s; 
-}
-.btn-royal:active { transform: scale(0.96); opacity: 0.9; }
-
-/* بار التنقل */
-.nav-item { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    color: #4b5563; 
-    transition: 0.4s; 
-    gap: 4px; 
-}
+body { font-family: 'Cairo', sans-serif; background: #05070a; color: white; -webkit-tap-highlight-color: transparent; }
+.royal-input { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem; padding: 1.5rem; color: white; text-align: center; outline: none; }
+.royal-input:focus { border-color: #10b981; }
+.btn-royal { background: linear-gradient(135deg, #10b981, #059669); color: black; transition: 0.3s; }
+.btn-royal:active { transform: scale(0.95); }
+.nav-item { display: flex; flex-direction: column; align-items: center; color: #4b5563; font-size: 10px; gap: 4px; }
 .nav-item.active { color: #10b981; }
-.nav-item.active i { transform: translateY(-4px); text-shadow: 0 0 20px rgba(16,185,129,0.5); }
-.nav-item span { font-size: 10px; font-weight: 700; }
-
-/* الزر العائم للسلة */
-.btn-fab-royal { 
-    width: 68px; 
-    height: 68px; 
-    background: linear-gradient(135deg, #10b981, #064e3b); 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: #000; 
-    font-size: 1.7rem; 
-    border: 5px solid #05070a;
-    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-}
-
-/* بطاقات الحساب */
-.luxury-card { 
-    background: rgba(255, 255, 255, 0.02); 
-    border: 1px solid rgba(255, 255, 255, 0.05); 
-    border-radius: 1.8rem; 
-    padding: 1.5rem; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    gap: 10px; 
-    transition: 0.3s; 
-}
-.luxury-card:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.05); }
-
-/* الخط الزمني للطلبات */
-.timeline { display: flex; justify-content: space-between; position: relative; margin-top: 20px; padding: 0 10px; }
-.timeline::before { content: ''; position: absolute; top: 12px; left: 30px; right: 30px; height: 1px; border-top: 2px dashed rgba(255,255,255,0.1); z-index: 1; }
-.step { display: flex; flex-direction: column; align-items: center; z-index: 2; width: 25%; }
-.dot { width: 24px; height: 24px; background: #1a1c25; border: 2px solid #1a1c25; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #555; }
-.step.active .dot { background: #10b981; border-color: #10b981; color: #000; box-shadow: 0 0 15px rgba(16,185,129,0.4); }
-
-/* الأنيميشن */
-@keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-.animate-slideUp { animation: slideUp 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.animate-fadeIn { animation: fadeIn 0.6s ease-out; }
-
-/* منع التمرير الزائد */
+.btn-fab-royal { width: 64px; height: 64px; background: #10b981; border-radius: 50%; display: flex; items-center; justify-content: center; color: black; font-size: 24px; border: 4px solid #05070a; margin-top: -40px; box-shadow: 0 10px 20px rgba(16,185,129,0.3); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
-.shadow-3xl { box-shadow: 0 35px 70px rgba(0, 0, 0, 0.9); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-fadeIn { animation: fadeIn 0.5s ease; }

@@ -90,7 +90,6 @@ app.get('/api/auth/user/:phone', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// سنبقي على هذا المسار الاحتياطي ليتوافق مع كود الفرونت إند الـ Sync القديم
 app.post('/api/auth/sync', async (req, res) => {
     try {
         const { phone, pass } = req.body;
@@ -125,7 +124,7 @@ app.get('/api/orders/:phone', async (req, res) => {
     catch (e) { res.status(500).json([]); }
 });
 
-// مسار جلب الأقسام تلقائياً من المنتجات المتوفرة ليتوافق مع تطبيقك
+// جلب الأقسام تلقائياً من المنتجات المتوفرة ليتطابق مع الفرونت إند
 app.get('/api/categories', async (req, res) => {
     try {
         const products = await Product.find();
@@ -172,7 +171,7 @@ app.post('/api/admin/product/add', async (req, res) => {
 
 app.post('/api/admin/product/delete', async (req, res) => {
     const { adminPass, id } = req.body;
-    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json60({ message: "غير مصرح لك!" });
+    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
     try {
         await Product.findByIdAndDelete(id); 
         res.json({ success: true });
@@ -202,5 +201,5 @@ async function seedDatabase() {
     }
 }
 
-// تشغيل موحد ومستقر تماماً 🚀
+// تشغيل موحد ومستقر تماماً على منفذ Render تلقائياً 🚀
 app.listen(PORT, () => console.log(`🚀 السيرفر يعمل بنجاح وبثبات كامل على المنفذ: ${PORT}`));

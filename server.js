@@ -6,61 +6,72 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- بيانات الاتصال بقاعدة البيانات ---
+// --- 1. إعدادات قاعدة البيانات السحابية ---
 const MONGO_URI = "mongodb://mohe78795_db_user:737465252@ac-3prk1zf-shard-00-00.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-01.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-02.qr9q8iv.mongodb.net:27017/?ssl=true&replicaSet=atlas-kaid64-shard-0&authSource=admin&appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
     .then(async () => {
         console.log("✅ متصل بنجاح بـ MongoDB Atlas");
-        await seedDatabase();
+        await seedDatabase(); 
     })
     .catch(err => console.error("❌ فشل الاتصال بالقاعدة:", err.message));
 
-// --- 2. تعريف الجداول (Schemas) مع الـ Aliases لربط العربي بالإنجليزي ---
+// --- 2. تعريف هياكل البيانات (Schemas) ---
 
+// هيكل المستخدمين
 const userSchema = new mongoose.Schema({
-    name: { type: String, alias: 'اسم' },
-    phone: { type: String, unique: true, required: true, alias: 'هاتف' },
-    pass: { type: String, alias: 'يمر' },
-    bal: { type: Number, default: 0, alias: 'بال' } // هنا تم ربط بال السحابي بـ bal
+    name: String,
+    phone: { type: String, unique: true, required: true },
+    pass: String,
+    bal: { type: Number, default: 0 }
 });
 
+// هيكل المنتجات
 const productSchema = new mongoose.Schema({
-    name: { type: String, alias: 'اسم' },
-    price: { type: Number, alias: 'سعر' },
-    img: { type: String, alias: 'صورة' },
-    cat: { type: String, alias: 'قطة' }
+    name: String, price: Number, img: String, cat: String
 });
 
+// هيكل الطلبات (الفواتير)
 const orderSchema = new mongoose.Schema({
-    id: { type: String, alias: 'معرف' },
-    phone: { type: String, alias: 'هاتف' },
-    items: { type: Array, alias: 'العناصر' },
-    total: { type: Number, alias: 'الاجمالي' },
-    status: { type: String, default: 'قيد المراجعة', alias: 'الحالة' },
-    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }), alias: 'تاريخ الطلب' }
+    id: String, phone: String, items: Array, total: Number, status: { type: String, default: 'قيد المراجعة' },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 });
 
-// هنا السر الفعلي: ربط الموديل بالمجلد العربي الموجود في السحابي حالياً
-const User = mongoose.model('User', userSchema, 'المستخدمون');
-const Product = mongoose.model('Product', productSchema, 'منتجات');
-const Order = mongoose.model('Order', orderSchema, 'طلبات');
+// هيكل الإعلانات (الجديد)
+const adSchema = new mongoose.Schema({
+    videoUrl: { type: String, alias: 'رابط_الفيديو' },
+    active: { type: Boolean, default: true, alias: 'نشط' }
+});
 
-// --- الإعدادات ---
+const User = mongoose.model('User', userSchema);
+const Product = mongoose.model('Product', productSchema);
+const Order = mongoose.model('Order', orderSchema);
+const Ad = mongoose.model('Ad', adSchema, 'إعلانات');
+
+// --- 3. الإعدادات الأساسية ---
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- مسارات المصادقة ---
+// --- 4. مسارات الإعلانات (Ads API) ---
+
+app.get('/api/ads/active', async (req, res) => {
+    try {
+        const activeAd = await Ad.findOne({ active: true });
+        res.json(activeAd || { videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4" });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// --- 5. مسارات المصادقة (Auth API) ---
 
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, phone, pass } = req.body;
         const exists = await User.findOne({ phone });
         if (exists) return res.status(400).json({ message: "الرقم مسجل مسبقاً" });
-        const user = new User({ name, phone, pass, bal: 0 });
-        await user.save();
-        res.json({ success: true, user: { name: user.name, phone: user.phone, bal: user.bal } });
+        const newUser = new User({ name, phone, pass, bal: 0 });
+        await newUser.save();
+        res.json({ success: true, user: { name: newUser.name, phone: newUser.phone, bal: newUser.bal } });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
@@ -81,7 +92,7 @@ app.get('/api/auth/user/:phone', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// --- مسارات المتجر والطلبات ---
+// --- 6. مسارات المتجر والطلبات ---
 
 app.get('/api/products', async (req, res) => {
     try { res.json(await Product.find()); } catch (e) { res.status(500).json([]); }
@@ -94,11 +105,9 @@ app.post('/api/orders/add', async (req, res) => {
         if (user && user.bal >= order.total) {
             user.bal -= order.total;
             await user.save();
-            
-            const invoiceId = "INV-" + Date.now().toString().slice(-6);
-            const newOrder = new Order({ id: invoiceId, phone, items: order.items, total: order.total });
+            const serverId = "INV-" + Date.now().toString().slice(-6);
+            const newOrder = new Order({ id: serverId, phone, items: order.items, total: order.total });
             await newOrder.save();
-            
             res.json({ success: true, currentBal: user.bal, order: newOrder });
         } else res.status(400).json({ message: "رصيد غير كافٍ" });
     } catch (e) { res.status(500).json({ success: false }); }
@@ -109,16 +118,19 @@ app.get('/api/orders/:phone', async (req, res) => {
     catch (e) { res.status(500).json([]); }
 });
 
-// دالة تغذية البيانات الأولية
+// --- 7. دالة تغذية البيانات (Seeding) ---
 async function seedDatabase() {
+    // إدخال منتجات تجريبية
     if (await Product.countDocuments() === 0) {
-        const prods = [
-            { name: "أرز بسمتي 5 كيلو", price: 12500, cat: "مواد غذائية", img: "https://i.postimg.cc/q7M8VnHz/rice.jpg" },
-            { name: "زيت طبخ 1.5 لتر", price: 4800, cat: "زيوت", img: "https://i.postimg.cc/vHdb8P9G/oil.jpg" },
-            { name: "حليب نيدو 900 جرام", price: 18500, cat: "ألبان", img: "https://i.postimg.cc/mD8XmYxk/nido.jpg" }
-        ];
-        await Product.insertMany(prods);
+        await Product.insertMany([
+            { name: "أرز بسمتي 5 كيلو", price: 12000, cat: "مواد غذائية", img: "https://i.postimg.cc/q7M8VnHz/rice.jpg" },
+            { name: "زيت طبخ 1.5 لتر", price: 4500, cat: "زيوت", img: "https://i.postimg.cc/vHdb8P9G/oil.jpg" }
+        ]);
+    }
+    // إدخال إعلان تجريبي
+    if (await Ad.countDocuments() === 0) {
+        await Ad.create({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", active: true });
     }
 }
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 السيرفر يعمل بنجاح على المنفذ: ${PORT}`));

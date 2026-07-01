@@ -1,3 +1,4 @@
+require('dotenv').config(); // تأكد من استدعاء dotenv في أول الملف إذا كنت تستخدم ملف .env
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -9,11 +10,13 @@ const PORT = process.env.PORT || 3000;
 // ضع رابط قاعدة البيانات الفعلي الخاص بك هنا مباشرة بين علامات التنصيص بدلاً من الرابط الاحتياطي القديم
 const MONGO_URI = process.env.MONGO_URI || "YOUR_ACTUAL_MONGODB_ATLAS_LINK";
 
+// إصلاح دالة الاتصال وترتيب الأقواس والـ Catch بشكل سليم
 mongoose.connect(MONGO_URI)
     .then(async () => {
         console.log("✅ Securely Connected to MongoDB Atlas Direct");
         await seedDatabase();
-    }).catch(e => {
+    })
+    .catch(e => {
         console.error("❌ DB Connection Failed:", e.message);
     });
 
@@ -146,4 +149,5 @@ app.post('/api/admin/order/update-status', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// تشغيل السيرفر مرة واحدة فقط بشكل مستقر
 app.listen(PORT, () => console.log(`🚀 Server fully stabilized at ${PORT}`));

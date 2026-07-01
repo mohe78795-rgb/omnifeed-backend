@@ -98,5 +98,69 @@ async function seedDatabase() {
         ]);
     }
 }
+// ==========================================
+// 👑 مسارات لوحة التحكم الخاصة بالمدير (Admin)
+// ==========================================
 
+// 1. جلب الإحصائيات العامة والبيانات بالكامل
+app.post('/api/admin/dashboard', async (req, res) => {
+    const { adminPass } = req.body;
+    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
+
+    try {
+        const users = await User.find().sort({ name: 1 });
+        const orders = await Order.find().sort({ _id: -1 });
+        const categories = await Category.find();
+        const products = await Product.find();
+        const ad = await Ad.findOne({ active: true });
+
+        res.json({ success: true, data: { users, orders, categories, products, ad } });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// 2. تعديل/شحن رصيد مستخدم
+app.post('/api/admin/user/update-balance', async (req, res) => {
+    const { adminPass, phone, newBalance } = req.body;
+    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
+
+    try {
+        const user = await User.findOneAndUpdate({ phone }, { bal: Number(newBalance) }, { new: true });
+        if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
+        res.json({ success: true, currentBal: user.bal });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// 3. إضافة منتج جديد
+app.post('/api/admin/product/add', async (req, res) => {
+    const { adminPass, name, price, img, cat } = req.body;
+    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
+
+    try {
+        const newProduct = new Product({ name, price: Number(price), img, cat });
+        await newProduct.save();
+        res.json({ success: true, product: newProduct });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// 4. حذف منتج
+app.post('/api/admin/product/delete', async (req, res) => {
+    const { adminPass, id } = req.body;
+    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
+
+    try {
+        await Product.findByIdAndDelete(id);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// 5. تعديل حالة الفاتورة (مثلاً: تم التوصيل، قيد المعالجة)
+app.post('/api/admin/order/update-status', async (req, res) => {
+    const { adminPass, id, status } = req.body;
+    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
+
+    try {
+        await Order.findOneAndUpdate({ id }, { status });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
 app.listen(PORT, () => console.log(`🚀 Final Fortress Engine at ${PORT}`));

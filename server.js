@@ -1,4 +1,4 @@
-require('dotenv').config(); // تفعيل مكتبة قراءة الملفات البيئية
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,16 +7,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// الحل الذكي: إذا لم يجد الرابط الخارجي، يتصل بقاعدة بيانات داخلية مؤقتة لئلا يسقط السيرفر
+// الحل الاحتياطي: إذا لم يجد الرابط الخارجي، يتصل بقاعدة مؤقتة لئلا ينهار السيرفر
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/tamwinati_fallback";
 
 if (!process.env.MONGO_URI) {
-    console.warn("⚠️ تحذير أمني: لم يتم العثور على MONGO_URI في موقع Render. تم التحويل الاحتياطي لقاعدة داخلية مؤقتة لتشغيل الموقع.");
+    console.warn("⚠️ تحذير: لم يتم العثور على MONGO_URI. تم التحويل الاحتياطي لقاعدة داخلية لتشغيل السيرفر وصفحة التحكم.");
 }
 
 mongoose.connect(MONGO_URI)
     .then(async () => {
-        console.log("✅ Securely Connected to MongoDB");
+        console.log("✅ Connected to MongoDB");
         await seedDatabase();
     }).catch(e => console.error("❌ DB Connection Failed:", e.message));
 
@@ -40,12 +40,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// مسار افتراضي للتأكد من عمل السيرفر عند الدخول للرابط الأساسي
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ✅ تأمين 1: حذف pass من استجابة التسجيل
+// --- Auth Routes ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, phone, pass } = req.body;
@@ -55,14 +54,12 @@ app.post('/api/auth/signup', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// ✅ تأمين 2: حذف pass من استجابة الدخول
 app.post('/api/auth/login', async (req, res) => {
     const user = await User.findOne({ phone: req.body.phone, pass: req.body.pass });
     if (user) res.json({ success: true, user: { name: user.name, phone: user.phone, bal: user.bal } });
     else res.status(401).json({ message: "بيانات الدخول خاطئة" });
 });
 
-// ✅ تأمين 3: حذف pass من استجابة المزامنة
 app.post('/api/auth/sync', async (req, res) => {
     try {
         const { phone, pass } = req.body;
@@ -76,21 +73,18 @@ app.get('/api/categories', async (req, res) => res.json(await Category.find()));
 app.get('/api/products', async (req, res) => res.json(await Product.find()));
 app.get('/api/ads/active', async (req, res) => res.json(await Ad.findOne({ active: true })));
 
-// ✅ تأمين 4: فرض التحقق من الـ pass قبل تنفيذ أي عملية خصم مالي
 app.post('/api/orders/add', async (req, res) => {
     try {
         const { phone, pass, order } = req.body;
         const user = await User.findOne({ phone, pass });
-
         if (user && user.bal >= order.total) {
-            user.bal -= order.total;
-            await user.save();
+            user.bal -= order.total; await user.save();
             const serverId = "INV-" + Date.now().toString().slice(-6);
             const newOrder = new Order({ id: serverId, phone, items: order.items, total: order.total });
             await newOrder.save();
             res.json({ success: true, currentBal: user.bal, order: newOrder });
         } else {
-            res.status(400).json({ message: "فشل التحقق الأمني أو الرصيد غير كافٍ" });
+            res.status(400).json({ message: "فشل التحقق أو الرصيد غير كافٍ" });
         }
     } catch (e) { res.status(500).json({ success: false }); }
 });
@@ -106,18 +100,16 @@ async function seedDatabase() {
     }
 }
 
-// 👑 مسارات لوحة التحكم الخاصة بالمدير (Admin)
+// --- Admin Dashboard Routes ---
 app.post('/api/admin/dashboard', async (req, res) => {
     const { adminPass } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
-
     try {
         const users = await User.find().sort({ name: 1 });
         const orders = await Order.find().sort({ _id: -1 });
         const categories = await Category.find();
         const products = await Product.find();
         const ad = await Ad.findOne({ active: true });
-
         res.json({ success: true, data: { users, orders, categories, products, ad } });
     } catch (e) { res.status(500).json({ success: false }); }
 });
@@ -125,7 +117,6 @@ app.post('/api/admin/dashboard', async (req, res) => {
 app.post('/api/admin/user/update-balance', async (req, res) => {
     const { adminPass, phone, newBalance } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
-
     try {
         const user = await User.findOneAndUpdate({ phone }, { bal: Number(newBalance) }, { new: true });
         if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
@@ -136,10 +127,8 @@ app.post('/api/admin/user/update-balance', async (req, res) => {
 app.post('/api/admin/product/add', async (req, res) => {
     const { adminPass, name, price, img, cat } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
-
     try {
-        const newProduct = new Product({ name, price: Number(price), img, cat });
-        await newProduct.save();
+        const newProduct = new Product({ name, price: Number(price), img, cat }); await newProduct.save();
         res.json({ success: true, product: newProduct });
     } catch (e) { res.status(500).json({ success: false }); }
 });
@@ -147,21 +136,17 @@ app.post('/api/admin/product/add', async (req, res) => {
 app.post('/api/admin/product/delete', async (req, res) => {
     const { adminPass, id } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
-
     try {
-        await Product.findByIdAndDelete(id);
-        res.json({ success: true });
+        await Product.findByIdAndDelete(id); res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/admin/order/update-status', async (req, res) => {
     const { adminPass, id, status } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
-
     try {
-        await Order.findOneAndUpdate({ id }, { status });
-        res.json({ success: true });
+        await Order.findOneAndUpdate({ id }, { status }); res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-app.listen(PORT, () => console.log(`🚀 Final Fortress Engine safely running at ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server safely running at ${PORT}`));

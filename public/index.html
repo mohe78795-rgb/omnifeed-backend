@@ -3,103 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>تموينات أبو حسين | Smart Prestige</title>
+    <title>أبو حسين | V33</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#05070a] text-white overflow-x-hidden select-none">
-    
-    <div id="top-push-notif" class="fixed top-[-150px] left-4 right-4 z-[6000] bg-[#1a1c25]/95 backdrop-blur-xl border border-white/10 p-5 rounded-[2rem] shadow-2xl flex items-center gap-4 transition-all duration-500">
-        <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-black text-xl"><i class="fas fa-bell"></i></div>
-        <div class="flex-1 text-right"><h4 class="text-emerald-500 font-black text-[10px] uppercase">تنبيه</h4><p id="notif-text" class="text-sm font-bold">تم العملية!</p></div>
+<body class="bg-[#05070a] text-white">
+
+    <div class="blob"></div>
+    <div class="blob blob-2"></div>
+
+    <div id="splash" class="fixed inset-0 z-[3000] bg-[#05070a] flex items-center justify-center">
+        <h1 class="text-3xl font-black text-emerald-500 animate-pulse tracking-widest">أبو حسين</h1>
     </div>
 
-    <div id="splash" class="fixed inset-0 z-[3000] bg-[#05070a] flex flex-col items-center justify-center transition-all duration-1000">
-        <div class="w-24 h-24 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center animate-bounce"><i class="fas fa-store text-white text-4xl"></i></div>
-        <h1 class="text-2xl font-black mt-6 tracking-[8px]">أبو حسين</h1>
-    </div>
-
-    <section id="auth-screen" class="fixed inset-0 z-[1500] hidden flex flex-col items-center justify-center p-8 bg-[#05070a]">
-        <div class="w-full max-w-sm space-y-10 text-center">
-            <h1 class="text-4xl font-black">مرحباً بك</h1>
+    <!-- Auth Section -->
+    <section id="auth-screen" class="fixed inset-0 z-[1500] hidden flex items-center justify-center p-6 bg-[#05070a]">
+        <div class="w-full max-w-sm p-10 bg-gradient-to-br from-[#0a101e] to-[#0d1527] rounded-[3rem] border border-white/5 text-center shadow-3xl">
+            <h1 class="text-4xl font-black mb-10">دخول</h1>
             <div id="login-box" class="space-y-4">
                 <input type="tel" id="login-phone" class="royal-input" placeholder="رقم الهاتف">
                 <input type="password" id="login-pass" class="royal-input" placeholder="كلمة المرور">
-                <button onclick="handleLogin()" class="btn-royal w-full py-5 rounded-2xl font-black">دخول</button>
-                <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 mt-4 underline">سجل حساب جديد</button>
+                <button onclick="handleLogin()" class="btn-royal w-full py-5 rounded-2xl font-black">دخول للمتجر</button>
+                <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 mt-4">ليس لديك حساب؟ <span class="text-emerald-500 underline">سجل الآن</span></button>
             </div>
             <div id="signup-box" class="hidden space-y-4">
                 <input type="text" id="reg-name" class="royal-input" placeholder="الاسم الكامل">
                 <input type="tel" id="reg-phone" class="royal-input" placeholder="رقم الهاتف">
                 <input type="password" id="reg-pass" class="royal-input" placeholder="كلمة المرور">
-                <button onclick="handleSignup()" class="btn-royal w-full py-5 rounded-2xl font-black">إنشاء حساب</button>
+                <button onclick="handleSignup()" class="btn-royal w-full py-5 rounded-2xl font-black">تفعيل الحساب</button>
                 <button onclick="toggleAuth()" class="w-full text-xs text-slate-500 mt-4 underline">لديك حساب؟ دخول</button>
             </div>
         </div>
     </section>
 
+    <!-- App Content -->
     <div id="main-app" class="hidden opacity-0 transition-all duration-1000">
-        <header class="fixed top-0 left-0 right-0 z-[100] px-6 py-6 bg-[#05070a]/90 backdrop-blur-xl border-b border-white/5 flex justify-between items-center">
-            <div class="flex items-center gap-3"><div id="u-avatar" class="w-11 h-11 bg-emerald-500 text-black rounded-xl flex items-center justify-center font-black">..</div><h1 class="text-lg font-black">أبو حسين</h1></div>
-            <div id="u-balance-top" class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-500 font-black text-[10px]">0 YER</div>
+        <header class="fixed top-0 left-0 right-0 z-[1000] px-6 py-6 bg-[#05070a]/80 backdrop-blur-xl border-b border-white/5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div id="u-avatar" class="w-10 h-10 bg-emerald-500 text-black rounded-xl flex items-center justify-center font-black">..</div>
+                <h1 class="font-black text-lg">أبو حسين</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/10" onclick="switchLayout()">
+                    <i id="layoutIcon" class="fa fa-table-cells text-emerald-500"></i>
+                </button>
+                <div id="u-balance-top" class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-500 font-black text-[11px]">0 YER</div>
+            </div>
         </header>
 
-        <main class="pt-28 p-5 pb-44 space-y-12">
+        <main class="pt-28 p-5 pb-44 space-y-10">
+            <!-- Home -->
             <div id="view-home" class="view-content space-y-10">
-                <div class="p-8 rounded-[3rem] bg-gradient-to-br from-[#0a101e] to-[#05070a] border border-emerald-500/10 relative">
-                    <p class="text-slate-500 text-[10px] font-black uppercase mb-3">الرصيد المتاح</p>
-                    <div class="flex items-baseline gap-2"><span id="u-balance" class="text-5xl font-black">0</span><span class="text-xs font-bold text-emerald-500">Yer</span></div>
+                <div class="relative p-3 rounded-[2.5rem] bg-[#0a101e]/60 backdrop-blur-md border border-white/5 overflow-hidden shadow-2xl">
+                    <video id="promo-video" autoplay loop playsinline class="w-full h-48 object-cover rounded-2xl"></video>
+                    <button onclick="toggleMute()" class="absolute bottom-6 left-6 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10">
+                        <i id="mute-icon" class="fas fa-volume-mute text-white text-[10px]"></i>
+                    </button>
                 </div>
-                <div id="cat-list" class="flex gap-3 overflow-x-auto no-scrollbar py-1"></div>
-                <div class="grid grid-cols-2 gap-4" id="products-grid"></div>
+                <div class="search-bar"><i class="fa fa-search text-emerald-500"></i><input type="text" id="home-search" oninput="searchCategories()" placeholder="ابحث عن قسم أو خدمة..."></div>
+                <div id="categories-grid" class="cards-container mode-matrix"></div>
             </div>
 
+            <!-- Category Sub-View -->
+            <div id="view-category-details" class="view-content hidden space-y-8 animate-fadeIn">
+                <div class="flex items-center gap-4">
+                    <button onclick="changeView('home')" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center"><i class="fa fa-arrow-right"></i></button>
+                    <h2 id="current-cat-name" class="text-2xl font-black">..</h2>
+                </div>
+                <div id="category-products-grid" class="cards-container mode-dual"></div>
+            </div>
+
+            <!-- Cart, Orders, Account (Previous logic applies) -->
             <div id="view-cart" class="view-content hidden space-y-8">
-                <h2 class="text-3xl font-black">الحقيبة</h2>
-                <div id="cart-list" class="space-y-3 min-h-[200px]"></div>
-                <div class="p-8 bg-[#0a101e] rounded-[3.5rem] border border-white/5 space-y-6">
-                    <div class="flex justify-between items-center"><span class="text-slate-400">المجموع</span><span id="cart-total" class="text-3xl font-black text-emerald-400">0 YER</span></div>
-                    <button onclick="processBalanceOrder()" class="btn-royal w-full py-5 rounded-2xl font-black">تأكيد من الرصيد</button>
+                <h2 class="text-3xl font-black">حقيبة المشتريات</h2>
+                <div id="cart-list" class="space-y-4"></div>
+                <div class="p-8 bg-[#0a101e] rounded-[3rem] border border-white/5 text-center shadow-3xl">
+                    <span id="cart-total" class="text-3xl font-black text-emerald-400 block mb-6 tracking-tighter">0 YER</span>
+                    <button onclick="processBalanceOrder()" class="btn-royal w-full py-5 rounded-2xl font-black">تأكيد المشتريات من الرصيد</button>
                 </div>
             </div>
-
-            <div id="view-orders" class="view-content hidden space-y-8">
-                <h2 class="text-3xl font-black">طلباتي</h2>
-                <div id="orders-list" class="space-y-6"></div>
-            </div>
-
-            <div id="view-account" class="view-content hidden space-y-8">
-                <div class="text-center p-10 bg-[#0a101e] rounded-[4rem] border border-white/5">
-                    <div class="w-24 h-24 bg-slate-900 rounded-full mx-auto flex items-center justify-center text-4xl text-emerald-500 mb-4"><i class="fas fa-user"></i></div>
-                    <h2 id="acc-name-display" class="text-xl font-black">..</h2>
-                    <p id="acc-phone-display" class="text-emerald-500">..</p>
-                    <button onclick="logout()" class="mt-8 text-red-500 font-bold"><i class="fas fa-power-off"></i> خروج</button>
+            <div id="view-orders" class="view-content hidden space-y-8"><h2 class="text-3xl font-black">فواتيري</h2><div id="orders-list"></div></div>
+            <div id="view-account" class="view-content hidden space-y-8 text-center pt-10">
+                <div class="p-10 bg-[#0a101e] rounded-[3.5rem] border border-white/5 shadow-2xl">
+                    <h2 id="acc-name-display" class="text-2xl font-black">..</h2>
+                    <p id="acc-phone-display" class="text-emerald-500 mb-10 tracking-widest">..</p>
+                    <button onclick="logout()" class="text-red-500 font-black"><i class="fas fa-power-off"></i> خروج</button>
                 </div>
             </div>
         </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 h-24 bg-[#0a0d14]/95 backdrop-blur-2xl border-t border-white/5 grid grid-cols-5 items-center z-[500] px-4">
-            <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home"></i><span>الرئيسية</span></button>
-            <button onclick="toast('قريباً')" class="nav-item"><i class="fas fa-bolt"></i><span>عروض</span></button>
+        <nav class="fixed bottom-0 left-0 right-0 h-24 bg-[#0a0d14]/95 border-t border-white/5 grid grid-cols-5 items-center z-[500] px-4">
+            <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-compass"></i><span>استكشاف</span></button>
+            <button onclick="toast('قريباً')" class="nav-item"><i class="fas fa-bolt-lightning"></i><span>عروض</span></button>
             <button onclick="changeView('cart', null)" class="btn-fab-royal"><i class="fas fa-shopping-bag"></i></button>
-            <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-list"></i><span>طلباتي</span></button>
-            <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user"></i><span>حسابي</span></button>
+            <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt"></i><span>طلباتي</span></button>
+            <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-gear"></i><span>حسابي</span></button>
         </nav>
     </div>
 
+    <!-- Product Detail Sheet -->
     <div id="sheet-overlay" class="fixed inset-0 bg-black/95 z-[1100] hidden" onclick="closeSheet()"></div>
-    <div id="product-sheet" class="fixed bottom-[-100%] left-0 right-0 z-[1200] bg-[#05070a] border-t border-white/10 rounded-t-[4rem] p-10 transition-all duration-700 text-right">
-        <div class="w-16 h-1 bg-white/10 mx-auto mb-10"></div>
-        <img id="sh-img" class="w-full h-64 object-cover rounded-[3rem] mb-6">
-        <h2 id="sh-name" class="text-3xl font-black mb-2"></h2>
+    <div id="product-sheet" class="fixed bottom-[-100%] left-0 right-0 z-[1200] bg-[#05070a] border-t border-white/10 rounded-t-[3rem] p-10 transition-all duration-700">
+        <img id="sh-img" class="w-full h-64 object-cover rounded-[2.5rem] mb-6">
+        <h2 id="sh-name" class="text-2xl font-black"></h2>
         <p id="sh-price" class="text-3xl font-black text-emerald-400 mb-8"></p>
-        <button id="sh-add-btn" class="btn-royal w-full py-6 rounded-full text-xl font-black">إضافة +</button>
+        <button id="sh-add-btn" class="btn-royal w-full py-6 rounded-full text-xl font-black">إضافة للسلة +</button>
     </div>
 
-    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[7000] bg-emerald-500 text-black px-10 py-4 hidden font-black text-xs rounded-full"></div>
-
+    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[7000] bg-emerald-500 text-black px-8 py-3 hidden font-black text-xs rounded-full"></div>
     <script src="script.js"></script>
 </body>
 </html>

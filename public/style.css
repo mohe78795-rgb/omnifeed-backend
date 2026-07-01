@@ -1,11 +1,11 @@
 body { font-family: 'Cairo', sans-serif; background: #05070a; color: white; -webkit-tap-highlight-color: transparent; }
-.royal-input { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; padding: 1.5rem; color: white; text-align: center; outline: none; }
+.royal-input { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; padding: 1.5rem; color: white; text-align: center; outline: none; }
 .royal-input:focus { border-color: #10b981; }
-.btn-royal { background: linear-gradient(135deg, #10b981, #059669); color: black; transition: 0.3s; }
+.btn-royal { background: linear-gradient(135deg, #10b981, #059669); color: black; transition: 0.3s; font-weight: 900; }
 .btn-royal:active { transform: scale(0.96); }
-.nav-item { display: flex; flex-direction: column; align-items: center; color: #4b5563; font-size: 9px; gap: 4px; transition: 0.3s; }
+.nav-item { display: flex; flex-direction: column; align-items: center; color: #4b5563; font-size: 9px; gap: 4px; transition: 0.4s; }
 .nav-item.active { color: #10b981; }
 .btn-fab-royal { width: 64px; height: 64px; background: #10b981; border-radius: 50%; display: flex; items-center; justify-content: center; color: black; font-size: 24px; border: 5px solid #05070a; margin-top: -40px; box-shadow: 0 10px 20px rgba(16,185,129,0.3); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-.animate-slideUp { animation: slideUp 0.6s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fadeIn { animation: fadeIn 0.5s ease forwards; }

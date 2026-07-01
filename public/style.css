@@ -1,1 +1,51 @@
-1
+body { font-family: 'Cairo', sans-serif; background: #05070a; color: white; -webkit-tap-highlight-color: transparent; }
+
+/* المدخلات الفخمة مع التوهج */
+.royal-input { 
+    width: 100%; 
+    background: rgba(255, 255, 255, 0.02); 
+    border: 1px solid rgba(255, 255, 255, 0.05); 
+    border-radius: 1.5rem; 
+    padding: 1.5rem; 
+    color: white; 
+    text-align: center; 
+    outline: none; 
+    transition: all 0.3s ease;
+}
+.royal-input:focus { 
+    border-color: #10b981; 
+    background: rgba(16, 185, 129, 0.05);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); 
+}
+
+/* الأزرار الزمردية */
+.btn-royal { background: linear-gradient(135deg, #10b981, #059669); color: black; transition: 0.3s; }
+.btn-royal:active { transform: scale(0.96); opacity: 0.9; }
+
+.luxury-btn-red { 
+    width: 100%; padding: 1.2rem; border-radius: 1.5rem; 
+    background: rgba(239, 68, 68, 0.05); 
+    color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.1); 
+    font-weight: 900; transition: 0.3s;
+}
+
+.nav-item { display: flex; flex-direction: column; align-items: center; color: #4b5563; font-size: 9px; gap: 4px; transition: 0.4s; }
+.nav-item.active { color: #10b981; }
+
+.btn-fab-royal { 
+    width: 64px; height: 64px; background: #10b981; border-radius: 50%; 
+    display: flex; items-center; justify-content: center; 
+    color: black; font-size: 24px; border: 5px solid #05070a; 
+    margin-top: -40px; box-shadow: 0 10px 20px rgba(16,185,129,0.3); 
+}
+
+.shadow-3xl { box-shadow: 0 35px 70px rgba(0, 0, 0, 0.9); }
+.shadow-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.1); }
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slideUp { animation: slideUp 0.6s ease; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-fadeIn { animation: fadeIn 0.4s ease; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }

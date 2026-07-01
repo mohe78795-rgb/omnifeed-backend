@@ -1,4 +1,3 @@
-require('dotenv').config(); // تأكد من استدعاء dotenv في أول الملف إذا كنت تستخدم ملف .env
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,59 +6,91 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ضع رابط قاعدة البيانات الفعلي الخاص بك هنا مباشرة بين علامات التنصيص بدلاً من الرابط الاحتياطي القديم
-const MONGO_URI = process.env.MONGO_URI || "YOUR_ACTUAL_MONGODB_ATLAS_LINK";
+// --- 1. إعدادات قاعدة البيانات السحابية (رابطك الأصلي الشغال ✅) ---
+const MONGO_URI = "mongodb://mohe78795_db_user:737465252@ac-3prk1zf-shard-00-00.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-01.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-02.qr9q8iv.mongodb.net:27017/?ssl=true&replicaSet=atlas-kaid64-shard-0&authSource=admin&appName=Cluster0";
 
-// إصلاح دالة الاتصال وترتيب الأقواس والـ Catch بشكل سليم
 mongoose.connect(MONGO_URI)
     .then(async () => {
-        console.log("✅ Securely Connected to MongoDB Atlas Direct");
+        console.log("✅ متصل بنجاح بـ MongoDB Atlas");
         await seedDatabase();
     })
-    .catch(e => {
-        console.error("❌ DB Connection Failed:", e.message);
-    });
+    .catch(err => console.error("❌ فشل الاتصال بالقاعدة:", err.message));
 
-// --- Schemas ---
-const userSchema = new mongoose.Schema({ name: String, phone: { type: String, unique: true }, pass: String, bal: { type: Number, default: 0 } });
-const catSchema = new mongoose.Schema({ name: String, sub: String, img: String });
-const productSchema = new mongoose.Schema({ name: String, price: Number, img: String, cat: String });
-const adSchema = new mongoose.Schema({ videoUrl: String, active: { type: Boolean, default: true } });
+// --- 2. تعريف هياكل البيانات (Schemas) ---
+
+// هيكل المستخدمين
+const userSchema = new mongoose.Schema({
+    name: String,
+    phone: { type: String, unique: true, required: true },
+    pass: String,
+    bal: { type: Number, default: 0 }
+});
+
+// هيكل المنتجات
+const productSchema = new mongoose.Schema({
+    name: String, price: Number, img: String, cat: String
+});
+
+// هيكل الطلبات (الفواتير)
 const orderSchema = new mongoose.Schema({
     id: String, phone: String, items: Array, total: Number, status: { type: String, default: 'تم الاستلام' },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 });
 
-const User = mongoose.model('User', userSchema);
-const Category = mongoose.model('Category', catSchema);
-const Product = mongoose.model('Product', productSchema);
-const Ad = mongoose.model('Ad', adSchema);
-const Order = mongoose.model('Order', orderSchema);
+// هيكل الإعلانات الأصلي
+const adSchema = new mongoose.Schema({
+    videoUrl: { type: String, alias: 'رابط_الفيديو' },
+    active: { type: Boolean, default: true, alias: 'نشط' }
+});
 
+const User = mongoose.model('User', userSchema);
+const Product = mongoose.model('Product', productSchema);
+const Order = mongoose.model('Order', orderSchema);
+const Ad = mongoose.model('Ad', adSchema, 'إعلانات');
+
+// --- 3. الإعدادات الأساسية ---
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// --- 4. مسارات الإعلانات (Ads API) ---
+app.get('/api/ads/active', async (req, res) => {
+    try {
+        const activeAd = await Ad.findOne({ active: true });
+        res.json(activeAd || { videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4" });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// --- Auth Routes ---
+// --- 5. مسارات المصادقة (Auth API) ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, phone, pass } = req.body;
-        if (await User.findOne({ phone })) return res.status(400).json({ message: "الرقم مسجل مسبقاً" });
-        const user = new User({ name, phone, pass }); await user.save();
-        res.json({ success: true, user: { name: user.name, phone: user.phone, bal: user.bal } });
+        const exists = await User.findOne({ phone });
+        if (exists) return res.status(400).json({ message: "الرقم مسجل مسبقاً" });
+        const newUser = new User({ name, phone, pass, bal: 0 });
+        await newUser.save();
+        res.json({ success: true, user: { name: newUser.name, phone: newUser.phone, bal: newUser.bal } });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-    const user = await User.findOne({ phone: req.body.phone, pass: req.body.pass });
-    if (user) res.json({ success: true, user: { name: user.name, phone: user.phone, bal: user.bal } });
-    else res.status(401).json({ message: "بيانات الدخول خاطئة" });
+    try {
+        const { phone, pass } = req.body;
+        const user = await User.findOne({ phone, pass });
+        if (user) res.json({ success: true, user: { name: user.name, phone: user.phone, bal: user.bal } });
+        else res.status(401).json({ message: "خطأ في البيانات" });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
+app.get('/api/auth/user/:phone', async (req, res) => {
+    try {
+        const user = await User.findOne({ phone: req.params.phone });
+        if (user) res.json({ success: true, user: { name: user.name, phone: user.phone, bal: user.bal } });
+        else res.status(404).json({ success: false });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// سنبقي على هذا المسار الاحتياطي ليتوافق مع كود الفرونت إند الـ Sync القديم
 app.post('/api/auth/sync', async (req, res) => {
     try {
         const { phone, pass } = req.body;
@@ -69,48 +100,53 @@ app.post('/api/auth/sync', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-app.get('/api/categories', async (req, res) => res.json(await Category.find()));
-app.get('/api/products', async (req, res) => res.json(await Product.find()));
-app.get('/api/ads/active', async (req, res) => res.json(await Ad.findOne({ active: true })));
+// --- 6. مسارات المتجر والطلبات ---
+app.get('/api/products', async (req, res) => {
+    try { res.json(await Product.find()); } catch (e) { res.status(500).json([]); }
+});
 
 app.post('/api/orders/add', async (req, res) => {
     try {
-        const { phone, pass, order } = req.body;
-        const user = await User.findOne({ phone, pass });
+        const { phone, order } = req.body;
+        const user = await User.findOne({ phone });
         if (user && user.bal >= order.total) {
-            user.bal -= order.total; await user.save();
+            user.bal -= order.total;
+            await user.save();
             const serverId = "INV-" + Date.now().toString().slice(-6);
             const newOrder = new Order({ id: serverId, phone, items: order.items, total: order.total });
             await newOrder.save();
             res.json({ success: true, currentBal: user.bal, order: newOrder });
-        } else {
-            res.status(400).json({ message: "فشل التحقق أو الرصيد غير كافٍ" });
-        }
+        } else res.status(400).json({ message: "رصيد غير كافٍ أو المستخدم غير موجود" });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-app.get('/api/orders/:phone', async (req, res) => res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })));
+app.get('/api/orders/:phone', async (req, res) => {
+    try { res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })); }
+    catch (e) { res.status(500).json([]); }
+});
 
-async function seedDatabase() {
-    if (await Category.countDocuments() === 0) {
-        await Category.insertMany([
-            { name: "مواد غذائية", sub: "تموينات مختارة", img: "https://i.postimg.cc/q7M8VnHz/rice.jpg" },
-            { name: "باقات ورصيد", sub: "شحن فوري", img: "https://i.postimg.cc/XvL4Q8w9/tea.jpg" }
-        ]);
-    }
-}
+// مسار جلب الأقسام تلقائياً من المنتجات المتوفرة ليتوافق مع تطبيقك
+app.get('/api/categories', async (req, res) => {
+    try {
+        const products = await Product.find();
+        const cats = [...new Set(products.map(p => p.cat))];
+        const categoriesData = cats.map(c => ({ name: c, sub: "قسم مخصص", img: "" }));
+        res.json(categoriesData);
+    } catch (e) { res.status(500).json([]); }
+});
 
-// --- Admin Dashboard Routes ---
+
+// --- 7. لوحة تحكم الإدارة (Admin Dashboard APIs) 👑 ---
+
 app.post('/api/admin/dashboard', async (req, res) => {
     const { adminPass } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
     try {
         const users = await User.find().sort({ name: 1 });
         const orders = await Order.find().sort({ _id: -1 });
-        const categories = await Category.find();
         const products = await Product.find();
         const ad = await Ad.findOne({ active: true });
-        res.json({ success: true, data: { users, orders, categories, products, ad } });
+        res.json({ success: true, data: { users, orders, products, ad } });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
@@ -128,16 +164,18 @@ app.post('/api/admin/product/add', async (req, res) => {
     const { adminPass, name, price, img, cat } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
     try {
-        const newProduct = new Product({ name, price: Number(price), img, cat }); await newProduct.save();
+        const newProduct = new Product({ name, price: Number(price), img, cat }); 
+        await newProduct.save();
         res.json({ success: true, product: newProduct });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/admin/product/delete', async (req, res) => {
     const { adminPass, id } = req.body;
-    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
+    if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json60({ message: "غير مصرح لك!" });
     try {
-        await Product.findByIdAndDelete(id); res.json({ success: true });
+        await Product.findByIdAndDelete(id); 
+        res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
@@ -145,9 +183,24 @@ app.post('/api/admin/order/update-status', async (req, res) => {
     const { adminPass, id, status } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
     try {
-        await Order.findOneAndUpdate({ id }, { status }); res.json({ success: true });
+        await Order.findOneAndUpdate({ id }, { status }); 
+        res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// تشغيل السيرفر مرة واحدة فقط بشكل مستقر
-app.listen(PORT, () => console.log(`🚀 Server fully stabilized at ${PORT}`));
+
+// --- 8. دالة تغذية البيانات (Seeding) ---
+async function seedDatabase() {
+    if (await Product.countDocuments() === 0) {
+        await Product.insertMany([
+            { name: "أرز بسمتي 5 كيلو", price: 12000, cat: "مواد غذائية", img: "https://i.postimg.cc/q7M8VnHz/rice.jpg" },
+            { name: "زيت طبخ 1.5 لتر", price: 4500, cat: "زيوت", img: "https://i.postimg.cc/vHdb8P9G/oil.jpg" }
+        ]);
+    }
+    if (await Ad.countDocuments() === 0) {
+        await Ad.create({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", active: true });
+    }
+}
+
+// تشغيل موحد ومستقر تماماً 🚀
+app.listen(PORT, () => console.log(`🚀 السيرفر يعمل بنجاح وبثبات كامل على المنفذ: ${PORT}`));

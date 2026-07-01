@@ -1,11 +1,35 @@
-body { font-family: 'Cairo', sans-serif; background: #05070a; color: white; -webkit-tap-highlight-color: transparent; }
-.royal-input { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem; padding: 1.5rem; color: white; text-align: center; outline: none; }
-.royal-input:focus { border-color: #10b981; }
+/* Glassmorphism Design */
+body { font-family: 'Cairo', sans-serif; background: #05070a; -webkit-tap-highlight-color: transparent; }
+.blob { position: fixed; width: 400px; height: 400px; background: #10b981; filter: blur(150px); border-radius: 50%; z-index: -1; opacity: 0.15; animation: float 20s infinite alternate; }
+.blob-2 { background: #4834d4; right: -100px; bottom: -100px; animation-delay: -5s; }
+@keyframes float { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
+
+.royal-input { width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; padding: 1.5rem; color: white; text-align: center; outline: none; transition: 0.3s; }
+.royal-input:focus { border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+
 .btn-royal { background: linear-gradient(135deg, #10b981, #059669); color: black; transition: 0.3s; }
-.btn-royal:active { transform: scale(0.95); }
-.nav-item { display: flex; flex-direction: column; align-items: center; color: #4b5563; font-size: 10px; gap: 4px; }
+.btn-royal:active { transform: scale(0.96); }
+
+.search-bar { background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(25px); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 18px; display: flex; align-items: center; padding: 2px 18px; transition: 0.4s; }
+.search-bar input { background: transparent; border: none; color: #fff; padding: 14px; width: 100%; outline: none; }
+
+.nav-item { display: flex; flex-direction: column; align-items: center; color: #4b5563; font-size: 9px; gap: 4px; transition: 0.4s; }
 .nav-item.active { color: #10b981; }
-.btn-fab-royal { width: 64px; height: 64px; background: #10b981; border-radius: 50%; display: flex; items-center; justify-content: center; color: black; font-size: 24px; border: 4px solid #05070a; margin-top: -40px; box-shadow: 0 10px 20px rgba(16,185,129,0.3); }
+
+.cards-container { display: grid; gap: 15px; transition: 0.5s ease; }
+.mode-matrix { grid-template-columns: repeat(4, 1fr); }
+.mode-dual { grid-template-columns: repeat(2, 1fr); }
+.mode-list { grid-template-columns: 1fr; }
+
+.card-glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 22px; padding: 12px; text-align: center; transition: 0.4s; cursor: pointer; }
+.card-glass:active { transform: scale(0.94); animation: shake 0.2s ease-in-out; }
+@keyframes shake { 0%, 100% { transform: scale(0.94) rotate(0deg); } 25% { transform: scale(0.94) rotate(1.5deg); } 75% { transform: scale(0.94) rotate(-1.5deg); } }
+
+.mode-list .card-glass { display: flex; flex-direction: row; align-items: center; text-align: right; padding: 12px 20px; height: 90px; }
+.mode-list .card-img { width: 80px; height: 100%; margin-left: 15px; margin-bottom: 0; }
+
+.btn-fab-royal { width: 64px; height: 64px; background: #10b981; border-radius: 50%; display: flex; items-center; justify-content: center; color: black; font-size: 24px; border: 5px solid #05070a; margin-top: -40px; box-shadow: 0 10px 20px rgba(16,185,129,0.3); }
+.shadow-3xl { box-shadow: 0 35px 70px rgba(0, 0, 0, 0.9); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.animate-fadeIn { animation: fadeIn 0.5s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fadeIn { animation: fadeIn 0.4s ease forwards; }

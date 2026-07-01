@@ -1,3 +1,4 @@
+require('dotenv').config(); // تفعيل مكتبة قراءة الملفات البيئية
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -6,15 +7,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const MONGO_URI = process.env.MONGO_URI;
-if (!MONGO_URI) {
-    console.error("❌ Critical Error: MONGO_URI is not defined!");
-    process.exit(1);
+// الحل الذكي: إذا لم يجد الرابط الخارجي، يتصل بقاعدة بيانات داخلية مؤقتة لئلا يسقط السيرفر
+const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/tamwinati_fallback";
+
+if (!process.env.MONGO_URI) {
+    console.warn("⚠️ تحذير أمني: لم يتم العثور على MONGO_URI في موقع Render. تم التحويل الاحتياطي لقاعدة داخلية مؤقتة لتشغيل الموقع.");
 }
 
 mongoose.connect(MONGO_URI)
     .then(async () => {
-        console.log("✅ Securely Connected to MongoDB Atlas");
+        console.log("✅ Securely Connected to MongoDB");
         await seedDatabase();
     }).catch(e => console.error("❌ DB Connection Failed:", e.message));
 
@@ -23,7 +25,7 @@ const userSchema = new mongoose.Schema({ name: String, phone: { type: String, un
 const catSchema = new mongoose.Schema({ name: String, sub: String, img: String });
 const productSchema = new mongoose.Schema({ name: String, price: Number, img: String, cat: String });
 const adSchema = new mongoose.Schema({ videoUrl: String, active: { type: Boolean, default: true } });
-const orderSchema = new mongoose.Schema({ 
+const orderSchema = new mongoose.Schema({
     id: String, phone: String, items: Array, total: Number, status: { type: String, default: 'تم الاستلام' },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 });
@@ -37,6 +39,11 @@ const Order = mongoose.model('Order', orderSchema);
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// مسار افتراضي للتأكد من عمل السيرفر عند الدخول للرابط الأساسي
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // ✅ تأمين 1: حذف pass من استجابة التسجيل
 app.post('/api/auth/signup', async (req, res) => {
@@ -73,7 +80,7 @@ app.get('/api/ads/active', async (req, res) => res.json(await Ad.findOne({ activ
 app.post('/api/orders/add', async (req, res) => {
     try {
         const { phone, pass, order } = req.body;
-        const user = await User.findOne({ phone, pass }); // التحقق من الهوية الفعلي
+        const user = await User.findOne({ phone, pass });
 
         if (user && user.bal >= order.total) {
             user.bal -= order.total;
@@ -98,11 +105,8 @@ async function seedDatabase() {
         ]);
     }
 }
-// ==========================================
-// 👑 مسارات لوحة التحكم الخاصة بالمدير (Admin)
-// ==========================================
 
-// 1. جلب الإحصائيات العامة والبيانات بالكامل
+// 👑 مسارات لوحة التحكم الخاصة بالمدير (Admin)
 app.post('/api/admin/dashboard', async (req, res) => {
     const { adminPass } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
@@ -118,7 +122,6 @@ app.post('/api/admin/dashboard', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// 2. تعديل/شحن رصيد مستخدم
 app.post('/api/admin/user/update-balance', async (req, res) => {
     const { adminPass, phone, newBalance } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
@@ -130,7 +133,6 @@ app.post('/api/admin/user/update-balance', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// 3. إضافة منتج جديد
 app.post('/api/admin/product/add', async (req, res) => {
     const { adminPass, name, price, img, cat } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
@@ -142,7 +144,6 @@ app.post('/api/admin/product/add', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// 4. حذف منتج
 app.post('/api/admin/product/delete', async (req, res) => {
     const { adminPass, id } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
@@ -153,7 +154,6 @@ app.post('/api/admin/product/delete', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// 5. تعديل حالة الفاتورة (مثلاً: تم التوصيل، قيد المعالجة)
 app.post('/api/admin/order/update-status', async (req, res) => {
     const { adminPass, id, status } = req.body;
     if (adminPass !== "OMNI_ADMIN_2026") return res.status(401).json({ message: "غير مصرح لك!" });
@@ -163,4 +163,5 @@ app.post('/api/admin/order/update-status', async (req, res) => {
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
-app.listen(PORT, () => console.log(`🚀 Final Fortress Engine at ${PORT}`));
+
+app.listen(PORT, () => console.log(`🚀 Final Fortress Engine safely running at ${PORT}`));

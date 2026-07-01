@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,18 +6,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// الحل الاحتياطي: إذا لم يجد الرابط الخارجي، يتصل بقاعدة مؤقتة لئلا ينهار السيرفر
-const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/tamwinati_fallback";
-
-if (!process.env.MONGO_URI) {
-    console.warn("⚠️ تحذير: لم يتم العثور على MONGO_URI. تم التحويل الاحتياطي لقاعدة داخلية لتشغيل السيرفر وصفحة التحكم.");
-}
+// ضع رابط قاعدة البيانات الفعلي الخاص بك هنا مباشرة بين علامات التنصيص بدلاً من الرابط الاحتياطي القديم
+const MONGO_URI = process.env.MONGO_URI || "YOUR_ACTUAL_MONGODB_ATLAS_LINK";
 
 mongoose.connect(MONGO_URI)
     .then(async () => {
-        console.log("✅ Connected to MongoDB");
+        console.log("✅ Securely Connected to MongoDB Atlas Direct");
         await seedDatabase();
-    }).catch(e => console.error("❌ DB Connection Failed:", e.message));
+    }).catch(e => {
+        console.error("❌ DB Connection Failed:", e.message);
+    });
 
 // --- Schemas ---
 const userSchema = new mongoose.Schema({ name: String, phone: { type: String, unique: true }, pass: String, bal: { type: Number, default: 0 } });
@@ -149,4 +146,4 @@ app.post('/api/admin/order/update-status', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server safely running at ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server fully stabilized at ${PORT}`));

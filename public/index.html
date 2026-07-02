@@ -50,6 +50,7 @@
         </header>
 
         <main class="pt-28 p-5 pb-44 space-y-10">
+            <!-- الرئيسية -->
             <div id="view-home" class="view-content space-y-10 animate-fadeIn">
                 <div class="relative p-3 rounded-[2.5rem] bg-[#0a101e]/60 backdrop-blur-md border border-white/5 overflow-hidden shadow-2xl">
                     <video id="promo-video" autoplay loop playsinline class="w-full h-48 object-cover rounded-2xl"></video>
@@ -61,11 +62,32 @@
                 <div id="categories-grid" class="cards-container mode-matrix"></div>
             </div>
 
+            <!-- 🎮 هنا تم وضع محتوى شحن الألعاب داخل واجهة العروض المطلوبة 🎮 -->
             <div id="view-games" class="view-content hidden space-y-8 animate-fadeIn">
-                <h2 class="text-3xl font-black text-right">شحن الألعاب الفوري</h2>
+                <h2 class="text-2xl font-black text-right text-emerald-400">عروض شحن الألعاب الفوري ⚡</h2>
                 
                 <div id="games-list-grid" class="grid grid-cols-2 gap-4">
+                    <!-- بطاقة ببجي موبايل -->
+                    <div class="card-glass p-5 animate-fadeIn shadow-xl flex flex-col items-center border border-white/5 active:scale-95 transition-all" onclick="selectGameToTopup('PUBGM_GLOBAL')">
+                        <img src="https://img.icons8.com/color/144/pubg-drop-box.png" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                        <h3 class="text-xs font-black text-white">PUBG Mobile UC</h3>
+                        <span class="text-[8px] text-emerald-400 mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">شحن آمن وفوري</span>
                     </div>
+
+                    <!-- بطاقة موبايل ليجندز -->
+                    <div class="card-glass p-5 animate-fadeIn shadow-xl flex flex-col items-center border border-white/5 active:scale-95 transition-all" onclick="selectGameToTopup('MLBB_GLOBAL')">
+                        <img src="https://img.icons8.com/color/144/mobile-legends.png" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                        <h3 class="text-xs font-black text-white">Mobile Legends</h3>
+                        <span class="text-[8px] text-emerald-400 mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">شحن آمن وفوري</span>
+                    </div>
+
+                    <!-- بطاقة فري فاير -->
+                    <div class="card-glass p-5 animate-fadeIn shadow-xl flex flex-col items-center border border-white/5 active:scale-95 transition-all" onclick="selectGameToTopup('FREEFIRE_GLOBAL')">
+                        <img src="https://img.icons8.com/color/144/free-fire.png" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                        <h3 class="text-xs font-black text-white">Free Fire Diamonds</h3>
+                        <span class="text-[8px] text-emerald-400 mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">شحن آمن وفوري</span>
+                    </div>
+                </div>
 
                 <div id="game-topup-panel" class="hidden p-6 bg-[#0a101e]/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 space-y-6 animate-slideUp text-right">
                     <div class="flex justify-between items-center mb-2">
@@ -84,8 +106,7 @@
 
                     <div class="space-y-3">
                         <label class="text-xs font-bold text-slate-300 block">اختر فئة الشحن المتاحة:</label>
-                        <div id="game-denominations-list" class="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar">
-                            </div>
+                        <div id="game-denominations-list" class="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar"></div>
                     </div>
                 </div>
             </div>
@@ -115,9 +136,10 @@
             </div>
         </main>
 
+        <!-- شريط التنقل السفلي كما في الصورة تماماً (أيقونة البرق + كلمة عروض) -->
         <nav class="fixed bottom-0 left-0 right-0 h-24 bg-black/80 backdrop-blur-2xl border-t border-white/5 grid grid-cols-5 items-center z-[500] px-4">
             <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home"></i><span>الرئيسية</span></button>
-            <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-gamepad text-xl"></i><span>الألعاب</span></button>
+            <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-bolt text-xl"></i><span>عروض</span></button>
             <button onclick="changeView('cart', null)" class="btn-fab-royal"><i class="fas fa-shopping-bag"></i></button>
             <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt"></i><span>فواتيري</span></button>
             <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-gear"></i><span>حسابي</span></button>

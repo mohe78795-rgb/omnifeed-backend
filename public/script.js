@@ -13,8 +13,10 @@ window.onload = () => {
     setTimeout(() => {
         if (state.user) unlockApp();
         else {
-            document.getElementById('splash').classList.add('hidden');
-            document.getElementById('auth-screen').classList.remove('hidden');
+            const splash = document.getElementById('splash');
+            if(splash) splash.classList.add('hidden');
+            const authScreen = document.getElementById('auth-screen');
+            if(authScreen) authScreen.classList.remove('hidden');
         }
     }, 2000);
 };
@@ -34,7 +36,7 @@ function ui() {
         
         if(state.cart.length > 0) {
             cartList.innerHTML = state.cart.map(i => `
-                <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 animate-fadeIn mb-2">
+                <div class="card-glass flex justify-between items-center animate-fadeIn mb-2">
                     <div class="text-right">
                         <h4 class="text-xs font-bold text-white">${i.name}</h4>
                         <p class="text-[10px] text-emerald-400 mt-1 font-black">${Number(i.price).toLocaleString()} YER × ${i.qty}</p>
@@ -107,10 +109,9 @@ function renderGamesMenu() {
     };
 
     grid.innerHTML = state.games.map(g => `
-        <div class="card-glass p-5 animate-fadeIn shadow-xl flex flex-col items-center border border-white/5 active:scale-95 transition-all" onclick="selectGameToTopup('${g.game_code}')">
-            <img src="${gameIcons[g.game_code] || 'https://img.icons8.com/color/144/game-controller.png'}" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+        <div class="card-glass flex flex-col items-center animate-fadeIn cursor-pointer" onclick="selectGameToTopup('${g.game_code}')">
+            <img src="${gameIcons[g.game_code] || 'https://img.icons8.com/color/144/game-controller.png'}" class="w-16 h-16 object-contain mb-3">
             <h3 class="text-xs font-black text-white">${g.game_name}</h3>
-            <span class="text-[8px] text-emerald-400 mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">شحن آمن وفوري</span>
         </div>
     `).join('');
 }
@@ -128,12 +129,11 @@ function selectGameToTopup(code) {
     
     const denomList = document.getElementById('game-denominations-list');
     denomList.innerHTML = state.selectedGame.denominations.map(pkg => `
-        <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all mb-2">
+        <div class="card-glass flex justify-between items-center transition-all mb-2">
             <div class="text-right">
                 <span class="text-sm font-black text-white block">${pkg.name}</span>
-                <span class="text-[10px] text-slate-400">كود الفئة: ${pkg.id}</span>
             </div>
-            <button onclick="sendTopupRequest('${pkg.id}', ${pkg.price})" class="px-4 py-2 bg-emerald-500 text-black text-xs font-black rounded-xl active:scale-90 transition-all shadow-md shadow-emerald-500/10">
+            <button onclick="sendTopupRequest('${pkg.id}', ${pkg.price})" class="px-4 py-2 bg-emerald-500 text-black text-xs font-black rounded-xl active:scale-90">
                 ${Number(pkg.price).toLocaleString()} YER
             </button>
         </div>
@@ -142,10 +142,10 @@ function selectGameToTopup(code) {
 
 function cancelGameSelection() {
     state.selectedGame = null;
-    document.getElementById('game-player-id').value = '';
-    document.getElementById('player-name-display').innerText = '';
-    document.getElementById('game-topup-panel').classList.add('hidden');
-    document.getElementById('games-list-grid').classList.remove('hidden');
+    const panel = document.getElementById('game-topup-panel');
+    const grid = document.getElementById('games-list-grid');
+    if(panel) panel.classList.add('hidden');
+    if(grid) grid.classList.remove('hidden');
 }
 
 async function validatePlayer() {
@@ -153,8 +153,8 @@ async function validatePlayer() {
     const id = document.getElementById('game-player-id').value;
     if(!id) return toast("⚠️ أدخل معرف اللاعب أولاً");
     
-    document.getElementById('player-name-display').className = "text-xs text-slate-400 animate-pulse";
-    document.getElementById('player-name-display').innerText = "جاري الفحص المباشر...";
+    const display = document.getElementById('player-name-display');
+    display.innerText = "جاري الفحص...";
 
     try {
         const res = await fetch(`${API}/api/games/validate-user`, {
@@ -164,23 +164,22 @@ async function validatePlayer() {
         });
         const data = await res.json();
         if(data.success) {
-            document.getElementById('player-name-display').className = "text-xs text-emerald-400 font-bold";
-            document.getElementById('player-name-display').innerText = `اسم الحساب: ${data.player_name} ✅`;
+            display.innerText = `اسم الحساب: ${data.player_name} ✅`;
         } else {
-            document.getElementById('player-name-display').innerText = "فشل التعرف على المعرف";
+            display.innerText = "فشل التعرف على المعرف";
         }
-    } catch(e) { document.getElementById('player-name-display').innerText = ""; toast("⚠️ خطأ في الاتصال"); }
+    } catch(e) { display.innerText = ""; toast("⚠️ خطأ في الاتصال"); }
 }
 
 async function sendTopupRequest(pkgId, price) {
     const id = document.getElementById('game-player-id').value;
-    if(!id) return toast("⚠️ أدخل معرف اللاعب وتحقق منه!");
-    if(state.user.bal < price) return toast("❌ رصيد محفظتك غير كافٍ");
+    if(!id) return toast("⚠️ أدخل معرف اللاعب!");
+    if(state.user.bal < price) return toast("❌ رصيد غير كافٍ");
 
-    if(!confirm(`تأكيد شحن الفئة بقيمة ${Number(price).toLocaleString()} YER من رصيدك؟`)) return;
+    if(!confirm(`تأكيد شحن بقيمة ${price} YER؟`)) return;
 
     try {
-        toast("⏳ جاري إرسال العملية لـ UniPin...");
+        toast("⏳ جاري المعالجة...");
         const res = await fetch(`${API}/api/games/topup`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -198,12 +197,12 @@ async function sendTopupRequest(pkgId, price) {
             state.user.bal = data.currentBal;
             localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
             ui();
-            toast("🚀 تم الشحن وتحديث الرصيد فورياً!");
+            toast("🚀 تم الشحن بنجاح!");
             cancelGameSelection();
         } else {
             toast("❌ " + data.message);
         }
-    } catch(e) { toast("⚠️ عطل فني في خادم السداد"); }
+    } catch(e) { toast("⚠️ عطل فني"); }
 }
 
 async function fetchOrders() {
@@ -213,13 +212,11 @@ async function fetchOrders() {
         const list = document.getElementById('orders-list');
         if(res.ok && orders.length > 0) {
             list.innerHTML = orders.map(o => `
-                <div class="p-5 bg-[#0a101e] rounded-2xl border border-white/5 mb-3 space-y-2 animate-fadeIn shadow-xl text-right">
-                    <div class="flex justify-between text-[10px] opacity-50"><span>${o.date}</span><span class="font-black text-emerald-500">ID: ${o.id}</span></div>
-                    <div class="font-bold text-lg text-white">${Number(o.total).toLocaleString()} <small class="text-[10px] text-emerald-500">YER</small></div>
-                    <div class="text-[10px] text-slate-400 bg-white/5 p-2 rounded-lg">حالة الطلب: <span class="text-emerald-400 font-black">${o.status}</span></div>
+                <div class="card-glass mb-3 text-right">
+                    <div class="flex justify-between text-[10px] opacity-50"><span>${o.date}</span></div>
+                    <div class="font-bold text-lg">${Number(o.total).toLocaleString()} YER</div>
+                    <div class="text-[10px] text-emerald-400">حالة الطلب: ${o.status}</div>
                 </div>`).join('');
-        } else {
-            list.innerHTML = "<div class='opacity-30 text-center py-20 text-xs font-bold'>لا توجد فواتير سابقة</div>";
         }
     } catch(e) { console.error("Orders Error"); }
 }
@@ -227,22 +224,20 @@ async function fetchOrders() {
 async function processBalanceOrder() {
     const total = state.cart.reduce((s,i) => s + (i.price * i.qty), 0);
     if(state.cart.length === 0) return toast("⚠️ الحقيبة فارغة");
-    if(state.user.bal < total) return toast("❌ رصيد غير كافٍ");
     
     try {
-        toast("⏳ جاري تأمين العملية...");
         const res = await fetch(`${API}/api/orders/add`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ phone: state.user.phone, order: { total, items: state.cart } })
         });
-        const data = await res.json();
         if(res.ok) {
+            const data = await res.json();
             state.user.bal = data.currentBal;
             localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
             state.cart = [];
             ui();
-            toast("✅ تم تنفيذ طلبك بنجاح");
+            toast("✅ تم تنفيذ طلبك");
             changeView('orders', document.querySelector('.nav-item:nth-child(4)'));
         }
     } catch(e) { toast("⚠️ عطل فني"); }
@@ -250,7 +245,6 @@ async function processBalanceOrder() {
 
 async function handleLogin() {
     const phone = document.getElementById('login-phone').value, pass = document.getElementById('login-pass').value;
-    if(!phone || !pass) return toast("⚠️ أكمل الحقول");
     try {
         const res = await fetch(`${API}/api/auth/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone, pass }) });
         const data = await res.json();
@@ -261,22 +255,28 @@ async function handleLogin() {
 
 async function handleSignup() {
     const name = document.getElementById('reg-name').value, phone = document.getElementById('reg-phone').value, pass = document.getElementById('reg-pass').value;
-    if(!name || !phone || !pass) return toast("⚠️ أكمل البيانات");
     try {
         const res = await fetch(`${API}/api/auth/signup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, phone, pass }) });
         const data = await res.json();
         if(res.ok) { state.user = data.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); unlockApp(); }
         else toast("❌ " + data.message);
-    } catch(e) { toast("⚠️ عطل fني"); }
+    } catch(e) { toast("⚠️ عطل فني"); }
 }
 
 function unlockApp() {
-    document.getElementById('splash').style.display = "none";
-    document.getElementById('auth-screen').style.display = "none";
-    document.getElementById('main-app').classList.remove('hidden');
-    setTimeout(() => { document.getElementById('main-app').style.opacity = "1"; ui(); loadPromoVideo(); sync(); }, 50);
+    const splash = document.getElementById('splash');
+    const authScreen = document.getElementById('auth-screen');
+    const mainApp = document.getElementById('main-app');
+    
+    if(splash) splash.style.display = "none";
+    if(authScreen) authScreen.style.display = "none";
+    if(mainApp) {
+        mainApp.classList.remove('hidden');
+        setTimeout(() => mainApp.style.opacity = "1", 50);
+    }
+    ui();
     initProducts();
-    initGamesData(); 
+    initGamesData();
 }
 
 async function initProducts() {
@@ -289,11 +289,11 @@ async function initProducts() {
 
 function renderCategories() {
     const grid = document.getElementById('categories-grid');
+    if(!grid) return;
     grid.innerHTML = state.categories.map(cat => `
-        <div class="card-glass animate-fadeIn shadow-lg" onclick="openCategory('${cat.name}')">
-            <img src="${cat.img}" class="w-full h-20 object-cover rounded-xl mb-3 border border-white/5">
-            <h3 class="text-[10px] font-black truncate text-white">${cat.name}</h3>
-            <span class="text-[8px] opacity-40 text-white">${cat.sub}</span>
+        <div class="card-glass cursor-pointer" onclick="openCategory('${cat.name}')">
+            <img src="${cat.img}" class="w-full h-20 object-cover rounded-xl mb-3">
+            <h3 class="text-[10px] font-black text-white">${cat.name}</h3>
         </div>`).join('');
 }
 
@@ -303,11 +303,11 @@ function openCategory(catName) {
     const filtered = state.prods.filter(p => p.cat === catName);
     const prodGrid = document.getElementById('category-products-grid');
     prodGrid.innerHTML = filtered.map(p => `
-        <div class="card-glass animate-fadeIn shadow-lg" onclick="sheet('${p._id}')">
-            <img src="${p.img}" class="w-full h-32 object-cover rounded-xl mb-3 border border-white/5">
-            <h3 class="text-xs font-bold truncate text-white">${p.name}</h3>
+        <div class="card-glass cursor-pointer" onclick="sheet('${p._id}')">
+            <img src="${p.img}" class="w-full h-32 object-cover rounded-xl mb-3">
+            <h3 class="text-xs font-bold text-white">${p.name}</h3>
             <p class="text-emerald-400 font-black mt-1 text-sm">${Number(p.price).toLocaleString()} YER</p>
-        </div>`).join('') || "<div class='col-span-full opacity-30 text-center py-20 font-bold'>قريباً..</div>";
+        </div>`).join('');
 }
 
 function switchLayout() {
@@ -333,15 +333,23 @@ function addToCart(p) {
     toast("🛒 أضيف للسلة");
 }
 
-async function sync() {
-    const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
-    const data = await res.json();
-    if(res.ok) { state.user = data.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); ui(); }
+function toast(m) { 
+    const t = document.getElementById('toast'); 
+    t.innerText = m; t.classList.remove('hidden'); 
+    setTimeout(() => t.classList.add('hidden'), 3000); 
 }
 
-function logout() { localStorage.clear(); location.reload(); }
-function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3000); }
-function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
-function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(()=>{}); } }
-function toggleAuth() { document.getElementById('login-box').classList.toggle('hidden'); document.getElementById('signup-box').classList.toggle('hidden'); }
+function closeSheet() { 
+    document.getElementById('product-sheet').style.bottom = "-100%"; 
+    setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); 
+}
 
+function playSound(id) { 
+    const s = document.getElementById(id); 
+    if(s) { s.currentTime = 0; s.play().catch(()=>{}); } 
+}
+
+function toggleAuth() { 
+    document.getElementById('login-box').classList.toggle('hidden'); 
+    document.getElementById('signup-box').classList.toggle('hidden'); 
+}

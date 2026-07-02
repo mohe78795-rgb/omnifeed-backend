@@ -14,81 +14,87 @@ while true; do
     echo -e "${GOLD}======================================${NC}"
     echo -e "${GOLD}   🛡️  لوحة تحكم أبو حسين الذكية  🛡️${NC}"
     echo -e "${GOLD}======================================${NC}"
-    
+
     # 1 و 2 و 3 باللون الرصاصي
     echo -e "${GRAY}1. فتح/استعراض ملفات المشروع (Backend)${NC}"
     echo -e "${GRAY}2. الدخول إلى مجلد الواجهة (Public)${NC}"
     echo -e "${GRAY}3. نسخ محتويات الواجهة إلى ذاكرة الهاتف (YTM)${NC}"
-    
-    # 4 و 5 و 6 باللون البنفسجي
+
+    # 4 و 5 و 6 و 7 باللون البنفسجي
     echo -e "${PURPLE}4. تحديث سريع ومباشر لملف واجهة المستخدم (index.html)${NC}"
     echo -e "${PURPLE}5. تحديث سريع ومباشر لملف سكريبت المستخدم (script.js)${NC}"
     echo -e "${PURPLE}6. تحديث سريع ومباشر لملف ستايل المستخدم (style.css)${NC}"
-    
+    echo -e "${PURPLE}7. تحديث سريع ومباشر لملف السيرفر (server.js)${NC}"
+
     # 555 باللون الأخضر
     echo -e "${GREEN}555. رفع التحديثات الجديدة للمتجر (./up)${NC}"
-    
+
     # 44 و 55 و 66 باللون الأزرق مع توضيح اسم ملف الأدمن
     echo -e "${BLUE}44. تحديث سريع ومباشر لملف واجهة الأدمن (admin/index.html)${NC}"
     echo -e "${BLUE}55. تحديث سريع ومباشر لملف سكريبت الأدمن (admin/script.js)${NC}"
     echo -e "${BLUE}66. تحديث سريع ومباشر لملف ستايل الأدمن (admin/style.css)${NC}"
-    
+
     echo -e "${RED}0. خروج${NC}"
     echo -e "${GOLD}======================================${NC}"
     read -p "اختر رقماً (0-66): " choice
 
     case $choice in
-        1) 
+        1)
             cd ~/omnifeed-backend
             ls
             break
             ;;
-        2) 
+        2)
             cd ~/omnifeed-backend/public
             ls
             break
             ;;
-        3) 
-            cp -r ~/omnifeed-backend/public/* /sdcard/YTM/ && echo -e "${GREEN}✅ تم النسخ إلى YTM${NC}" 
+        3)
+            cp -r ~/omnifeed-backend/public/* /sdcard/YTM/ && echo -e "${GREEN}✅ تم النسخ إلى YTM${NC}"
             read -p "اضغط Enter للعودة..."
             ;;
-        4) 
+        4)
             echo -e "${PURPLE}📥 الصق كود الـ HTML للمستخدم، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"
             cat > ~/omnifeed-backend/public/index.html
             echo -e "${GREEN}✅ تم التحديث بنجاح!${NC}"
             sleep 1
             ;;
-        5) 
+        5)
             echo -e "${PURPLE}📥 الصق كود الـ JavaScript للمستخدم، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"
             cat > ~/omnifeed-backend/public/script.js
             echo -e "${GREEN}✅ تم التحديث بنجاح!${NC}"
             sleep 1
             ;;
-        6) 
-            echo -e "${PURPLE}📥 الصق كود الـ CSS للمستخدم، then اضغط [Enter] ثم [Ctrl+D]:${NC}"
+        6)
+            echo -e "${PURPLE}📥 الصق كود الـ CSS للمستخدم، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"
             cat > ~/omnifeed-backend/public/style.css
             echo -e "${GREEN}✅ تم التحديث بنجاح!${NC}"
             sleep 1
             ;;
-        555) 
+        7)
+            echo -e "${PURPLE}📥 الصق كود الـ JavaScript الخاص بالسيرفر، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"
+            cat > ~/omnifeed-backend/server.js
+            echo -e "${GREEN}✅ تم تحديث ملف السيرفر بنجاح!${NC}"
+            sleep 1
+            ;;
+        555)
             echo -e "${GREEN}🚀 جاري تشغيل سكريبت الرفع المباشر...${NC}"
-            # تشغيل ملف الرفع باستخدام مساره الكامل والمباشر
             cd ~/omnifeed-backend && ./up
             read -p "اضغط Enter للعودة للوحة التحكم..."
             ;;
-        44) 
+        44)
             echo -e "${BLUE}📥 الصق كود الـ HTML الخاص بملف الأدمن، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"
             cat > ~/omnifeed-backend/public/admin/index.html
             echo -e "${GREEN}✅ تم تحديث أدمن HTML بنجاح!${NC}"
             sleep 1
             ;;
-        55) 
+        55)
             echo -e "${BLUE}📥 الصق كود الـ JavaScript الخاص بملف الأدمن، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"
             cat > ~/omnifeed-backend/public/admin/script.js
             echo -e "${GREEN}✅ تم تحديث أدمن JS بنجاح!${NC}"
             sleep 1
             ;;
-        66) 
+        66)
             echo -e "${BLUE}📥 الصق كود الـ CSS الخاص بملف الأدمن، ثم اضغط [Enter] ثم [Ctrl+D]:${NC}"
             cat > ~/omnifeed-backend/public/admin/style.css
             echo -e "${GREEN}✅ تم تحديث أدمن CSS بنجاح!${NC}"
@@ -97,11 +103,11 @@ while true; do
         20)
             continue
             ;;
-        0) 
-            return 2> /dev/null || exit 
+        0)
+            return 2> /dev/null || exit
             ;;
-        *) 
-            echo -e "${RED}❌ خيار غير صحيح${NC}" 
+        *)
+            echo -e "${RED}❌ خيار غير صحيح${NC}"
             sleep 1
             ;;
     esac

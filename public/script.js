@@ -8,7 +8,65 @@ window.onload = () => {
     }, 2000);
 };
 
-// --- دالة جلب الفواتير (التي كانت منسية) ---
+// --- تحديث واجهة المستخدم الشامل (UI Sync) ---
+function ui() {
+    if(!state.user) return;
+    
+    // 1. تحديث الرصيد والمعلومات الشخصية
+    document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
+    document.getElementById('acc-name-display').innerText = state.user.name;
+    document.getElementById('acc-phone-display').innerText = state.user.phone;
+    document.getElementById('u-avatar').innerText = state.user.name.charAt(0);
+
+    // ✅ 2. تحديث شاشة حقيبة المشتريات ديناميكياً
+    const cartList = document.getElementById('cart-list');
+    if(cartList) {
+        const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
+        document.getElementById('cart-total').innerText = total.toLocaleString() + " YER";
+        
+        if(state.cart.length > 0) {
+            cartList.innerHTML = state.cart.map(i => `
+                <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 animate-fadeIn mb-2">
+                    <div class="text-right">
+                        <h4 class="text-xs font-bold text-white">${i.name}</h4>
+                        <p class="text-[10px] text-emerald-400 mt-1 font-black">${Number(i.price).toLocaleString()} YER × ${i.qty}</p>
+                    </div>
+                    <button onclick="removeFromCart('${i._id}')" class="w-8 h-8 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl active:scale-90 transition-all">
+                        <i class="fas fa-trash-can text-[10px]"></i>
+                    </button>
+                </div>`).join('');
+        } else {
+            cartList.innerHTML = `
+                <div class="opacity-30 text-center py-20 animate-fadeIn">
+                    <i class="fas fa-shopping-basket text-4xl mb-4"></i>
+                    <p class="text-xs font-bold">الحقيبة فارغة حالياً</p>
+                </div>`;
+        }
+    }
+}
+
+// دالة مساعدة لحذف عنصر من السلة
+function removeFromCart(id) {
+    state.cart = state.cart.filter(x => x._id !== id);
+    ui();
+    toast("🗑️ تم الحذف من السلة");
+}
+
+// --- تبديل الشاشات ---
+function changeView(v, b) {
+    playSound('snd-click');
+    document.querySelectorAll('.view-content').forEach(x => x.classList.add('hidden'));
+    document.getElementById('view-' + v).classList.remove('hidden');
+    
+    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+    if(b) b.classList.add('active');
+
+    // ✅ تحديث البيانات فور فتح الشاشات المختارة
+    if(v === 'cart') ui(); 
+    if(v === 'orders') fetchOrders();
+}
+
+// --- بقية الدوال (المستقرة) ---
 async function fetchOrders() {
     try {
         const res = await fetch(`${API}/api/orders/${state.user.phone}`);
@@ -16,47 +74,42 @@ async function fetchOrders() {
         const list = document.getElementById('orders-list');
         if(res.ok && orders.length > 0) {
             list.innerHTML = orders.map(o => `
-                <div class="p-5 bg-[#0a101e] rounded-2xl border border-white/5 mb-3 space-y-2 animate-fadeIn shadow-xl">
+                <div class="p-5 bg-[#0a101e] rounded-2xl border border-white/5 mb-3 space-y-2 animate-fadeIn shadow-xl text-right">
                     <div class="flex justify-between text-[10px] opacity-50"><span>${o.date}</span><span class="font-black text-emerald-500">ID: ${o.id}</span></div>
                     <div class="font-bold text-lg text-white">${Number(o.total).toLocaleString()} <small class="text-[10px] text-emerald-500">YER</small></div>
                     <div class="text-[10px] text-slate-400 bg-white/5 p-2 rounded-lg">حالة الطلب: <span class="text-emerald-400 font-black">${o.status}</span></div>
                 </div>`).join('');
         } else {
-            list.innerHTML = "<div class='opacity-30 text-center py-20 text-xs font-bold'>لا توجد فواتير سابقة في سجلك</div>";
+            list.innerHTML = "<div class='opacity-30 text-center py-20 text-xs font-bold'>لا توجد فواتير سابقة</div>";
         }
-    } catch(e) { toast("⚠️ خطأ في جلب الفواتير"); }
+    } catch(e) { console.error("Orders Error"); }
 }
 
-// --- مشغل الفيديو وتعديل كتم الصوت ---
-async function loadPromoVideo() {
+async function processBalanceOrder() {
+    const total = state.cart.reduce((s,i) => s + (i.price * i.qty), 0);
+    if(state.cart.length === 0) return toast("⚠️ الحقيبة فارغة");
+    if(state.user.bal < total) return toast("❌ رصيد غير كافٍ");
+    
     try {
-        const res = await fetch(`${API}/api/ads/active`);
+        toast("⏳ جاري تأمين العملية...");
+        const res = await fetch(`${API}/api/orders/add`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone: state.user.phone, order: { total, items: state.cart } })
+        });
         const data = await res.json();
-        const video = document.getElementById('promo-video');
-        if (video && data && data.videoUrl) {
-            video.src = data.videoUrl;
-            video.muted = true; // البدء بمكتوم لضمان الأوتوبلاي
-            video.play().catch(() => {});
+        if(res.ok) {
+            state.user.bal = data.currentBal;
+            localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
+            state.cart = [];
+            ui();
+            toast("✅ تم تنفيذ طلبك بنجاح");
+            changeView('orders', document.querySelector('.nav-item:nth-child(4)'));
         }
-    } catch (e) {}
+    } catch(e) { toast("⚠️ عطل فني"); }
 }
 
-function toggleMute() {
-    const video = document.getElementById('promo-video');
-    const icon = document.getElementById('mute-icon');
-    if(video) {
-        video.muted = !video.muted;
-        icon.className = video.muted ? "fas fa-volume-mute text-white text-[11px]" : "fas fa-volume-up text-white text-[11px]";
-        toast(video.muted ? "🔇 تم كتم الصوت" : "🔊 الصوت يعمل");
-    }
-}
-
-// --- المصادقة ---
-function toggleAuth() {
-    document.getElementById('login-box').classList.toggle('hidden');
-    document.getElementById('signup-box').classList.toggle('hidden');
-}
-
+// (بقية الدوال: Auth, Categories, Products, Mute, الخ كما في V34)
 async function handleLogin() {
     const phone = document.getElementById('login-phone').value, pass = document.getElementById('login-pass').value;
     if(!phone || !pass) return toast("⚠️ أكمل الحقول");
@@ -79,7 +132,6 @@ async function handleSignup() {
     } catch(e) { toast("⚠️ عطل فني"); }
 }
 
-// --- إدارة المتجر ---
 function unlockApp() {
     document.getElementById('auth-screen').style.display = "none";
     document.getElementById('main-app').classList.remove('hidden');
@@ -100,8 +152,8 @@ function renderCategories() {
     grid.innerHTML = state.categories.map(cat => `
         <div class="card-glass animate-fadeIn shadow-lg" onclick="openCategory('${cat.name}')">
             <img src="${cat.img}" class="w-full h-20 object-cover rounded-xl mb-3 border border-white/5">
-            <h3 class="text-[10px] font-black truncate">${cat.name}</h3>
-            <span class="text-[8px] opacity-40">${cat.sub}</span>
+            <h3 class="text-[10px] font-black truncate text-white">${cat.name}</h3>
+            <span class="text-[8px] opacity-40 text-white">${cat.sub}</span>
         </div>`).join('');
 }
 
@@ -113,50 +165,30 @@ function openCategory(catName) {
     prodGrid.innerHTML = filtered.map(p => `
         <div class="card-glass animate-fadeIn shadow-lg" onclick="sheet('${p._id}')">
             <img src="${p.img}" class="w-full h-32 object-cover rounded-xl mb-3 border border-white/5">
-            <h3 class="text-xs font-bold truncate">${p.name}</h3>
-            <p class="text-emerald-400 font-black mt-1 text-sm">${Number(p.price).toLocaleString()} <small>YER</small></p>
-        </div>`).join('') || "<div class='col-span-full opacity-30 text-center py-20 font-bold'>قريباً في هذا القسم..</div>";
+            <h3 class="text-xs font-bold truncate text-white">${p.name}</h3>
+            <p class="text-emerald-400 font-black mt-1 text-sm">${Number(p.price).toLocaleString()} YER</p>
+        </div>`).join('') || "<div class='col-span-full opacity-30 text-center py-20 font-bold'>قريباً..</div>";
 }
 
-async function processBalanceOrder() {
-    const total = state.cart.reduce((s,i) => s + (i.price * i.qty), 0);
-    if(state.user.bal < total) return toast("❌ رصيد غير كافٍ");
+async function loadPromoVideo() {
     try {
-        const res = await fetch(`${API}/api/orders/add`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone: state.user.phone, order: { total, items: state.cart } }) });
+        const res = await fetch(`${API}/api/ads/active`);
         const data = await res.json();
-        if(res.ok) { state.user.bal = data.currentBal; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); state.cart = []; ui(); toast("✅ تم تنفيذ الطلب"); changeView('orders'); }
-    } catch(e) { toast("⚠️ فشل الاتصال"); }
+        const video = document.getElementById('promo-video');
+        if (video && data && data.videoUrl) { video.src = data.videoUrl; video.muted = true; video.play().catch(() => {}); }
+    } catch (e) {}
+}
+
+function toggleMute() {
+    const video = document.getElementById('promo-video'), icon = document.getElementById('mute-icon');
+    if(video) { video.muted = !video.muted; icon.className = video.muted ? "fas fa-volume-mute text-white text-[11px]" : "fas fa-volume-up text-white text-[11px]"; }
 }
 
 function switchLayout() {
     state.layoutMode = (state.layoutMode + 1) % 3;
-    const grid = document.getElementById('categories-grid');
-    const classes = ["mode-matrix", "mode-dual", "mode-list"];
-    const icons = ["fa-table-cells", "fa-grip-lines-vertical", "fa-list-ul"];
-    grid.className = `cards-container ${classes[state.layoutMode]}`;
+    const grid = document.getElementById('categories-grid'), icons = ["fa-table-cells", "fa-grip-lines-vertical", "fa-list-ul"];
+    grid.className = `cards-container ${["mode-matrix", "mode-dual", "mode-list"][state.layoutMode]}`;
     document.getElementById('layoutIcon').className = `fa ${icons[state.layoutMode]} text-emerald-500`;
-}
-
-function ui() {
-    if(!state.user) return;
-    document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
-    document.getElementById('acc-name-display').innerText = state.user.name;
-    document.getElementById('acc-phone-display').innerText = state.user.phone;
-    document.getElementById('u-avatar').innerText = state.user.name.charAt(0);
-}
-
-async function sync() {
-    const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
-    const data = await res.json();
-    if(res.ok) { state.user = data.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); ui(); }
-}
-
-function changeView(v, b) {
-    document.querySelectorAll('.view-content').forEach(x => x.classList.add('hidden'));
-    document.getElementById('view-' + v).classList.remove('hidden');
-    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-    if(b) b.classList.add('active');
-    if(v === 'orders') fetchOrders();
 }
 
 function sheet(id) {
@@ -175,6 +207,14 @@ function addToCart(p) {
     toast("🛒 أضيف للسلة");
 }
 
+async function sync() {
+    const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
+    const data = await res.json();
+    if(res.ok) { state.user = data.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); ui(); }
+}
+
 function logout() { localStorage.clear(); location.reload(); }
 function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3000); }
 function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
+function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(()=>{}); } }
+function toggleAuth() { document.getElementById('login-box').classList.toggle('hidden'); document.getElementById('signup-box').classList.toggle('hidden'); }

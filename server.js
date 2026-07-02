@@ -5,10 +5,19 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const MONGO_URI = "mongodb://mohe78795_db_user:737465252@ac-3prk1zf-shard-00-00.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-01.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-02.qr9q8iv.mongodb.net:27017/?ssl=true&replicaSet=atlas-kaid64-shard-0&authSource=admin&appName=Cluster0";
+// ✅ تأمين قاعدة البيانات عبر متغيرات البيئة
+const MONGO_URI = process.env.MONGO_URI; 
 
-mongoose.connect(MONGO_URI).then(() => console.log("✅ Connected to Atlas")).catch(e => console.log(e));
+if (!MONGO_URI) {
+    console.error("❌ خطأ: MONGO_URI غير معرف في متغيرات البيئة!");
+    process.exit(1);
+}
 
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("✅ Securely Connected to MongoDB Atlas"))
+    .catch(e => console.error("❌ Connection Failed:", e.message));
+
+// --- هياكل البيانات (Schemas) ---
 const userSchema = new mongoose.Schema({ name: String, phone: { type: String, unique: true }, pass: String, bal: { type: Number, default: 0 } });
 const catSchema = new mongoose.Schema({ name: String, sub: String, img: String });
 const productSchema = new mongoose.Schema({ name: String, price: Number, img: String, cat: String });
@@ -23,14 +32,17 @@ const Ad = mongoose.model('Ad', adSchema);
 
 app.use(cors()); app.use(express.json()); app.use(express.static(path.join(__dirname, 'public')));
 
+// --- مسارات الـ API (نفس المنطق السابق المستقر) ---
 app.get('/api/categories', async (req, res) => res.json(await Category.find()));
 app.get('/api/products', async (req, res) => res.json(await Product.find()));
 app.get('/api/ads/active', async (req, res) => res.json(await Ad.findOne({ active: true })));
 app.post('/api/auth/signup', async (req, res) => {
-    const { name, phone, pass } = req.body;
-    if (await User.findOne({ phone })) return res.status(400).json({ message: "الرقم مسجل" });
-    const user = new User({ name, phone, pass }); await user.save();
-    res.json({ success: true, user });
+    try {
+        const { name, phone, pass } = req.body;
+        if (await User.findOne({ phone })) return res.status(400).json({ message: "الرقم مسجل" });
+        const user = new User({ name, phone, pass }); await user.save();
+        res.json({ success: true, user });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 app.post('/api/auth/login', async (req, res) => {
     const user = await User.findOne({ phone: req.body.phone, pass: req.body.pass });
@@ -48,4 +60,4 @@ app.post('/api/orders/add', async (req, res) => {
 });
 app.get('/api/orders/:phone', async (req, res) => res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })));
 
-app.listen(PORT, () => console.log(`🚀 Server running`));
+app.listen(PORT, () => console.log(`🚀 Secure Server running on port ${PORT}`));

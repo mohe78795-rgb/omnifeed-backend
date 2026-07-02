@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>أبو حسين | Supplies</title>
+    <title>أبو حسين | Prestige</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
@@ -61,18 +61,14 @@
                 <div id="categories-grid" class="cards-container mode-matrix"></div>
             </div>
 
-            <!-- تم تغيير المعرّف هنا إلى view-games ليطابق منطق الـ JS تماماً -->
             <div id="view-games" class="view-content hidden space-y-8 animate-fadeIn">
-                <h2 class="text-3xl font-black text-right">عروض شحن الألعاب الفوري ⚡</h2>
-                
+                <h2 class="text-3xl font-black text-right">شحن الألعاب الفوري</h2>
                 <div id="games-list-grid" class="grid grid-cols-2 gap-4"></div>
-
                 <div id="game-topup-panel" class="hidden p-6 bg-[#0a101e]/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 space-y-6 animate-slideUp text-right">
                     <div class="flex justify-between items-center mb-2">
                         <h3 id="selected-game-title" class="text-xl font-black text-emerald-400">اسم اللعبة</h3>
                         <button onclick="cancelGameSelection()" class="text-xs text-slate-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">تغيير اللعبة</button>
                     </div>
-
                     <div class="space-y-2">
                         <label class="text-xs font-bold text-slate-300 block">معرف اللاعب (Player ID):</label>
                         <div class="flex gap-2">
@@ -81,7 +77,6 @@
                         </div>
                         <p id="player-name-display" class="text-xs text-emerald-400 font-bold min-h-[16px]"></p>
                     </div>
-
                     <div class="space-y-3">
                         <label class="text-xs font-bold text-slate-300 block">اختر فئة الشحن المتاحة:</label>
                         <div id="game-denominations-list" class="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar"></div>
@@ -114,10 +109,9 @@
             </div>
         </main>
 
-        <!-- تم الحفاظ على الأيقونة والاسم "عروض" مع تمرير الـ view باسم 'games' ليتوافق مع السكريبت -->
         <nav class="fixed bottom-0 left-0 right-0 h-24 bg-black/80 backdrop-blur-2xl border-t border-white/5 grid grid-cols-5 items-center z-[500] px-4">
             <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home"></i><span>الرئيسية</span></button>
-            <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-bolt text-xl"></i><span>عروض</span></button>
+            <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-gamepad text-xl"></i><span>الألعاب</span></button>
             <button onclick="changeView('cart', null)" class="btn-fab-royal"><i class="fas fa-shopping-bag"></i></button>
             <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt"></i><span>فواتيري</span></button>
             <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-gear"></i><span>حسابي</span></button>

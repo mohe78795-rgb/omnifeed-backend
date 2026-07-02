@@ -1,4 +1,3 @@
-// استبدل ملف script.js الحالي بهذا السكريبت الكامل لضمان المزامنة والربط المباشر
 const API = "https://0zk30qr9iu.onrender.com";
 let state = { 
     categories: [], 
@@ -6,8 +5,8 @@ let state = {
     cart: [], 
     layoutMode: 0, 
     user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
-    games: [],          // 🆕 قائمة الألعاب
-    selectedGame: null  // 🆕 اللعبة المحددة حالياً لشحنها
+    games: [],          
+    selectedGame: null  
 };
 
 window.onload = () => {
@@ -69,14 +68,13 @@ function changeView(v, b) {
 
     if(v === 'cart') ui(); 
     if(v === 'orders') fetchOrders();
-    if(v === 'games') renderGamesMenu(); // 🆕 استدعاء قائمة الألعاب عند فتح التبويب
+    if(v === 'games') renderGamesMenu(); 
 }
 
 // =======================================================
 // 🆕 محرك تشغيل وإدارة قسم الألعاب الفوري (UniPin Integration)
 // =======================================================
 
-// جلب قائمة عروض الألعاب وفئاتها من السيرفر
 async function initGamesData() {
     try {
         const res = await fetch(`${API}/api/games`);
@@ -85,15 +83,12 @@ async function initGamesData() {
     } catch(e) { console.error("Games Fetching Error"); }
 }
 
-// عرض بطاقات الألعاب الفخمة
 function renderGamesMenu() {
     const grid = document.getElementById('games-list-grid');
     if(!grid) return;
     
-    // تنظيف الحقول والواجهة أولاً عند الدخول للقسم
     cancelGameSelection();
 
-    // خريطة أيقونات ذكية للألعاب لتبدو فخمة وجذابة
     const gameIcons = {
         "PUBGM_GLOBAL": "https://img.icons8.com/color/144/pubg-drop-box.png",
         "MLBB_GLOBAL": "https://img.icons8.com/color/144/mobile-legends.png",
@@ -109,7 +104,6 @@ function renderGamesMenu() {
     `).join('');
 }
 
-// فتح لوحة التحكم باللعبة المختارة
 function selectGameToTopup(code) {
     playSound('snd-click');
     state.selectedGame = state.games.find(g => g.game_code === code);
@@ -121,7 +115,6 @@ function selectGameToTopup(code) {
 
     document.getElementById('selected-game-title').innerText = state.selectedGame.game_name;
     
-    // تعبئة قائمة الفئات وعروض الشحن
     const denomList = document.getElementById('game-denominations-list');
     denomList.innerHTML = state.selectedGame.denominations.map(pkg => `
         <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all mb-2">
@@ -136,20 +129,18 @@ function selectGameToTopup(code) {
     `).join('');
 }
 
-// العودة لإستعراض الألعاب
 function cancelGameSelection() {
     state.selectedGame = null;
-    document.getElementById('game-player-id').value = '';
-    document.getElementById('player-name-display').innerText = '';
-    document.getElementById('game-topup-panel').classList.add('hidden');
-    document.getElementById('games-list-grid').classList.remove('hidden');
+    if(document.getElementById('game-player-id')) document.getElementById('game-player-id').value = '';
+    if(document.getElementById('player-name-display')) document.getElementById('player-name-display').innerText = '';
+    if(document.getElementById('game-topup-panel')) document.getElementById('game-topup-panel').classList.add('hidden');
+    if(document.getElementById('games-list-grid')) document.getElementById('games-list-grid').classList.remove('hidden');
 }
 
-// التحقق من اسم اللاعب برميجيًا
 async function validatePlayer() {
     playSound('snd-click');
     const id = document.getElementById('game-player-id').value;
-    if(!id) return toast("⚠️ أدمل معرف اللاعب أولاً");
+    if(!id) return toast("⚠️ أدخل معرف اللاعب أولاً");
     
     document.getElementById('player-name-display').className = "text-xs text-slate-400 animate-pulse";
     document.getElementById('player-name-display').innerText = "جاري الفحص المباشر...";
@@ -170,7 +161,6 @@ async function validatePlayer() {
     } catch(e) { document.getElementById('player-name-display').innerText = ""; toast("⚠️ خطأ في الاتصال"); }
 }
 
-// إتمام عملية الشحن الفوري من المحفظة
 async function sendTopupRequest(pkgId, price) {
     const id = document.getElementById('game-player-id').value;
     if(!id) return toast("⚠️ أدخل معرف اللاعب وتحقق منه!");
@@ -193,7 +183,7 @@ async function sendTopupRequest(pkgId, price) {
         });
         const data = await res.json();
         if(res.ok && data.success) {
-            playSound('snd-cashier'); // تشغيل صوت الكاشير عند نجاح الشحن الفوري المالي
+            playSound('snd-cashier'); 
             state.user.bal = data.currentBal;
             localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
             ui();
@@ -205,7 +195,7 @@ async function sendTopupRequest(pkgId, price) {
     } catch(e) { toast("⚠️ عطل فني في خادم السداد"); }
 }
 
-// --- بقية الدوال الفنية المستقرة لتطبيقك ---
+// --- بقية الدوال الفنية المستقرة לתطبيقك ---
 async function fetchOrders() {
     try {
         const res = await fetch(`${API}/api/orders/${state.user.phone}`);
@@ -275,7 +265,7 @@ function unlockApp() {
     document.getElementById('main-app').classList.remove('hidden');
     setTimeout(() => { document.getElementById('main-app').style.opacity = "1"; ui(); sync(); loadPromoVideo(); }, 50);
     initProducts();
-    initGamesData(); // 🆕 جلب بيانات الألعاب مباشرة عند التشغيل الأمن
+    initGamesData(); 
 }
 
 async function initProducts() {
@@ -289,7 +279,7 @@ async function initProducts() {
 function renderCategories() {
     const grid = document.getElementById('categories-grid');
     grid.innerHTML = state.categories.map(cat => `
-        <div class="card-glass animate-fadeIn shadow-lg" onclick="openCategory('${cat.name}')">
+        <div class="card-glass animate-fadeIn shadow-lg cursor-pointer" onclick="openCategory('${cat.name}')">
             <img src="${cat.img}" class="w-full h-20 object-cover rounded-xl mb-3 border border-white/5">
             <h3 class="text-[10px] font-black truncate text-white">${cat.name}</h3>
             <span class="text-[8px] opacity-40 text-white">${cat.sub}</span>
@@ -302,7 +292,7 @@ function openCategory(catName) {
     const filtered = state.prods.filter(p => p.cat === catName);
     const prodGrid = document.getElementById('category-products-grid');
     prodGrid.innerHTML = filtered.map(p => `
-        <div class="card-glass animate-fadeIn shadow-lg" onclick="sheet('${p._id}')">
+        <div class="card-glass animate-fadeIn shadow-lg cursor-pointer" onclick="sheet('${p._id}')">
             <img src="${p.img}" class="w-full h-32 object-cover rounded-xl mb-3 border border-white/5">
             <h3 class="text-xs font-bold truncate text-white">${p.name}</h3>
             <p class="text-emerald-400 font-black mt-1 text-sm">${Number(p.price).toLocaleString()} YER</p>
@@ -330,6 +320,18 @@ function switchLayout() {
     document.getElementById('layoutIcon').className = `fa ${icons[state.layoutMode]} text-emerald-500`;
 }
 
+function searchCategories() {
+    const query = document.querySelector('.search-bar input').value.toLowerCase();
+    const filtered = state.categories.filter(cat => cat.name.toLowerCase().includes(query));
+    const grid = document.getElementById('categories-grid');
+    grid.innerHTML = filtered.map(cat => `
+        <div class="card-glass animate-fadeIn shadow-lg cursor-pointer" onclick="openCategory('${cat.name}')">
+            <img src="${cat.img}" class="w-full h-20 object-cover rounded-xl mb-3 border border-white/5">
+            <h3 class="text-[10px] font-black truncate text-white">${cat.name}</h3>
+            <span class="text-[8px] opacity-40 text-white">${cat.sub}</span>
+        </div>`).join('');
+}
+
 function sheet(id) {
     const p = state.prods.find(x => x._id == id);
     document.getElementById('sh-img').src = p.img;
@@ -347,6 +349,7 @@ function addToCart(p) {
 }
 
 async function sync() {
+    if (!state.user) return;
     const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
     const data = await res.json();
     if(res.ok) { state.user = data.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); ui(); }

@@ -9,28 +9,25 @@ body { font-family: 'Cairo', sans-serif; background: #05070a; -webkit-tap-highli
 .btn-royal { background: linear-gradient(135deg, #10b981, #059669); color: black; transition: 0.3s; }
 .search-bar { background: rgba(255,255,255,0.04); backdrop-filter: blur(20px); border: 1px solid rgba(16,185,129,0.1); border-radius: 18px; display: flex; align-items: center; padding: 2px 18px; }
 .search-bar input { background: transparent; border: none; color: #fff; padding: 14px; width: 100%; outline: none; }
-.nav-item { display: flex; flex-direction: column; align-items: center; color: #4b5563; font-size: 9px; gap: 4px; }
+.nav-item { display: flex; flex-direction: column; align-items: center; color: #4b5563; font-size: 9px; gap: 4px; background: transparent; border: none; cursor: pointer; }
 .nav-item.active { color: #10b981; }
 .cards-container { display: grid; gap: 15px; transition: 0.5s ease; }
 .mode-matrix { grid-template-columns: repeat(4, 1fr); }
 .mode-dual { grid-template-columns: repeat(2, 1fr); }
 .mode-list { grid-template-columns: 1fr; }
 .card-glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 12px; text-align: center; cursor: pointer; }
-.btn-fab-royal { width: 64px; height: 64px; background: #10b981; border-radius: 50%; display: flex; items-center; justify-content: center; color: black; font-size: 24px; border: 5px solid #05070a; margin-top: -40px; }
+.btn-fab-royal { width: 64px; height: 64px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 24px; border: 5px solid #05070a; margin-top: -40px; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 .animate-slideUp { animation: slideUp 0.6s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* ======================================================= */
-/* 🎮 ستايل الألعاب المطور والـ Scroll الناعم بدون شريط مزعج 🎮 */
-/* ======================================================= */
 #game-denominations-list {
-    -ms-overflow-style: none;  /* لمتصفحات IE */
-    scrollbar-width: none;     /* لمتصفحات فايرفوكس */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;     
 }
 #game-denominations-list::-webkit-scrollbar {
-    display: none;             /* إخفاء شريط التمرير تماماً على الكروم وسفاري */
+    display: none;             
 }
 

@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require('express');                                              
 const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
+const cors = require('cors');                                                    
+const path = require('path');                                                    
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;                                           
 
 // ✅ تأمين قاعدة البيانات عبر متغيرات البيئة
 const MONGO_URI = process.env.MONGO_URI;
@@ -13,7 +13,8 @@ if (!MONGO_URI) {
     process.exit(1);
 }
 
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+// تم تحديث خيارات الاتصال لتفادي التحذيرات في النسخ الحديثة
+mongoose.connect(MONGO_URI)
     .then(() => console.log("✅ Securely Connected to MongoDB Atlas"))
     .catch(e => console.error("❌ Connection Failed:", e.message));
 
@@ -78,7 +79,6 @@ app.get('/api/orders/:phone', async (req, res) => res.json(await Order.find({ ph
 // 1. مسار جلب قائمة الألعاب المتاحة وفئاتها السعرية
 app.get('/api/games', async (req, res) => {
     try {
-        // البيانات محاكاة محلياً لتفادي حظر الشبكات والـ Cloudflare
         const gamesData = [
             {
                 game_code: "PUBGM_GLOBAL",
@@ -116,8 +116,6 @@ app.get('/api/games', async (req, res) => {
 // 2. مسار التحقق من حساب اللاعب داخل اللعبة (User ID Validation)
 app.post('/api/games/validate-user', async (req, res) => {
     const { game_code, user_id, zone_id } = req.body;
-    
-    // محاكاة التحقق من الاسم: إذا أرسل أي ID، نعطيه اسم وهمي كاستجابة فورية ذكية
     if (user_id) {
         return res.json({
             success: true,
@@ -132,20 +130,16 @@ app.post('/api/games/validate-user', async (req, res) => {
 app.post('/api/games/topup', async (req, res) => {
     try {
         const { phone, game_code, user_id, zone_id, denomination_id, price } = req.body;
-        
         const user = await User.findOne({ phone });
         if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
-        
-        // التحقق من كفاية الرصيد بالمحفظة
+
         if (user.bal < price) {
             return res.status(400).json({ message: "رصيد محفظتك غير كافٍ لإتمام عملية الشحن" });
         }
-        
-        // خصم المبلغ وحفظ البيانات الجديدة للمحفظة
+
         user.bal -= price;
         await user.save();
-        
-        // إنشاء فاتورة فريدة وتخزين عملية الشحن داخل الـ Orders لتظهر في سجل المستخدم
+
         const orderId = "GAME-" + Date.now().toString().slice(-6);
         const gameOrderItem = {
             name: `شحن ألعاب: ${game_code}`,
@@ -153,23 +147,22 @@ app.post('/api/games/topup', async (req, res) => {
             price: price,
             qty: 1
         };
-        
+
         const newOrder = new Order({
             id: orderId,
             phone: phone,
             items: [gameOrderItem],
             total: price,
-            status: 'تم الشحن بنجاح' // بما أنه معتمد على الماكيت، يتم تأكيده فوراً
+            status: 'تم الشحن بنجاح'
         });
         await newOrder.save();
-        
+
         res.json({
             success: true,
             message: "تم الشحن وخصم الرصيد من المحفظة بنجاح 🚀",
             currentBal: user.bal,
             order: newOrder
         });
-        
     } catch (e) {
         res.status(500).json({ success: false, message: "حدث خطأ أثناء معالجة عملية الشحن" });
     }

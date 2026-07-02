@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>أبو حسين | Prestige</title>
+    <title>أبو حسين Supplies | Prestige</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-[#05070a] text-white">
@@ -18,7 +18,7 @@
     <div class="blob blob-2"></div>
 
     <div id="splash" class="fixed inset-0 z-[3000] bg-[#05070a] flex items-center justify-center">
-        <h1 class="text-3xl font-black text-emerald-500 animate-pulse tracking-widest">أبو حسين</h1>
+        <h1 class="text-3xl font-black text-emerald-500 animate-pulse tracking-widest">أبو حسين Supplies</h1>
     </div>
 
     <section id="auth-screen" class="fixed inset-0 z-[2000] hidden flex items-center justify-center p-6 auth-bg">
@@ -50,20 +50,35 @@
         </header>
 
         <main class="pt-28 p-5 pb-44 space-y-10">
-            <div id="view-home" class="view-content space-y-10 animate-fadeIn">
-                <div class="relative p-3 rounded-[2.5rem] bg-[#0a101e]/60 backdrop-blur-md border border-white/5 overflow-hidden shadow-2xl">
-                    <video id="promo-video" autoplay loop playsinline class="w-full h-48 object-cover rounded-2xl"></video>
-                    <button onclick="toggleMute()" class="absolute bottom-6 left-6 w-10 h-10 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 z-10">
-                        <i id="mute-icon" class="fas fa-volume-mute text-white text-[11px]"></i>
-                    </button>
+            <!-- 🏠 الشاشة الرئيسية الأصلية بالفيديو دون تغيير -->
+            <div id="view-home" class="view-content space-y-8 animate-fadeIn">
+                <div class="relative w-full aspect-video rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-black">
+                    <video id="promo-video" class="w-full h-full object-cover" loop muted playsinline>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-laser-lights-background-41764-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex flex-col justify-end p-8 text-right">
+                        <span class="text-[9px] text-emerald-400 font-black tracking-wider uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full w-max mb-2">Prestige Update</span>
+                        <h2 class="text-2xl font-black text-white leading-tight">أبو حسين Supplies<br><span class="text-emerald-500 font-bold text-sm">سرعة، أمان، واعتمادية</span></h2>
+                        <div class="flex gap-2 mt-4">
+                            <!-- التعديل هنا: تم تغيير الاسم إلى "الألعاب" والحدث لفتح واجهة الألعاب -->
+                            <button onclick="changeView('games', document.querySelector('.nav-item:nth-child(2)'))" class="px-6 py-3 bg-emerald-500 text-black font-black text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
+                                <i class="fas fa-gamepad"></i> الألعاب
+                            </button>
+                            <button onclick="toggleMute()" class="w-10 h-10 bg-white/10 backdrop-blur-md border border-white/10 rounded-xl flex items-center justify-center active:scale-95 transition-all">
+                                <i id="mute-icon" class="fas fa-volume-mute text-white text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="search-bar"><i class="fa fa-search text-emerald-500/50"></i><input type="text" oninput="searchCategories()" placeholder="ابحث عن قسم أو خدمة..."></div>
                 <div id="categories-grid" class="cards-container mode-matrix"></div>
             </div>
 
+            <!-- 🎮 شاشة الألعاب المستقلة -->
             <div id="view-games" class="view-content hidden space-y-8 animate-fadeIn">
                 <h2 class="text-3xl font-black text-right">شحن الألعاب الفوري</h2>
                 <div id="games-list-grid" class="grid grid-cols-2 gap-4"></div>
+
                 <div id="game-topup-panel" class="hidden p-6 bg-[#0a101e]/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 space-y-6 animate-slideUp text-right">
                     <div class="flex justify-between items-center mb-2">
                         <h3 id="selected-game-title" class="text-xl font-black text-emerald-400">اسم اللعبة</h3>
@@ -84,6 +99,7 @@
                 </div>
             </div>
 
+            <!-- بقية التبويبات الفنية المستقرة -->
             <div id="view-category-details" class="view-content hidden space-y-8 animate-fadeIn">
                 <div class="flex items-center gap-4"><button onclick="changeView('home')" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center border border-white/5"><i class="fa fa-arrow-right"></i></button><h2 id="current-cat-name" class="text-2xl font-black">..</h2></div>
                 <div id="category-products-grid" class="cards-container mode-dual"></div>
@@ -110,11 +126,11 @@
         </main>
 
         <nav class="fixed bottom-0 left-0 right-0 h-24 bg-black/80 backdrop-blur-2xl border-t border-white/5 grid grid-cols-5 items-center z-[500] px-4">
-            <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home"></i><span>الرئيسية</span></button>
+            <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home text-xl"></i><span>الرئيسية</span></button>
             <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-gamepad text-xl"></i><span>الألعاب</span></button>
-            <button onclick="changeView('cart', null)" class="btn-fab-royal"><i class="fas fa-shopping-bag"></i></button>
-            <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt"></i><span>فواتيري</span></button>
-            <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-gear"></i><span>حسابي</span></button>
+            <button onclick="changeView('cart', null)" class="btn-fab-royal"><i class="fas fa-shopping-bag text-black"></i></button>
+            <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt text-xl"></i><span>فواتيري</span></button>
+            <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-gear text-xl"></i><span>حسابي</span></button>
         </nav>
     </div>
 

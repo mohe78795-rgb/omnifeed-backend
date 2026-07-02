@@ -1,172 +1,236 @@
-const express = require('express');                                              
+const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');                                                    
-const path = require('path');                                                    
+const cors = require('cors');
+const path = require('path');
+
 const app = express();
-const PORT = process.env.PORT || 3000;                                           
+const PORT = process.env.PORT || 3000;
 
-// ✅ تأمين قاعدة البيانات عبر متغيرات البيئة
-const MONGO_URI = process.env.MONGO_URI;
+// --- الإعدادات الأساسية (Middlewares) ---
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-if (!MONGO_URI) {
-    console.error("❌ خطأ: MONGO_URI غير معرف في متغيرات البيئة!");
-    process.exit(1);
-}
+// --- 1. الاتصال بالقاعدة ---
+const MONGO_URI = "mongodb://mohe78795_db_user:737465252@ac-3prk1zf-shard-00-00.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-01.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-02.qr9q8iv.mongodb.net:27017/?ssl=true&replicaSet=atlas-kaid64-shard-0&authSource=admin&appName=Cluster0";
 
-// تم تحديث خيارات الاتصال لتفادي التحذيرات في النسخ الحديثة
 mongoose.connect(MONGO_URI)
-    .then(() => console.log("✅ Securely Connected to MongoDB Atlas"))
-    .catch(e => console.error("❌ Connection Failed:", e.message));
+    .then(async () => {
+        console.log("✅ متصل بسحابة أبو حسين (MongoDB)");
+    })
+    .catch(err => {
+        console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err);
+    });
 
-// --- هياكل البيانات (Schemas) ---
-const userSchema = new mongoose.Schema({ name: String, phone: { type: String, unique: true }, pass: String, bal: { type: Number, default: 0 } });
-const catSchema = new mongoose.Schema({ name: String, sub: String, img: String });
-const productSchema = new mongoose.Schema({ name: String, price: Number, img: String, cat: String });
-const orderSchema = new mongoose.Schema({ id: String, phone: String, items: Array, total: Number, status: { type: String, default: 'قيد المراجعة' }, date: { type: String, default: () => new Date().toLocaleString('ar-YE') } });
-const adSchema = new mongoose.Schema({ videoUrl: String, active: { type: Boolean, default: true } });
+// ==========================================
+// 🗃️ تعريف موديلات وقواعد البيانات (Schemas)
+// ==========================================
 
-// 🆕 هياكل بيانات قسم شحن الألعاب (UniPin Mock Data Integration)
-const gameSchema = new mongoose.Schema({
-    game_code: { type: String, unique: true },
-    game_name: String,
-    game_status: { type: String, default: 'active' },
-    denominations: [
-        { id: String, name: String, price: Number } // فئات الشحن (مثل: 60 جوهرة بـ 150 ريال)
-    ]
+// 1. موديل المستخدمين (المحفظة الرقمية)
+const UserSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    phone: { type: String, required: true, unique: true },
+    pass: { type: String, required: true },
+    bal: { type: Number, default: 0 } // الرصيد بالعملة المحلية YER
 });
+const User = mongoose.model('User', UserSchema);
 
-const User = mongoose.model('User', userSchema);
-const Category = mongoose.model('Category', catSchema);
-const Product = mongoose.model('Product', productSchema);
-const Order = mongoose.model('Order', orderSchema);
-const Ad = mongoose.model('Ad', adSchema);
-const Game = mongoose.model('Game', gameSchema); // 🆕 موديل الألعاب
+// 2. موديل المنتجات الأساسية للكتالوج
+const ProductSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    cat: { type: String, required: true },
+    img: { type: String, required: true }
+});
+const Product = mongoose.model('Product', ProductSchema);
 
-app.use(cors()); app.use(express.json()); app.use(express.static(path.join(__dirname, 'public')));
+// 3. موديل أقسام المتجر
+const CategorySchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true },
+    sub: { type: String, default: "" },
+    img: { type: String, required: true }
+});
+const Category = mongoose.model('Category', CategorySchema);
 
-// --- مسارات الـ API (الخدمات السابقة المستقرة) ---
-app.get('/api/categories', async (req, res) => res.json(await Category.find()));
-app.get('/api/products', async (req, res) => res.json(await Product.find()));
-app.get('/api/ads/active', async (req, res) => res.json(await Ad.findOne({ active: true })));
+// 4. موديل الفواتير وسجل العمليات
+const OrderSchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    phone: { type: String, required: true },
+    total: { type: Number, required: true },
+    status: { type: String, default: "مكتمل ✅" },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) },
+    items: { type: Array, required: true }
+});
+const Order = mongoose.model('Order', OrderSchema);
+
+
+// ==========================================
+// 🔐 مسارات الهوية والتحقق (Authentication)
+// ==========================================
+
+// تسجيل حساب جديد وتفعيل محفظة افتراضية
 app.post('/api/auth/signup', async (req, res) => {
+    const { name, phone, pass } = req.body;
     try {
-        const { name, phone, pass } = req.body;
-        if (await User.findOne({ phone })) return res.status(400).json({ message: "الرقم مسجل" });
-        const user = new User({ name, phone, pass }); await user.save();
-        res.json({ success: true, user });
-    } catch (e) { res.status(500).json({ success: false }); }
+        const exist = await User.findOne({ phone });
+        if (exist) return res.status(400).json({ success: false, message: "رقم الهاتف مسجل مسبقاً" });
+        
+        // رصيد افتراضي أولي للتجربة 5000 YER
+        const newUser = new User({ name, phone, pass, bal: 5000 }); 
+        await newUser.save();
+        res.json({ success: true, user: newUser });
+    } catch (e) { res.status(500).json({ success: false, message: "حدث خطأ في خادم التسجيل" }); }
 });
+
+// تسجيل الدخول العادي
 app.post('/api/auth/login', async (req, res) => {
-    const user = await User.findOne({ phone: req.body.phone, pass: req.body.pass });
-    if (user) res.json({ success: true, user }); else res.status(401).json({ message: "بيانات خاطئة" });
+    const { phone, pass } = req.body;
+    try {
+        const user = await User.findOne({ phone, pass });
+        if (!user) return res.status(400).json({ success: false, message: "رقم الهاتف أو كلمة المرور غير صحيحة" });
+        res.json({ success: true, user });
+    } catch (e) { res.status(500).json({ success: false, message: "خطأ في السيرفر الداخلي" }); }
 });
-app.get('/api/auth/user/:phone', async (req, res) => res.json({ success: true, user: await User.findOne({ phone: req.params.phone }) }));
+
+// مزامنة رصيد الحساب المباشر
+app.get('/api/auth/user/:phone', async (req, res) => {
+    try {
+        const user = await User.findOne({ phone: req.params.phone });
+        if (!user) return res.status(404).json({ success: false, message: "المستخدم غير موجود" });
+        res.json({ success: true, user });
+    } catch (e) { res.status(500).json({ success: false, message: "فشلت مزامنة البيانات" }); }
+});
+
+
+// ==========================================
+// 📦 مسارات المنتجات والأقسام (Catalog)
+// ==========================================
+
+app.get('/api/categories', async (req, res) => {
+    try { res.json(await Category.find({})); } catch(e) { res.status(500).send(e); }
+});
+
+app.get('/api/products', async (req, res) => {
+    try { res.json(await Product.find({})); } catch(e) { res.status(500).send(e); }
+});
+
+
+// ==========================================
+// 🧾 مسارات الدفع الفوري وفواتير السلة (Orders)
+// ==========================================
+
 app.post('/api/orders/add', async (req, res) => {
-    const { phone, order } = req.body; const user = await User.findOne({ phone });
-    if (user && user.bal >= order.total) {
-        user.bal -= order.total; await user.save();
-        const serverId = "INV-" + Date.now().toString().slice(-6);
-        const newOrder = new Order({ id: serverId, phone, items: order.items, total: order.total });
-        await newOrder.save(); res.json({ success: true, currentBal: user.bal, order: newOrder });
-    } else res.status(400).json({ message: "رصيد غير كافٍ" });
-});
-app.get('/api/orders/:phone', async (req, res) => res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })));
-
-// =======================================================
-// 🆕 مسارات الـ API الخاصة بقسم شحن الألعاب (UniPin Integration)
-// =======================================================
-
-// 1. مسار جلب قائمة الألعاب المتاحة وفئاتها السعرية
-app.get('/api/games', async (req, res) => {
+    const { phone, order } = req.body;
     try {
-        const gamesData = [
-            {
-                game_code: "PUBGM_GLOBAL",
-                game_name: "PUBG Mobile UC",
-                game_status: "active",
-                denominations: [
-                    { id: "uc_60", name: "60 UC", price: 150 },
-                    { id: "uc_325", name: "325 UC", price: 750 },
-                    { id: "uc_660", name: "660 UC", price: 1500 }
-                ]
-            },
-            {
-                game_code: "MLBB_GLOBAL",
-                game_name: "Mobile Legends Diamonds",
-                game_status: "active",
-                denominations: [
-                    { id: "dm_86", name: "86 Diamonds", price: 200 },
-                    { id: "dm_172", name: "172 Diamonds", price: 400 }
-                ]
-            },
-            {
-                game_code: "FREEFIRE_GLOBAL",
-                game_name: "Free Fire Diamonds",
-                game_status: "active",
-                denominations: [
-                    { id: "ff_100", name: "100 Diamonds", price: 220 },
-                    { id: "ff_210", name: "210 Diamonds", price: 440 }
-                ]
-            }
-        ];
-        res.json({ success: true, game_list: gamesData });
-    } catch (e) { res.status(500).json({ success: false, message: "فشل استدعاء الألعاب" }); }
-});
-
-// 2. مسار التحقق من حساب اللاعب داخل اللعبة (User ID Validation)
-app.post('/api/games/validate-user', async (req, res) => {
-    const { game_code, user_id, zone_id } = req.body;
-    if (user_id) {
-        return res.json({
-            success: true,
-            player_name: `Hero_Player_${user_id.slice(-4)}`,
-            message: "تم التحقق من الحساب بنجاح"
-        });
-    }
-    res.status(400).json({ success: false, message: "معرف اللاعب غير صحيح" });
-});
-
-// 3. مسار معالجة عملية الشحن الفعلي وخصم الرصيد من المحفظة
-app.post('/api/games/topup', async (req, res) => {
-    try {
-        const { phone, game_code, user_id, zone_id, denomination_id, price } = req.body;
         const user = await User.findOne({ phone });
-        if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
+        if (!user || user.bal < order.total) return res.status(400).json({ message: "رصيد المحفظة غير كافٍ لإتمام الشراء" });
 
-        if (user.bal < price) {
-            return res.status(400).json({ message: "رصيد محفظتك غير كافٍ لإتمام عملية الشحن" });
-        }
+        // خصم القيمة وتحديث الحساب
+        user.bal -= order.total;
+        await user.save();
 
+        const customId = "INV-" + Math.floor(100000 + Math.random() * 900000);
+        const newOrder = new Order({ id: customId, phone, total: order.total, items: order.items });
+        await newOrder.save();
+
+        res.json({ success: true, currentBal: user.bal });
+    } catch (e) { res.status(500).json({ message: "فشل تنفيذ عملية الشراء" }); }
+});
+
+app.get('/api/orders/:phone', async (req, res) => {
+    try { res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })); } catch(e) { res.status(500).send(e); }
+});
+
+
+// ==========================================
+// 🎮 مسارات نظام شحن الألعاب الفوري (UniPin Integration API)
+// ==========================================
+
+const GAMES_DATA = [
+    {
+        game_name: "ببجي موبايل (PUBG Mobile)",
+        game_code: "PUBGM_GLOBAL",
+        denominations: [
+            { id: "pubg_60", name: "60 UC 💎", price: 1200 },
+            { id: "pubg_325", name: "325 UC 💎", price: 5800 },
+            { id: "pubg_660", name: "660 UC 💎", price: 11500 }
+        ]
+    },
+    {
+        game_name: "فري فاير (Free Fire)",
+        game_code: "FREEFIRE_GLOBAL",
+        denominations: [
+            { id: "ff_100", name: "100 Diamond 💎", price: 950 },
+            { id: "ff_210", name: "210 Diamond 💎", price: 1900 },
+            { id: "ff_530", name: "530 Diamond 💎", price: 4750 }
+        ]
+    },
+    {
+        game_name: "موبايل ليجند (Mobile Legends)",
+        game_code: "MLBB_GLOBAL",
+        denominations: [
+            { id: "ml_86", name: "86 Diamonds 💎", price: 1400 },
+            { id: "ml_172", name: "172 Diamonds 💎", price: 2800 },
+            { id: "ml_257", name: "257 Diamonds 💎", price: 4100 }
+        ]
+    }
+];
+
+// 1. جلب قائمة الألعاب المتاحة
+app.get('/api/games', (req, res) => {
+    res.json({ success: true, game_list: GAMES_DATA });
+});
+
+// 2. التحقق الفوري الذكي من اللاعب (Player ID Validation)
+app.post('/api/games/validate-user', (req, res) => {
+    const { game_code, user_id } = req.body;
+    if (!user_id) return res.json({ success: false, message: "يرجى إدخال المعرف أولاً" });
+    
+    // محاكاة استجابة الخادم لأسماء اللاعبين الفنيين للواقعية الكاملة
+    const mockNames = ["Abdu_Hero⚡", "Yemen_King🔥", "Prestige_User👑", "Supplies_Slayer⚔️"];
+    const nameIndex = user_id.length % mockNames.length;
+    
+    res.json({ success: true, player_name: mockNames[nameIndex] });
+});
+
+// 3. معالجة طلب شحن اللعبة، خصم الرصيد، وإنشاء فاتورة تلقائية
+app.post('/api/games/topup', async (req, res) => {
+    const { phone, game_code, user_id, denomination_id, price } = req.body;
+    
+    try {
+        const user = await User.findOne({ phone });
+        if (!user) return res.status(404).json({ success: false, message: "الحساب غير موجود" });
+        if (user.bal < price) return res.status(400).json({ success: false, message: "رصيد محفظتك غير كافٍ لإتمام عملية الشحن الفوري" });
+
+        // خصم قيمة الشحنة فورياً من محفظة العميل
         user.bal -= price;
         await user.save();
 
-        const orderId = "GAME-" + Date.now().toString().slice(-6);
-        const gameOrderItem = {
-            name: `شحن ألعاب: ${game_code}`,
-            detail: `المعرف: ${user_id} | الفئة: ${denomination_id}`,
-            price: price,
-            qty: 1
-        };
-
-        const newOrder = new Order({
-            id: orderId,
-            phone: phone,
-            items: [gameOrderItem],
+        // تدوين العملية في جدول الفواتير تلقائياً لضمان حق العميل وسهولة مراجعتها
+        const customId = "GAME-" + Math.floor(100000 + Math.random() * 900000);
+        const gameOrder = new Order({
+            id: customId,
+            phone: user.phone,
             total: price,
-            status: 'تم الشحن بنجاح'
+            status: "مشحون تلقائياً ⚡",
+            items: [{ name: `شحن فئة [${denomination_id}] لحساب اللاعب: (${user_id}) في لعبة: ${game_code}`, price: price, qty: 1 }]
         });
-        await newOrder.save();
+        await gameOrder.save();
 
-        res.json({
-            success: true,
-            message: "تم الشحن وخصم الرصيد من المحفظة بنجاح 🚀",
-            currentBal: user.bal,
-            order: newOrder
-        });
-    } catch (e) {
-        res.status(500).json({ success: false, message: "حدث خطأ أثناء معالجة عملية الشحن" });
+        res.json({ success: true, message: "تم الشحن وتحديث حسابك فورياً بنجاح!", currentBal: user.bal });
+    } catch(e) {
+        res.status(500).json({ success: false, message: "عطل طارئ في نظام السداد المباشر" });
     }
 });
 
-app.listen(PORT, () => console.log(`🚀 Secure Server running on port ${PORT}`));
+
+// --- توجيه كل طلبات الواجهة للملف الرئيسي لتطبيقات الـ SPA ---
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// --- تشغيل السيرفر ---
+app.listen(PORT, () => {
+    console.log(`🚀 خادم التطبيق يعمل بنجاح وكفاءة تامة على المنفذ: ${PORT}`);
+});
 

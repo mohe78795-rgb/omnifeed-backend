@@ -11,19 +11,16 @@
 </head>
 <body class="bg-[#05070a] text-white">
 
-    <!-- ✅ عناصر الصوت (تم إصلاح النقص) -->
     <audio id="snd-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2358-preview.mp3" preload="auto"></audio>
     <audio id="snd-cashier" src="https://assets.mixkit.co/active_storage/sfx/592/592-preview.mp3" preload="auto"></audio>
 
     <div class="blob"></div>
     <div class="blob blob-2"></div>
 
-    <!-- شاشة التمهيد -->
     <div id="splash" class="fixed inset-0 z-[3000] bg-[#05070a] flex items-center justify-center">
         <h1 class="text-3xl font-black text-emerald-500 animate-pulse tracking-widest">أبو حسين</h1>
     </div>
 
-    <!-- شاشة الدخول الفخمة -->
     <section id="auth-screen" class="fixed inset-0 z-[2000] hidden flex items-center justify-center p-6 auth-bg">
         <div class="w-full max-w-sm p-10 bg-black/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 text-center shadow-3xl animate-slideUp">
             <h1 class="text-3xl font-black mb-10">دخول العضوية</h1>
@@ -43,7 +40,6 @@
         </div>
     </section>
 
-    <!-- التطبيق -->
     <div id="main-app" class="hidden opacity-0 transition-all duration-1000">
         <header class="fixed top-0 left-0 right-0 z-[1000] px-6 py-6 bg-black/60 backdrop-blur-xl border-b border-white/5 flex justify-between items-center">
             <div class="flex items-center gap-3"><div id="u-avatar" class="w-10 h-10 bg-emerald-500 text-black rounded-xl flex items-center justify-center font-black">..</div><h1 class="font-black text-lg">أبو حسين</h1></div>
@@ -65,13 +61,40 @@
                 <div id="categories-grid" class="cards-container mode-matrix"></div>
             </div>
 
-            <!-- صفحة تفاصيل القسم -->
+            <div id="view-games" class="view-content hidden space-y-8 animate-fadeIn">
+                <h2 class="text-3xl font-black text-right">شحن الألعاب الفوري</h2>
+                
+                <div id="games-list-grid" class="grid grid-cols-2 gap-4">
+                    </div>
+
+                <div id="game-topup-panel" class="hidden p-6 bg-[#0a101e]/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 space-y-6 animate-slideUp text-right">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 id="selected-game-title" class="text-xl font-black text-emerald-400">اسم اللعبة</h3>
+                        <button onclick="cancelGameSelection()" class="text-xs text-slate-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">تغيير اللعبة</button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-300 block">معرف اللاعب (Player ID):</label>
+                        <div class="flex gap-2">
+                            <input type="tel" id="game-player-id" class="royal-input text-right py-4" placeholder="أدخل ID الحساب هنا">
+                            <button onclick="validatePlayer()" class="px-5 bg-white/5 rounded-2xl border border-white/10 font-bold text-xs hover:bg-emerald-500 hover:text-black transition-all">تحقق</button>
+                        </div>
+                        <p id="player-name-display" class="text-xs text-emerald-400 font-bold min-h-[16px]"></p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="text-xs font-bold text-slate-300 block">اختر فئة الشحن المتاحة:</label>
+                        <div id="game-denominations-list" class="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="view-category-details" class="view-content hidden space-y-8 animate-fadeIn">
                 <div class="flex items-center gap-4"><button onclick="changeView('home')" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center border border-white/5"><i class="fa fa-arrow-right"></i></button><h2 id="current-cat-name" class="text-2xl font-black">..</h2></div>
                 <div id="category-products-grid" class="cards-container mode-dual"></div>
             </div>
 
-            <!-- صفحة السلة المحدثة -->
             <div id="view-cart" class="view-content hidden space-y-8 animate-fadeIn">
                 <h2 class="text-3xl font-black">حقيبة المشتريات</h2>
                 <div id="cart-list" class="space-y-3"></div>
@@ -94,14 +117,13 @@
 
         <nav class="fixed bottom-0 left-0 right-0 h-24 bg-black/80 backdrop-blur-2xl border-t border-white/5 grid grid-cols-5 items-center z-[500] px-4">
             <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home"></i><span>الرئيسية</span></button>
-            <button onclick="toast('قريباً')" class="nav-item"><i class="fas fa-bolt"></i><span>عروض</span></button>
+            <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-gamepad text-xl"></i><span>الألعاب</span></button>
             <button onclick="changeView('cart', null)" class="btn-fab-royal"><i class="fas fa-shopping-bag"></i></button>
             <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt"></i><span>فواتيري</span></button>
             <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-gear"></i><span>حسابي</span></button>
         </nav>
     </div>
 
-    <!-- التفاصيل والتوست -->
     <div id="sheet-overlay" class="fixed inset-0 bg-black/95 z-[1500] hidden" onclick="closeSheet()"></div>
     <div id="product-sheet" class="fixed bottom-[-100%] left-0 right-0 z-[1600] bg-[#05070a] border-t border-white/10 rounded-t-[3rem] p-10 transition-all duration-700">
         <img id="sh-img" class="w-full h-64 object-cover rounded-[2.5rem] mb-6">
@@ -115,3 +137,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+

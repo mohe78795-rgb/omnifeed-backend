@@ -1,5 +1,14 @@
+// استبدل ملف script.js الحالي بهذا السكريبت الكامل لضمان المزامنة والربط المباشر
 const API = "https://0zk30qr9iu.onrender.com";
-let state = { categories: [], prods: [], cart: [], layoutMode: 0, user: JSON.parse(localStorage.getItem('abu_user_v30')) || null };
+let state = { 
+    categories: [], 
+    prods: [], 
+    cart: [], 
+    layoutMode: 0, 
+    user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
+    games: [],          // 🆕 قائمة الألعاب
+    selectedGame: null  // 🆕 اللعبة المحددة حالياً لشحنها
+};
 
 window.onload = () => {
     setTimeout(() => {
@@ -12,13 +21,11 @@ window.onload = () => {
 function ui() {
     if(!state.user) return;
     
-    // 1. تحديث الرصيد والمعلومات الشخصية
     document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
     document.getElementById('acc-name-display').innerText = state.user.name;
     document.getElementById('acc-phone-display').innerText = state.user.phone;
     document.getElementById('u-avatar').innerText = state.user.name.charAt(0);
 
-    // ✅ 2. تحديث شاشة حقيبة المشتريات ديناميكياً
     const cartList = document.getElementById('cart-list');
     if(cartList) {
         const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
@@ -35,8 +42,8 @@ function ui() {
                         <i class="fas fa-trash-can text-[10px]"></i>
                     </button>
                 </div>`).join('');
-        } else {
-            cartList.innerHTML = `
+            } else {
+                cartList.innerHTML = `
                 <div class="opacity-30 text-center py-20 animate-fadeIn">
                     <i class="fas fa-shopping-basket text-4xl mb-4"></i>
                     <p class="text-xs font-bold">الحقيبة فارغة حالياً</p>
@@ -45,14 +52,13 @@ function ui() {
     }
 }
 
-// دالة مساعدة لحذف عنصر من السلة
 function removeFromCart(id) {
     state.cart = state.cart.filter(x => x._id !== id);
     ui();
     toast("🗑️ تم الحذف من السلة");
 }
 
-// --- تبديل الشاشات ---
+// --- تبديل الشاشات المطور لدعم قسم الألعاب ---
 function changeView(v, b) {
     playSound('snd-click');
     document.querySelectorAll('.view-content').forEach(x => x.classList.add('hidden'));
@@ -61,12 +67,145 @@ function changeView(v, b) {
     document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
     if(b) b.classList.add('active');
 
-    // ✅ تحديث البيانات فور فتح الشاشات المختارة
     if(v === 'cart') ui(); 
     if(v === 'orders') fetchOrders();
+    if(v === 'games') renderGamesMenu(); // 🆕 استدعاء قائمة الألعاب عند فتح التبويب
 }
 
-// --- بقية الدوال (المستقرة) ---
+// =======================================================
+// 🆕 محرك تشغيل وإدارة قسم الألعاب الفوري (UniPin Integration)
+// =======================================================
+
+// جلب قائمة عروض الألعاب وفئاتها من السيرفر
+async function initGamesData() {
+    try {
+        const res = await fetch(`${API}/api/games`);
+        const data = await res.json();
+        if(data.success) { state.games = data.game_list; }
+    } catch(e) { console.error("Games Fetching Error"); }
+}
+
+// عرض بطاقات الألعاب الفخمة
+function renderGamesMenu() {
+    const grid = document.getElementById('games-list-grid');
+    if(!grid) return;
+    
+    // تنظيف الحقول والواجهة أولاً عند الدخول للقسم
+    cancelGameSelection();
+
+    // خريطة أيقونات ذكية للألعاب لتبدو فخمة وجذابة
+    const gameIcons = {
+        "PUBGM_GLOBAL": "https://img.icons8.com/color/144/pubg-drop-box.png",
+        "MLBB_GLOBAL": "https://img.icons8.com/color/144/mobile-legends.png",
+        "FREEFIRE_GLOBAL": "https://img.icons8.com/color/144/free-fire.png"
+    };
+
+    grid.innerHTML = state.games.map(g => `
+        <div class="card-glass p-5 animate-fadeIn shadow-xl flex flex-col items-center border border-white/5 active:scale-95 transition-all" onclick="selectGameToTopup('${g.game_code}')">
+            <img src="${gameIcons[g.game_code] || 'https://img.icons8.com/color/144/game-controller.png'}" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+            <h3 class="text-xs font-black text-white">${g.game_name}</h3>
+            <span class="text-[8px] text-emerald-400 mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">شحن آمن وفوري</span>
+        </div>
+    `).join('');
+}
+
+// فتح لوحة التحكم باللعبة المختارة
+function selectGameToTopup(code) {
+    playSound('snd-click');
+    state.selectedGame = state.games.find(g => g.game_code === code);
+    if(!state.selectedGame) return;
+
+    document.getElementById('games-list-grid').classList.add('hidden');
+    const panel = document.getElementById('game-topup-panel');
+    panel.classList.remove('hidden');
+
+    document.getElementById('selected-game-title').innerText = state.selectedGame.game_name;
+    
+    // تعبئة قائمة الفئات وعروض الشحن
+    const denomList = document.getElementById('game-denominations-list');
+    denomList.innerHTML = state.selectedGame.denominations.map(pkg => `
+        <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all mb-2">
+            <div class="text-right">
+                <span class="text-sm font-black text-white block">${pkg.name}</span>
+                <span class="text-[10px] text-slate-400">كود الفئة: ${pkg.id}</span>
+            </div>
+            <button onclick="sendTopupRequest('${pkg.id}', ${pkg.price})" class="px-4 py-2 bg-emerald-500 text-black text-xs font-black rounded-xl active:scale-90 transition-all shadow-md shadow-emerald-500/10">
+                ${Number(pkg.price).toLocaleString()} YER
+            </button>
+        </div>
+    `).join('');
+}
+
+// العودة لإستعراض الألعاب
+function cancelGameSelection() {
+    state.selectedGame = null;
+    document.getElementById('game-player-id').value = '';
+    document.getElementById('player-name-display').innerText = '';
+    document.getElementById('game-topup-panel').classList.add('hidden');
+    document.getElementById('games-list-grid').classList.remove('hidden');
+}
+
+// التحقق من اسم اللاعب برميجيًا
+async function validatePlayer() {
+    playSound('snd-click');
+    const id = document.getElementById('game-player-id').value;
+    if(!id) return toast("⚠️ أدمل معرف اللاعب أولاً");
+    
+    document.getElementById('player-name-display').className = "text-xs text-slate-400 animate-pulse";
+    document.getElementById('player-name-display').innerText = "جاري الفحص المباشر...";
+
+    try {
+        const res = await fetch(`${API}/api/games/validate-user`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ game_code: state.selectedGame.game_code, user_id: id })
+        });
+        const data = await res.json();
+        if(data.success) {
+            document.getElementById('player-name-display').className = "text-xs text-emerald-400 font-bold";
+            document.getElementById('player-name-display').innerText = `اسم الحساب: ${data.player_name} ✅`;
+        } else {
+            document.getElementById('player-name-display').innerText = "فشل التعرف على المعرف";
+        }
+    } catch(e) { document.getElementById('player-name-display').innerText = ""; toast("⚠️ خطأ في الاتصال"); }
+}
+
+// إتمام عملية الشحن الفوري من المحفظة
+async function sendTopupRequest(pkgId, price) {
+    const id = document.getElementById('game-player-id').value;
+    if(!id) return toast("⚠️ أدخل معرف اللاعب وتحقق منه!");
+    if(state.user.bal < price) return toast("❌ رصيد محفظتك غير كافٍ");
+
+    if(!confirm(`تأكيد شحن الفئة بقيمة ${Number(price).toLocaleString()} YER من رصيدك؟`)) return;
+
+    try {
+        toast("⏳ جاري إرسال العملية لـ UniPin...");
+        const res = await fetch(`${API}/api/games/topup`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                phone: state.user.phone,
+                game_code: state.selectedGame.game_code,
+                user_id: id,
+                denomination_id: pkgId,
+                price: price
+            })
+        });
+        const data = await res.json();
+        if(res.ok && data.success) {
+            playSound('snd-cashier'); // تشغيل صوت الكاشير عند نجاح الشحن الفوري المالي
+            state.user.bal = data.currentBal;
+            localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
+            ui();
+            toast("🚀 تم الشحن وتحديث الرصيد فورياً!");
+            cancelGameSelection();
+        } else {
+            toast("❌ " + data.message);
+        }
+    } catch(e) { toast("⚠️ عطل فني في خادم السداد"); }
+}
+
+// --- بقية الدوال الفنية المستقرة لتطبيقك ---
 async function fetchOrders() {
     try {
         const res = await fetch(`${API}/api/orders/${state.user.phone}`);
@@ -109,7 +248,6 @@ async function processBalanceOrder() {
     } catch(e) { toast("⚠️ عطل فني"); }
 }
 
-// (بقية الدوال: Auth, Categories, Products, Mute, الخ كما في V34)
 async function handleLogin() {
     const phone = document.getElementById('login-phone').value, pass = document.getElementById('login-pass').value;
     if(!phone || !pass) return toast("⚠️ أكمل الحقول");
@@ -137,6 +275,7 @@ function unlockApp() {
     document.getElementById('main-app').classList.remove('hidden');
     setTimeout(() => { document.getElementById('main-app').style.opacity = "1"; ui(); sync(); loadPromoVideo(); }, 50);
     initProducts();
+    initGamesData(); // 🆕 جلب بيانات الألعاب مباشرة عند التشغيل الأمن
 }
 
 async function initProducts() {
@@ -218,3 +357,4 @@ function toast(m) { const t = document.getElementById('toast'); t.innerText = m;
 function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
 function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(()=>{}); } }
 function toggleAuth() { document.getElementById('login-box').classList.toggle('hidden'); document.getElementById('signup-box').classList.toggle('hidden'); }
+

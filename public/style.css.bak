@@ -1,107 +1,157 @@
-* {
-    font-family: 'Cairo', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
+/* --- إعدادات الخطوط والخلفية الأساسية للمنظومة --- */
 body {
+    font-family: 'Cairo', sans-serif;
     background-color: #05070a;
-    color: #ffffff;
     overflow-x: hidden;
     position: relative;
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* خلفية متدرجة ذكية (Blobs) */
+/* --- نظام الكرات المضيئة في الخلفية (Ambient Blobs) --- */
 .blob {
     position: fixed;
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0) 70%);
     top: -50px;
     right: -50px;
-    z-index: [-1];
+    z-index: -1;
     pointer-events: none;
 }
 .blob-2 {
-    top: 60%;
+    bottom: -100px;
     left: -100px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(0,0,0,0) 70%);
 }
 
-/* تأثير الزجاج الفخم للأقسام والكروت (Card Glass) */
-.card-glass {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(16, 185, 129, 0.08);
-    box-shadow: 0 15px 35px -5px rgba(0,0,0,0.5);
-    padding: 1.25rem;
-    border-radius: 2rem;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.card-glass:hover {
-    background: rgba(16, 185, 129, 0.05);
-    border-color: rgba(16, 185, 129, 0.3);
-    transform: translateY(-5px);
-}
-
-/* توزيع الأقسام حسب الاختيار */
-.cards-container {
-    display: grid;
-    gap: 1rem;
-}
-.cards-container.mode-dual { grid-template-cols: repeat(2, minmax(0, 1fr)); }
-.cards-container.mode-matrix { grid-template-cols: repeat(3, minmax(0, 1fr)); }
-.cards-container.mode-list { grid-template-cols: repeat(1, minmax(0, 1fr)); }
-.cards-container.mode-list .card-glass {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-}
-.cards-container.mode-list .card-glass img {
-    width: 70px;
-    height: 70px;
-    margin-bottom: 0;
-}
-
-/* حقول الإدخال الملكية */
-.royal-input {
-    width: 100%;
-    padding: 1rem 1.25rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 1.25rem;
-    font-size: 0.875rem;
-    color: white;
-    outline: none;
-    transition: 0.3s;
-}
-.royal-input:focus {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.02);
-}
-
-/* عناصر شريط التنقل السفلي الخماسي الموحد */
+/* --- الأزرار وعناصر التنقل السفلي الفاخر (Navbar) --- */
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.375rem;
-    color: #64748b;
-    font-size: 0.625rem;
-    font-weight: 700;
-    transition: 0.3s;
+    gap: 4px;
+    color: #94a3b8; /* slate-400 */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     height: 100%;
 }
-.nav-item i { transition: 0.3s; }
-.nav-item.active { color: #10b981; }
-.nav-item.active i { transform: scale(1.2) translateY(-3px); }
+.nav-item span {
+    font-size: 10px;
+    font-weight: 700;
+}
+.nav-item.active {
+    color: #34d399; /* emerald-400 */
+    transform: translateY(-4px);
+}
 
-/* تأثيرات الأنيميشن الفخمة */
-@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
-.animate-slideUp { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+/* --- حقول الإدخال الملكية الذكية (Royal Inputs) --- */
+.royal-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 1px border rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    font-size: 13px;
+    color: #ffffff;
+    outline: none;
+    transition: all 0.3s ease;
+    text-align: right;
+}
+.royal-input:focus {
+    border-color: rgba(52, 211, 153, 0.4);
+    box-shadow: 0 0 15px rgba(52, 211, 153, 0.05);
+}
+
+/* --- واجهة الخلفية الزجاجية للبطاقات (Glassmorphism Base) --- */
+.card-glass {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+}
+.card-glass:active {
+    transform: scale(0.96);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ==========================================================================
+   🔥 إصلاح مشكلة تبديل عرض القوائم والأقسام (Layout System Grid Fixes)
+   ========================================================================== */
+
+/* الحاوية الأساسية للأقسام */
+.cards-container {
+    transition: all 0.4s ease-in-out;
+}
+
+/* 1️⃣ الوضع الثنائي المستقر (mode-dual) */
+.cards-container.mode-dual {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+/* 2️⃣ الوضع الثلاثي المصفوفي المكثف (mode-matrix) */
+.cards-container.mode-matrix {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+}
+.cards-container.mode-matrix .card-glass {
+    padding: 0.75rem;
+    border-radius: 1.25rem;
+}
+.cards-container.mode-matrix .card-glass img {
+    height: 5rem; /* تصغير حجم الصورة لتناسب العرض الثلاثي */
+    border-radius: 1rem;
+}
+.cards-container.mode-matrix .card-glass h3 {
+    font-size: 11px;
+}
+
+/* 3️⃣ وضع القائمة الطولية الفاخرة (mode-list) */
+.cards-container.mode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+/* إعادة هيكلة البطاقة لتصبح أفقية (الصورة بجانب النص) */
+.cards-container.mode-list .card-glass {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    text-align: right;
+    padding: 0.85rem;
+}
+.cards-container.mode-list .card-glass img {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin-bottom: 0 !important; /* إلغاء الهامش السفلي التلقائي */
+    object-fit: cover;
+    border-radius: 1rem;
+    shrink-0: 0;
+}
+.cards-container.mode-list .card-glass div {
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- حركات الأنيميشن السلسة للواجهات (Animations) --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.animate-slideUp {
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 

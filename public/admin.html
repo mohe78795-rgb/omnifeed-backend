@@ -6,10 +6,15 @@
     <title>لوحة تحكم أبو حسين المركزية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
     <style>*{font-family:'Cairo',sans-serif;}</style>
 </head>
 <body class="bg-[#05070a] text-slate-100 min-h-screen pb-20">
+
+    <audio id="snd-order-alert" src="https://assets.mixkit.co/active_storage/sfx/911/911-preview.mp3" preload="auto"></audio>
+    <audio id="snd-success" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+
+    <div id="adm-toast" class="fixed top-6 left-6 right-6 z-[5000] bg-emerald-500 text-black font-black p-5 rounded-2xl text-sm text-center shadow-2xl hidden transition-all duration-300"></div>
 
     <div id="admin-lock" class="fixed inset-0 z-[4000] bg-[#05070a] flex items-center justify-center p-6">
         <div class="max-w-md w-full bg-slate-900/40 p-8 rounded-3xl border border-white/5 space-y-6 text-center">
@@ -25,7 +30,7 @@
                 <h1 class="text-3xl font-black text-emerald-400">لوحة تحكم أبو حسين</h1>
                 <p class="text-xs text-slate-400 mt-1">إدارة كاملة للعمليات، شحن المحافظ، والرسائل الفورية</p>
             </div>
-            <button onclick="location.reload()" class="bg-white/5 px-4 py-2 rounded-xl text-xs border border-white/5 font-bold">تحديث البيانات 🔄</button>
+            <button onclick="manualDashboardRefresh()" class="bg-white/5 px-4 py-2 rounded-xl text-xs border border-white/5 font-bold text-emerald-400">تحديث فوري للطلبات والبيانات 🔄</button>
         </header>
 
         <div class="flex gap-2 overflow-x-auto pb-2">
@@ -98,6 +103,7 @@
     <script>
         const API = window.location.origin;
         let masterKey = "";
+        let previousOrdersCount = -1; // لتتبع وحساب الطلبات الجديدة آلياً
 
         document.getElementById('msg-receiver-type').addEventListener('change', function() {
             document.getElementById('msg-phone-container').classList.toggle('hidden', this.value === 'ALL');
@@ -108,6 +114,13 @@
             if(!key) return alert("أدخل المفتاح السري أولاً");
             masterKey = key;
             await loadDashboard();
+            // تشغيل فاحص الطلبيات التلقائي كل 10 ثوانٍ لبث الإشعارات الصوتية للادمن
+            setInterval(checkNewOrdersSilently, 10000);
+        }
+
+        async function manualDashboardRefresh() {
+            await loadDashboard();
+            showAdminToast("🔄 تم تحديث السيرفر ومزامنة أحدث العمليات بنجاح!");
         }
 
         async function loadDashboard() {
@@ -120,10 +133,31 @@
             if(reply.success) {
                 document.getElementById('admin-lock').classList.add('hidden');
                 document.getElementById('admin-content').classList.remove('hidden');
+                if(previousOrdersCount === -1) {
+                    previousOrdersCount = reply.data.orders.length;
+                }
                 renderAdminData(reply.data);
             } else {
                 alert("❌ الرمز السري الفوقي غير صحيح");
             }
+        }
+
+        // دالة الفحص الخلفي الصامت لجلب الطلبيات الجديدة وإطلاق الصوت فوراً
+        async function checkNewOrdersSilently() {
+            try {
+                let res = await fetch(`${API}/api/admin/dashboard`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ adminPass: masterKey })
+                });
+                let reply = await res.json();
+                if(reply.success && reply.data.orders.length > previousOrdersCount) {
+                    previousOrdersCount = reply.data.orders.length;
+                    playAdminSound('snd-order-alert');
+                    showAdminToast("🔔 تنبيه حاد: هناك طلبية شراء جديدة قادمة من أحد العملاء الآن!");
+                    renderAdminData(reply.data);
+                }
+            } catch(e) { console.log("Silent check failed"); }
         }
 
         function renderAdminData(data) {
@@ -142,7 +176,6 @@
                 </div>
             `).join('');
 
-            // رندرة قائمة المستخدمين مع تثبيت زر الشحن وإضافة الرصيد بدقة واحترافية عالية
             const uList = document.getElementById('adm-users-list');
             uList.innerHTML = data.users.map(u => `
                 <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between items-center">
@@ -163,6 +196,8 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, id, status })
             });
+            playAdminSound('snd-success');
+            showAdminToast(`📦 تم تعديل حالة الطلبية ${id} إلى [ ${status} ] بنجاح!`);
             await loadDashboard();
         }
 
@@ -176,7 +211,8 @@
                 body: JSON.stringify({ adminPass: masterKey, phone, newBalance: Number(amount) })
             });
             if(res.ok) { 
-                alert("✅ تم تعديل محفظة العميل بالنجاح الفوري وبث الإشعار التلقائي!"); 
+                playAdminSound('snd-success');
+                showAdminToast("💰 تم شحن الحساب وتحديث رصيد المحفظة وبث إشعار للعميل!");
                 await loadDashboard(); 
             }
         }
@@ -195,7 +231,8 @@
                 body: JSON.stringify({ adminPass: masterKey, receiver, title, body })
             });
             if(res.ok) {
-                alert("✅ تم بث وإرسال الإشعار والرسالة بنجاح!");
+                playAdminSound('snd-success');
+                showAdminToast("📢 تم بث الإشعار البرقي وإرسال التنبيه لكافة الأجهزة المستهدفة!");
                 document.getElementById('msg-title').value = "";
                 document.getElementById('msg-body').value = "";
             } else { alert("❌ فشل الإرسال"); }
@@ -210,7 +247,9 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name, sub, img })
             });
-            alert("✅ أضيف القسم بنجاح"); loadDashboard();
+            playAdminSound('snd-success');
+            showAdminToast(`📁 تم إنشاء القسم الجديد [ ${name} ] وإضافته للواجهة!`);
+            loadDashboard();
         }
 
         async function addProduct() {
@@ -223,7 +262,9 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name, price, img, cat })
             });
-            alert("✅ أضيف المنتج لبنية الخدمات"); loadDashboard();
+            playAdminSound('snd-success');
+            showAdminToast(`🛍️ تم تثبيت منتج الخدمة الجديد [ ${name} ] في قاعدة البيانات!`);
+            loadDashboard();
         }
 
         async function addAd() {
@@ -233,7 +274,8 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, videoUrl })
             });
-            alert("✅ تم تحديث الفيديو الإعلاني بنجاح الفوري");
+            playAdminSound('snd-success');
+            showAdminToast("🎬 تم تحديث وحفظ الفيديو الترويجي العلوي بنجاح!");
         }
 
         function switchTab(tabId) {
@@ -245,6 +287,13 @@
             document.getElementById(`tab-${tabId}`).classList.replace('bg-white/5', 'bg-emerald-500');
             document.getElementById(`tab-${tabId}`).classList.replace('text-slate-400', 'text-black');
         }
+
+        function showAdminToast(m) {
+            const t = document.getElementById('adm-toast');
+            t.innerText = m; t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 5000);
+        }
+        function playAdminSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(e=>{}); } }
     </script>
 </body>
 </html>

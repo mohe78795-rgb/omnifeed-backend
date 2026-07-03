@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');                                            
 const cors = require('cors');
 const path = require('path');                                                                                                                                     
-require('dotenv').config(); // 👈 1. أضفنا هذا السطر في الأعلى لقراءة ملف الـ .env السري
+require('dotenv').config(); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;                                           
@@ -13,7 +13,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- 1. الاتصال بالقاعدة ---
-// 👈 2. استبدلنا الرابط المكشوف بـ process.env.MONGO_URI لقراءته بأمان من ملف .env
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
@@ -33,7 +32,7 @@ const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     phone: { type: String, required: true, unique: true },
     pass: { type: String, required: true },
-    bal: { type: Number, default: 0 } // الرصيد بالعملة المحلية YER
+    bal: { type: Number, default: 0 } 
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -70,21 +69,18 @@ const Order = mongoose.model('Order', OrderSchema);
 // 🔐 مسارات الهوية والتحقق (Authentication)
 // ==========================================
 
-// تسجيل حساب جديد وتفعيل محفظة افتراضية
 app.post('/api/auth/signup', async (req, res) => {
     const { name, phone, pass } = req.body;
     try {
         const exist = await User.findOne({ phone });
         if (exist) return res.status(400).json({ success: false, message: "رقم الهاتف مسجل مسبقاً" });
 
-        // رصيد افتراضي أولي للتجربة 5000 YER
         const newUser = new User({ name, phone, pass, bal: 5000 });
         await newUser.save();
         res.json({ success: true, user: newUser });
     } catch (e) { res.status(500).json({ success: false, message: "حدث خطأ في خادم التسجيل" }); }
 });
 
-// تسجيل الدخول العادي
 app.post('/api/auth/login', async (req, res) => {
     const { phone, pass } = req.body;
     try {
@@ -94,7 +90,6 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "خطأ في السيرفر الداخلي" }); }
 });
 
-// مزامنة رصيد الحساب المباشر
 app.get('/api/auth/user/:phone', async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.params.phone });
@@ -127,7 +122,6 @@ app.post('/api/orders/add', async (req, res) => {
         const user = await User.findOne({ phone });
         if (!user || user.bal < order.total) return res.status(400).json({ message: "رصيد المحفظة غير كافٍ لإتمام الشراء" });
 
-        // خصم القيمة وتحديث الحساب
         user.bal -= order.total;
         await user.save();
 
@@ -145,7 +139,7 @@ app.get('/api/orders/:phone', async (req, res) => {
 
 
 // ==========================================
-// 🎮 مسارات نظام شحن الألعاب الفوري (UniPin Integration API)
+// 🎮 مسارات نظام شحن الألعاب الفوري (UniPin API)
 // ==========================================
 
 const GAMES_DATA = [
@@ -166,49 +160,33 @@ const GAMES_DATA = [
             { id: "ff_210", name: "210 Diamond 💎", price: 1900 },
             { id: "ff_530", name: "530 Diamond 💎", price: 4750 }
         ]
-    },
-    {
-        game_name: "موبايل ليجند (Mobile Legends)",
-        game_code: "MLBB_GLOBAL",
-        denominations: [
-            { id: "ml_86", name: "86 Diamonds 💎", price: 1400 },
-            { id: "ml_172", name: "172 Diamonds 💎", price: 2800 },
-            { id: "ml_257", name: "257 Diamonds 💎", price: 4100 }
-        ]
     }
 ];
 
-// 1. جلب قائمة الألعاب المتاحة
 app.get('/api/games', (req, res) => {
     res.json({ success: true, game_list: GAMES_DATA });
 });
 
-// 2. التحقق الفوري الذكي من اللاعب (Player ID Validation)
 app.post('/api/games/validate-user', (req, res) => {
     const { game_code, user_id } = req.body;
     if (!user_id) return res.json({ success: false, message: "يرجى إدخال المعرف أولاً" });
 
-    // محاكاة استجابة الخادم لأسماء اللاعبين الفنيين للواقعية الكاملة
     const mockNames = ["Abdu_Hero⚡", "Yemen_King🔥", "Prestige_User👑", "Supplies_Slayer⚔️"];
     const nameIndex = user_id.length % mockNames.length;
 
     res.json({ success: true, player_name: mockNames[nameIndex] });
 });
 
-// 3. معالجة طلب شحن اللعبة، خصم الرصيد، وإنشاء فاتورة تلقائية
 app.post('/api/games/topup', async (req, res) => {
     const { phone, game_code, user_id, denomination_id, price } = req.body;
-
     try {
         const user = await User.findOne({ phone });
         if (!user) return res.status(404).json({ success: false, message: "الحساب غير موجود" });
-        if (user.bal < price) return res.status(400).json({ success: false, message: "رصيد محفظتك غير كافٍ لإتمام عملية الشحن الفوري" });
+        if (user.bal < price) return res.status(400).json({ success: false, message: "رصيد محفظتك غير كافٍ" });
 
-        // خصم قيمة الشحنة فورياً من محفظة العميل
         user.bal -= price;
         await user.save();
 
-        // تدوين العملية في جدول الفواتير تلقائياً لضمان حق العميل وسهولة مراجعتها
         const customId = "GAME-" + Math.floor(100000 + Math.random() * 900000);
         const gameOrder = new Order({
             id: customId,
@@ -219,12 +197,68 @@ app.post('/api/games/topup', async (req, res) => {
         });
         await gameOrder.save();
 
-        res.json({ success: true, message: "تم الشحن وتحديث حسابك فورياً بنجاح!", currentBal: user.bal });
-    } catch(e) {
-        res.status(500).json({ success: false, message: "عطل طارئ في نظام السداد المباشر" });
-    }
+        res.json({ success: true, message: "تم الشحن بنجاح!", currentBal: user.bal });
+    } catch(e) { res.status(500).json({ success: false, message: "عطل طارئ" }); }
 });
 
+
+// ==========================================
+// 👑 مسارات لوحة تحكم الإدارة الآمنة (Admin API)
+// ==========================================
+
+const ADMIN_SECRET_KEY = "123456"; // 👈 يمكنك تغيير الرقم السري من هنا
+
+// 1. جلب بيانات لوحة التحكم (الفواتير)
+app.post('/api/admin/dashboard', async (req, res) => {
+    const { adminPass } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false, message: "الرمز السري خطأ!" });
+    try {
+        const orders = await Order.find({}).sort({ _id: -1 });
+        res.json({ success: true, data: { orders } });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// 2. تحديث وشحن رصيد العميل فوري
+app.post('/api/admin/user/update-balance', async (req, res) => {
+    const { adminPass, phone, newBalance } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        const user = await User.findOne({ phone });
+        if (!user) return res.status(404).json({ success: false });
+        user.bal = Number(newBalance);
+        await user.save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// 3. إضافة منتج جديد
+app.post('/api/admin/product/add', async (req, res) => {
+    const { adminPass, name, price, img, cat } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        const newProduct = new Product({ name, price: Number(price), img, cat });
+        await newProduct.save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// 4. تحديث حالة الطلب الفوري
+app.post('/api/admin/order/update-status', async (req, res) => {
+    const { adminPass, id, status } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        const order = await Order.findOne({ id });
+        if (!order) return res.status(404).json({ success: false });
+        order.status = status;
+        await order.save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// توجيه المتصفح لفتح واجهة الأدمن عند طلب المسار /admin
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
 
 // --- توجيه كل طلبات الواجهة للملف الرئيسي لتطبيقات الـ SPA ---
 app.get('*', (req, res) => {

@@ -1,243 +1,347 @@
 const API = "https://0zk30qr9iu.onrender.com";
-const STORE_PHONE = "967737528057";
-
-let state = {
-    prods: [], cart: [], location: null,
-    orders: JSON.parse(localStorage.getItem('abu_orders_v29')) || [],
-    cat: 'الكل', user: JSON.parse(localStorage.getItem('abu_user_v29')) || null,
-    favs: JSON.parse(localStorage.getItem('abu_favs_v29')) || []
+let state = { 
+    categories: [], 
+    prods: [], 
+    cart: [], 
+    layoutMode: 0, 
+    user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
+    games: [],          
+    selectedGame: null  
 };
 
-// تشغيل النظام
 window.onload = () => {
     setTimeout(() => {
-        document.getElementById('splash').style.opacity = '0';
-        setTimeout(() => { 
-            document.getElementById('splash').style.display = 'none';
-            if (state.user) { unlockApp(); } 
-            else { document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex'); }
-        }, 800);
-    }, 1500);
+        if (state.user) unlockApp();
+        else {
+            document.getElementById('splash').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+        }
+    }, 2000);
 };
-
-const playSound = (id) => {
-    const s = document.getElementById(id);
-    if(s) { s.currentTime = 0; s.play().catch(()=>{}); }
-};
-
-function toggleAuth() { document.getElementById('login-box').classList.toggle('hidden'); document.getElementById('signup-box').classList.toggle('hidden'); }
-
-function handleSignup() {
-    const n = document.getElementById('reg-name').value, p = document.getElementById('reg-phone').value, ps = document.getElementById('reg-pass').value;
-    if(!n || !p || !ps) return toast("⚠️ أكمل البيانات");
-    state.user = { name: n, phone: p, pass: ps, bal: 50000 };
-    localStorage.setItem('abu_user_v29', JSON.stringify(state.user));
-    unlockApp();
-}
-
-function handleLogin() {
-    const p = document.getElementById('login-phone').value, ps = document.getElementById('login-pass').value;
-    const saved = JSON.parse(localStorage.getItem('abu_user_v29'));
-    if(saved && saved.phone === p && saved.pass === ps) { state.user = saved; unlockApp(); } 
-    else toast("❌ خطأ في البيانات");
-}
-
-function unlockApp() {
-    document.getElementById('auth-screen').style.display = "none";
-    const app = document.getElementById('main-app');
-    app.classList.remove('hidden');
-    setTimeout(() => { app.style.opacity = "1"; ui(); initGoldParticles(); }, 50);
-    init();
-}
-
-async function init() {
-    try {
-        const res = await fetch(`${API}/api/products`);
-        state.prods = await res.json();
-        renderCats(); renderProds();
-    } catch (e) { toast("⚠️ عطل في البيانات"); }
-}
 
 function ui() {
-    if (!state.user) return;
-    document.getElementById('u-balance').innerText = state.user.bal.toLocaleString();
-    document.getElementById('u-balance-top').innerText = state.user.bal.toLocaleString() + " YER";
+    if(!state.user) return;
+    
+    document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
     document.getElementById('acc-name-display').innerText = state.user.name;
-    document.getElementById('acc-phone-display').innerText = "الهاتف: " + state.user.phone;
+    document.getElementById('acc-phone-display').innerText = state.user.phone;
     document.getElementById('u-avatar').innerText = state.user.name.charAt(0);
-    badge();
-}
 
-function renderCats() {
-    const cats = ['المفضلة', 'الكل', ...new Set(state.prods.map(p => p.cat))];
-    document.getElementById('cat-list').innerHTML = cats.map(c => `<button onclick="setCat('${c}')" class="px-7 py-3.5 bg-[#0a101e] rounded-2xl whitespace-nowrap text-[11px] font-black uppercase transition-all ${state.cat === c ? 'bg-emerald-500 !text-black shadow-lg' : 'text-slate-500 border border-white/5'}">${c}</button>`).join('');
-}
-
-function renderProds(data = state.prods) {
-    const grid = document.getElementById('products-grid');
-    let filtered = data;
-    if (state.cat === 'المفضلة') filtered = data.filter(p => state.favs.includes(p.id));
-    else if (state.cat !== 'الكل') filtered = data.filter(p => p.cat === state.cat);
-
-    grid.innerHTML = filtered.map(p => `
-        <div class="bg-[#0a101e] p-5 rounded-[2.5rem] border border-white/5 active:scale-95 transition-all text-right shadow-xl relative" onclick="sheet('${p.id}')">
-            <button class="fav-btn ${state.favs.includes(p.id) ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav(${p.id})"><i class="${state.favs.includes(p.id) ? 'fas' : 'far'} fa-heart"></i></button>
-            <div class="h-32 rounded-[2rem] bg-cover bg-center mb-3" style="background-image: url('${p.img}')"></div>
-            <h4 class="text-[12px] font-black truncate">${p.name}</h4>
-            <div class="flex justify-between items-center mt-3"><span class="text-emerald-400 font-black text-lg">${parseInt(p.price).toLocaleString()}</span><i class="fas fa-plus-circle text-emerald-500 text-lg"></i></div>
-        </div>`).join('');
-}
-
-function searchInHome() {
-    const term = document.getElementById('home-search').value.toLowerCase();
-    const res = state.prods.filter(p => p.name.toLowerCase().includes(term));
-    renderProds(res);
-}
-
-function sheet(id) {
-    playSound('snd-click');
-    const p = state.prods.find(x => x.id == id);
-    document.getElementById('sh-img').src = p.img;
-    document.getElementById('sh-name').innerText = p.name;
-    document.getElementById('sh-price').innerText = parseInt(p.price).toLocaleString();
-    document.getElementById('sh-add-btn').onclick = () => { add(p); closeSheet(); };
-    document.getElementById('sheet-overlay').classList.remove('hidden');
-    setTimeout(() => document.getElementById('product-sheet').style.bottom = "0", 10);
-}
-function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
-
-function add(p) {
-    const item = state.cart.find(i => i.id === p.id);
-    if (item) item.qty++; else state.cart.push({ ...p, qty: 1 });
-    badge(); toast("🛒 تمت الإضافة للحساب");
-}
-
-function updateQty(id, delta) {
-    const i = state.cart.find(x => x.id == id);
-    if (i) { 
-        i.qty += delta; 
-        if (i.qty <= 0) state.cart = state.cart.filter(x => x.id != id);
-        renderCart(); badge();
+    const cartList = document.getElementById('cart-list');
+    if(cartList) {
+        const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
+        document.getElementById('cart-total').innerText = total.toLocaleString() + " YER";
+        
+        if(state.cart.length > 0) {
+            cartList.innerHTML = state.cart.map(i => `
+                <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 animate-fadeIn mb-2">
+                    <div class="text-right">
+                        <h4 class="text-xs font-bold text-white">${i.name}</h4>
+                        <p class="text-[10px] text-emerald-400 mt-1 font-black">${Number(i.price).toLocaleString()} YER × ${i.qty}</p>
+                    </div>
+                    <button onclick="removeFromCart('${i._id}')" class="w-8 h-8 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl active:scale-90 transition-all">
+                        <i class="fas fa-trash-can text-[10px]"></i>
+                    </button>
+                </div>`).join('');
+        } else {
+            cartList.innerHTML = `
+                <div class="opacity-30 text-center py-20 animate-fadeIn">
+                    <i class="fas fa-shopping-basket text-4xl mb-4"></i>
+                    <p class="text-xs font-bold">الحقيبة فارغة حالياً</p>
+                </div>`;
+        }
     }
 }
 
-function badge() {
-    const count = state.cart.reduce((s, i) => s + i.qty, 0);
-    const b = document.getElementById('cart-badge');
-    if(count > 0) { b.innerText = count; b.classList.remove('hidden'); } else b.classList.add('hidden');
+function loadPromoVideo() {
+    const v = document.getElementById('promo-video');
+    if(v) { v.play().catch(() => console.log("Autoplay blocked")); }
 }
 
-function renderCart() {
-    const list = document.getElementById('cart-list');
-    let total = 0;
-    if (state.cart.length === 0) { list.innerHTML = "<div class='text-center py-20 opacity-10 font-black'>الحقيبة فارغة</div>"; document.getElementById('cart-total').innerText = "0 YER"; return; }
-    list.innerHTML = state.cart.map((i) => {
-        const sub = parseInt(i.price) * i.qty; total += sub;
-        return `<div class="bg-[#0a101e] p-6 rounded-[2.5rem] flex justify-between items-center border border-white/5 animate-fadeIn shadow-lg">
-            <div class="flex items-center gap-4"><img src="${i.img}" class="w-14 h-14 rounded-3xl object-cover shadow-lg"><div><h4 class="text-sm font-black text-white">${i.name}</h4><span class="text-emerald-500 font-bold text-[10px]">${parseInt(i.price).toLocaleString()} YER</span></div></div>
-            <div class="flex items-center gap-4 bg-black/40 p-1 rounded-2xl">
-                <
-                ="updateQty(${i.id}, -1)" class="w-8 h-8 rounded-xl bg-white/10 text-white font-black">-</button>
-                <span class="text-[11px] font-black w-4 text-center text-white">${i.qty}</span>
-                <button onclick="updateQty(${i.id}, 1)" class="w-8 h-8 rounded-xl bg-[#10b981] text-black font-black">+</button>
-            </div>
-        </div>`;
-    }).join('');
-    document.getElementById('cart-total').innerText = total.toLocaleString() + " YER";
+function toggleMute() {
+    const v = document.getElementById('promo-video');
+    const icon = document.getElementById('mute-icon');
+    if(v) {
+        v.muted = !v.muted;
+        icon.className = v.muted ? "fas fa-volume-mute text-white text-xs" : "fas fa-volume-up text-emerald-500 text-xs";
+    }
 }
 
-function openLocationModal() { if (!state.cart.length) return toast("⚠️ الحقيبة فارغة"); document.getElementById('location-modal').classList.remove('hidden'); }
-function closeLocationModal() { document.getElementById('location-modal').classList.add('hidden'); }
-
-function triggerGPSProcess() {
-    closeLocationModal();
-    toast("⚙️ جاري تحديد الإحداثيات...");
-    if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            state.location = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-            toast("✅ تم بنجاح، جاري فتح واتساب");
-            setTimeout(() => sendWhatsAppToStore(), 500);
-        }, () => {
-            toast("❌ فشل تحديد الموقع، سيتم الإرسال بدونه");
-            setTimeout(() => sendWhatsAppToStore(), 1000);
-        }, { enableHighAccuracy: true, timeout: 5000 });
-    } else sendWhatsAppToStore();
-}
-
-function sendWhatsAppToStore() {
-    const total = state.cart.reduce((s, i) => s + (parseInt(i.price) * i.qty), 0);
-    const items = state.cart.map(i => `• ${i.name} [الكمية: ${i.qty}] - ${parseInt(i.price).toLocaleString()} YER`).join('\n');
-    let msg = `*طلب جديد من تموينات أبو حسين*\n\nالمحتويات:\n${items}\n\n*إجمالي المبلغ: ${total.toLocaleString()} YER*`;
-    if(state.location) msg += `\n\n📍 رابط موقع التوصيل الدقيق:\n${state.location}`;
-    else msg += `\n\n⚠️ لم يتم إرفاق موقع جغرافي.`;
-    window.open(`https://wa.me/${STORE_PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-function processBalanceOrder() {
-    if (state.cart.length === 0) return toast("⚠️ الحقيبة فارغة");
-    const total = state.cart.reduce((s, i) => s + (parseInt(i.price) * i.qty), 0);
-    if (state.user.bal < total) return toast("❌ الرصيد غير كافٍ");
-    state.user.bal -= total;
-    const o = { id: Math.random().toString(36).substr(2, 5).toUpperCase(), total, status: 'تم الاستلام', date: new Date().toLocaleDateString('ar-EG'), items: [...state.cart] };
-    state.orders.unshift(o);
-    localStorage.setItem('abu_orders_v29', JSON.stringify(state.orders));
-    localStorage.setItem('abu_user_v29', JSON.stringify(state.user));
-    state.cart = []; ui(); triggerPrestigeNotif(); changeView('orders', null);
-    toast("✅ تم إرسال الطلب بنجاح");
-}
-
-function triggerPrestigeNotif() {
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    document.getElementById('snd-cashier').play().catch(()=>{});
-    const banner = document.getElementById('top-push-notif'); banner.style.top = "20px";
-    setTimeout(() => banner.style.top = "-150px", 5000);
-}
-
-function renderOrders() {
-    const list = document.getElementById('orders-list');
-    if (!state.orders.length) return list.innerHTML = "<div class='text-center py-20 opacity-10 font-black uppercase'>لا يوجد سجل</div>";
-    list.innerHTML = state.orders.map(o => `
-        <div class="invoice-card animate-fadeIn shadow-xl mb-6 text-right">
-            <div class="flex justify-between items-center mb-6">
-                <div class="text-right"><p class="text-[10px] font-black text-emerald-500 uppercase mb-1">فاتورة تجارية</p><h3 class="text-xl font-black text-white">ID: #${o.id}</h3></div>
-                <div class="text-left"><p class="text-[9px] text-slate-500 font-bold">${o.date}</p><span class="text-[8px] bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-lg font-black animate-pulse">${o.status}</span></div>
-            </div>
-            <div class="space-y-1 mb-8 border-y border-white/5 py-4">
-                <p class="text-[9px] text-slate-500 font-black mb-3 uppercase tracking-widest text-right">كشف المحتويات :</p>
-                ${o.items.map((it, idx) => `<div class="invoice-item"><div class="flex items-center gap-3"><span class="text-[10px] text-emerald-500 font-black">${idx + 1}</span><span class="text-xs font-bold text-slate-300">${it.name}</span></div><span class="text-xs font-black text-white">${(it.price * it.qty).toLocaleString()} YER</span></div>`).join('')}
-            </div>
-            <div class="timeline mt-8">
-                <div class="step active"><div class="dot"><i class="fas fa-check"></i></div><span class="step-label">تم الاستلام</span></div>
-                <div class="step"><div class="dot">2</div><span class="step-label">جاري التجهيز</span></div>
-                <div class="step"><div class="dot">3</div><span class="step-label">مع السائق</span></div>
-                <div class="step"><div class="dot">4</div><span class="step-label">عند الباب</span></div>
-            </div>
-        </div>`).join('');
+function removeFromCart(id) {
+    state.cart = state.cart.filter(x => x._id !== id);
+    ui();
+    toast("🗑️ تم الحذف من السلة");
 }
 
 function changeView(v, b) {
     playSound('snd-click');
     document.querySelectorAll('.view-content').forEach(x => x.classList.add('hidden'));
     document.getElementById('view-' + v).classList.remove('hidden');
+    
     document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-    if(b) b.classList.add('active'); else {
-        const map = { home: 'nav-home', offers: 'nav-offers', orders: 'nav-orders', account: 'nav-account' };
-        if(document.getElementById(map[v])) document.getElementById(map[v]).classList.add('active');
-    }
-    if (v === 'cart') renderCart(); if (v === 'orders') renderOrders();
+    if(b) b.classList.add('active');
+
+    if(v === 'cart') ui(); 
+    if(v === 'orders') fetchOrders();
+    if(v === 'games') renderGamesMenu(); 
 }
 
-function initGoldParticles() {
-    const canvas = document.getElementById('gold-particles'); if(!canvas) return;
-    const ctx = canvas.getContext('2d'); canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight;
-    let p = Array(30).fill().map(() => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, s: Math.random() * 2, v: Math.random() * 0.3 }));
-    function draw() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "#fbbf2422"; p.forEach(i => { ctx.beginPath(); ctx.arc(i.x, i.y, i.s, 0, Math.PI*2); ctx.fill(); i.y -= i.v; if(i.y < -10) i.y = canvas.height + 10; }); requestAnimationFrame(draw); }
-    draw();
+async function initGamesData() {
+    try {
+        const res = await fetch(`${API}/api/games`);
+        const data = await res.json();
+        if(data.success) { state.games = data.game_list; }
+    } catch(e) { console.error("Games Fetching Error"); }
 }
 
-function setCat(c) { state.cat = c; renderCats(); renderProds(); }
-function toggleFav(id) { if (state.favs.includes(id)) state.favs = state.favs.filter(i => i !== id); else state.favs.push(id); localStorage.setItem('abu_favs_v29', JSON.stringify(state.favs)); renderProds(); }
-function logout() { localStorage.removeItem('abu_user_v29'); location.reload(); }
+function renderGamesMenu() {
+    const grid = document.getElementById('games-list-grid');
+    if(!grid) return;
+    
+    cancelGameSelection();
+
+    const gameIcons = {
+        "PUBGM_GLOBAL": "https://img.icons8.com/color/144/pubg-drop-box.png",
+        "MLBB_GLOBAL": "https://img.icons8.com/color/144/mobile-legends.png",
+        "FREEFIRE_GLOBAL": "https://img.icons8.com/color/144/free-fire.png"
+    };
+
+    grid.innerHTML = state.games.map(g => `
+        <div class="card-glass p-5 animate-fadeIn shadow-xl flex flex-col items-center border border-white/5 active:scale-95 transition-all" onclick="selectGameToTopup('${g.game_code}')">
+            <img src="${gameIcons[g.game_code] || 'https://img.icons8.com/color/144/game-controller.png'}" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+            <h3 class="text-xs font-black text-white">${g.game_name}</h3>
+            <span class="text-[8px] text-emerald-400 mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">شحن آمن وفوري</span>
+        </div>
+    `).join('');
+}
+
+function selectGameToTopup(code) {
+    playSound('snd-click');
+    state.selectedGame = state.games.find(g => g.game_code === code);
+    if(!state.selectedGame) return;
+
+    document.getElementById('games-list-grid').classList.add('hidden');
+    const panel = document.getElementById('game-topup-panel');
+    panel.classList.remove('hidden');
+
+    document.getElementById('selected-game-title').innerText = state.selectedGame.game_name;
+    
+    const denomList = document.getElementById('game-denominations-list');
+    denomList.innerHTML = state.selectedGame.denominations.map(pkg => `
+        <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all mb-2">
+            <div class="text-right">
+                <span class="text-sm font-black text-white block">${pkg.name}</span>
+                <span class="text-[10px] text-slate-400">كود الفئة: ${pkg.id}</span>
+            </div>
+            <button onclick="sendTopupRequest('${pkg.id}', ${pkg.price})" class="px-4 py-2 bg-emerald-500 text-black text-xs font-black rounded-xl active:scale-90 transition-all shadow-md shadow-emerald-500/10">
+                ${Number(pkg.price).toLocaleString()} YER
+            </button>
+        </div>
+    `).join('');
+}
+
+function cancelGameSelection() {
+    state.selectedGame = null;
+    document.getElementById('game-player-id').value = '';
+    document.getElementById('player-name-display').innerText = '';
+    document.getElementById('game-topup-panel').classList.add('hidden');
+    document.getElementById('games-list-grid').classList.remove('hidden');
+}
+
+async function validatePlayer() {
+    playSound('snd-click');
+    const id = document.getElementById('game-player-id').value;
+    if(!id) return toast("⚠️ أدخل معرف اللاعب أولاً");
+    
+    document.getElementById('player-name-display').className = "text-xs text-slate-400 animate-pulse";
+    document.getElementById('player-name-display').innerText = "جاري الفحص المباشر...";
+
+    try {
+        const res = await fetch(`${API}/api/games/validate-user`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ game_code: state.selectedGame.game_code, user_id: id })
+        });
+        const data = await res.json();
+        if(data.success) {
+            document.getElementById('player-name-display').className = "text-xs text-emerald-400 font-bold";
+            document.getElementById('player-name-display').innerText = `اسم الحساب: ${data.player_name} ✅`;
+        } else {
+            document.getElementById('player-name-display').innerText = "فشل التعرف على المعرف";
+        }
+    } catch(e) { document.getElementById('player-name-display').innerText = ""; toast("⚠️ خطأ في الاتصال"); }
+}
+
+async function sendTopupRequest(pkgId, price) {
+    const id = document.getElementById('game-player-id').value;
+    if(!id) return toast("⚠️ أدخل معرف اللاعب وتحقق منه!");
+    if(state.user.bal < price) return toast("❌ رصيد محفظتك غير كافٍ");
+
+    if(!confirm(`تأكيد شحن الفئة بقيمة ${Number(price).toLocaleString()} YER من رصيدك؟`)) return;
+
+    try {
+        toast("⏳ جاري إرسال العملية لـ UniPin...");
+        const res = await fetch(`${API}/api/games/topup`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                phone: state.user.phone,
+                game_code: state.selectedGame.game_code,
+                user_id: id,
+                denomination_id: pkgId,
+                price: price
+            })
+        });
+        const data = await res.json();
+        if(res.ok && data.success) {
+            playSound('snd-cashier'); 
+            state.user.bal = data.currentBal;
+            localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
+            ui();
+            toast("🚀 تم الشحن وتحديث الرصيد فورياً!");
+            cancelGameSelection();
+        } else {
+            toast("❌ " + data.message);
+        }
+    } catch(e) { toast("⚠️ عطل فني في خادم السداد"); }
+}
+
+async function fetchOrders() {
+    try {
+        const res = await fetch(`${API}/api/orders/${state.user.phone}`);
+        const orders = await res.json();
+        const list = document.getElementById('orders-list');
+        if(res.ok && orders.length > 0) {
+            list.innerHTML = orders.map(o => `
+                <div class="p-5 bg-[#0a101e] rounded-2xl border border-white/5 mb-3 space-y-2 animate-fadeIn shadow-xl text-right">
+                    <div class="flex justify-between text-[10px] opacity-50"><span>${o.date}</span><span class="font-black text-emerald-500">ID: ${o.id}</span></div>
+                    <div class="font-bold text-lg text-white">${Number(o.total).toLocaleString()} <small class="text-[10px] text-emerald-500">YER</small></div>
+                    <div class="text-[10px] text-slate-400 bg-white/5 p-2 rounded-lg">حالة الطلب: <span class="text-emerald-400 font-black">${o.status}</span></div>
+                </div>`).join('');
+        } else {
+            list.innerHTML = "<div class='opacity-30 text-center py-20 text-xs font-bold'>لا توجد فواتير سابقة</div>";
+        }
+    } catch(e) { console.error("Orders Error"); }
+}
+
+async function processBalanceOrder() {
+    const total = state.cart.reduce((s,i) => s + (i.price * i.qty), 0);
+    if(state.cart.length === 0) return toast("⚠️ الحقيبة فارغة");
+    if(state.user.bal < total) return toast("❌ رصيد غير كافٍ");
+    
+    try {
+        toast("⏳ جاري تأمين العملية...");
+        const res = await fetch(`${API}/api/orders/add`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone: state.user.phone, order: { total, items: state.cart } })
+        });
+        const data = await res.json();
+        if(res.ok) {
+            state.user.bal = data.currentBal;
+            localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
+            state.cart = [];
+            ui();
+            toast("✅ تم تنفيذ طلبك بنجاح");
+            changeView('orders', document.querySelector('.nav-item:nth-child(4)'));
+        }
+    } catch(e) { toast("⚠️ عطل فني"); }
+}
+
+async function handleLogin() {
+    const phone = document.getElementById('login-phone').value, pass = document.getElementById('login-pass').value;
+    if(!phone || !pass) return toast("⚠️ أكمل الحقول");
+    try {
+        const res = await fetch(`${API}/api/auth/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone, pass }) });
+        const data = await res.json();
+        if(res.ok) { state.user = data.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); unlockApp(); }
+        else toast("❌ " + data.message);
+    } catch(e) { toast("⚠️ عطل فني"); }
+}
+
+async function handleSignup() {
+    const name = document.getElementById('reg-name').value, phone = document.getElementById('reg-phone').value, pass = document.getElementById('reg-pass').value;
+    if(!name || !phone || !pass) return toast("⚠️ أكمل البيانات");
+    try {
+        const res = await fetch(`${API}/api/auth/signup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, phone, pass }) });
+        const data = await res.json();
+        if(res.ok) { state.user = data.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); unlockApp(); }
+        else toast("❌ " + data.message);
+    } catch(e) { toast("⚠️ عطل fني"); }
+}
+
+function unlockApp() {
+    document.getElementById('splash').style.display = "none";
+    document.getElementById('auth-screen').style.display = "none";
+    document.getElementById('main-app').classList.remove('hidden');
+    setTimeout(() => { document.getElementById('main-app').style.opacity = "1"; ui(); loadPromoVideo(); sync(); }, 50);
+    initProducts();
+    initGamesData(); 
+}
+
+async function initProducts() {
+    try {
+        const [prodRes, catRes] = await Promise.all([ fetch(`${API}/api/products`), fetch(`${API}/api/categories`) ]);
+        state.prods = await prodRes.json(); state.categories = await catRes.json();
+        renderCategories();
+    } catch (e) { setTimeout(initProducts, 3000); }
+}
+
+function renderCategories() {
+    const grid = document.getElementById('categories-grid');
+    grid.innerHTML = state.categories.map(cat => `
+        <div class="card-glass animate-fadeIn shadow-lg" onclick="openCategory('${cat.name}')">
+            <img src="${cat.img}" class="w-full h-20 object-cover rounded-xl mb-3 border border-white/5">
+            <h3 class="text-[10px] font-black truncate text-white">${cat.name}</h3>
+            <span class="text-[8px] opacity-40 text-white">${cat.sub}</span>
+        </div>`).join('');
+}
+
+function openCategory(catName) {
+    document.getElementById('current-cat-name').innerText = catName;
+    changeView('category-details');
+    const filtered = state.prods.filter(p => p.cat === catName);
+    const prodGrid = document.getElementById('category-products-grid');
+    prodGrid.innerHTML = filtered.map(p => `
+        <div class="card-glass animate-fadeIn shadow-lg" onclick="sheet('${p._id}')">
+            <img src="${p.img}" class="w-full h-32 object-cover rounded-xl mb-3 border border-white/5">
+            <h3 class="text-xs font-bold truncate text-white">${p.name}</h3>
+            <p class="text-emerald-400 font-black mt-1 text-sm">${Number(p.price).toLocaleString()} YER</p>
+        </div>`).join('') || "<div class='col-span-full opacity-30 text-center py-20 font-bold'>قريباً..</div>";
+}
+
+function switchLayout() {
+    state.layoutMode = (state.layoutMode + 1) % 3;
+    const grid = document.getElementById('categories-grid'), icons = ["fa-table-cells", "fa-grip-lines-vertical", "fa-list-ul"];
+    grid.className = `cards-container ${["mode-matrix", "mode-dual", "mode-list"][state.layoutMode]}`;
+    document.getElementById('layoutIcon').className = `fa ${icons[state.layoutMode]} text-emerald-500`;
+}
+
+function sheet(id) {
+    const p = state.prods.find(x => x._id == id);
+    document.getElementById('sh-img').src = p.img;
+    document.getElementById('sh-name').innerText = p.name;
+    document.getElementById('sh-price').innerText = Number(p.price).toLocaleString() + " YER";
+    document.getElementById('sh-add-btn').onclick = () => { addToCart(p); closeSheet(); };
+    document.getElementById('sheet-overlay').classList.remove('hidden');
+    setTimeout(() => document.getElementById('product-sheet').style.bottom = "0", 10);
+}
+
+function addToCart(p) {
+    let i = state.cart.find(x => x._id === p._id);
+    if(i) i.qty++; else state.cart.push({...p, qty:1});
+    toast("🛒 أضيف للسلة");
+}
+
+async function sync() {
+    const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
+    const data = await res.json();
+    if(res.ok) { state.user = data.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); ui(); }
+}
+
+function logout() { localStorage.clear(); location.reload(); }
 function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3000); }
-if (state.user) unlockApp();
+function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
+function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(()=>{}); } }
+function toggleAuth() { document.getElementById('login-box').classList.toggle('hidden'); document.getElementById('signup-box').classList.toggle('hidden'); }
 

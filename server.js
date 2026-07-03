@@ -1,10 +1,11 @@
-const express = require('express');
-const mongoose = require('mongoose');
+const express = require('express');                                              
+const mongoose = require('mongoose');                                            
 const cors = require('cors');
-const path = require('path');
+const path = require('path');                                                                                                                                     
+require('dotenv').config(); // 👈 1. أضفنا هذا السطر في الأعلى لقراءة ملف الـ .env السري
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;                                           
 
 // --- الإعدادات الأساسية (Middlewares) ---
 app.use(cors());
@@ -12,7 +13,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- 1. الاتصال بالقاعدة ---
-const MONGO_URI = "mongodb://mohe78795_db_user:737465252@ac-3prk1zf-shard-00-00.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-01.qr9q8iv.mongodb.net:27017,ac-3prk1zf-shard-00-02.qr9q8iv.mongodb.net:27017/?ssl=true&replicaSet=atlas-kaid64-shard-0&authSource=admin&appName=Cluster0";
+// 👈 2. استبدلنا الرابط المكشوف بـ process.env.MONGO_URI لقراءته بأمان من ملف .env
+const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
     .then(async () => {
@@ -74,9 +76,9 @@ app.post('/api/auth/signup', async (req, res) => {
     try {
         const exist = await User.findOne({ phone });
         if (exist) return res.status(400).json({ success: false, message: "رقم الهاتف مسجل مسبقاً" });
-        
+
         // رصيد افتراضي أولي للتجربة 5000 YER
-        const newUser = new User({ name, phone, pass, bal: 5000 }); 
+        const newUser = new User({ name, phone, pass, bal: 5000 });
         await newUser.save();
         res.json({ success: true, user: newUser });
     } catch (e) { res.status(500).json({ success: false, message: "حدث خطأ في خادم التسجيل" }); }
@@ -185,18 +187,18 @@ app.get('/api/games', (req, res) => {
 app.post('/api/games/validate-user', (req, res) => {
     const { game_code, user_id } = req.body;
     if (!user_id) return res.json({ success: false, message: "يرجى إدخال المعرف أولاً" });
-    
+
     // محاكاة استجابة الخادم لأسماء اللاعبين الفنيين للواقعية الكاملة
     const mockNames = ["Abdu_Hero⚡", "Yemen_King🔥", "Prestige_User👑", "Supplies_Slayer⚔️"];
     const nameIndex = user_id.length % mockNames.length;
-    
+
     res.json({ success: true, player_name: mockNames[nameIndex] });
 });
 
 // 3. معالجة طلب شحن اللعبة، خصم الرصيد، وإنشاء فاتورة تلقائية
 app.post('/api/games/topup', async (req, res) => {
     const { phone, game_code, user_id, denomination_id, price } = req.body;
-    
+
     try {
         const user = await User.findOne({ phone });
         if (!user) return res.status(404).json({ success: false, message: "الحساب غير موجود" });

@@ -463,6 +463,9 @@ function setLayout(mode) {
 
 function logout() { localStorage.clear(); location.reload(); }
 function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3500); }
-function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%\"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
+function closeSheet() { 
+    document.getElementById('product-sheet').style.bottom = "-100%"; 
+    setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); 
+}
 function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(e=>{}); } }
 

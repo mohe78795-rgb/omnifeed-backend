@@ -1,12 +1,13 @@
 const API = window.location.origin; // ليعمل السيرفر تلقائياً محلياً أو على ريندر
-let state = { 
-    categories: [], 
-    prods: [], 
-    cart: [], 
-    layoutMode: 0, 
+let state = {
+    categories: [],
+    prods: [],
+    cart: [],
+    layoutMode: 0,
     user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
-    games: [],          
-    selectedGame: null  
+    games: [],
+    selectedGame: null,
+    selectedDenom: null
 };
 
 // --- تفعيل ميزة السحب للأسفل للتحديث (Pull to Refresh) ---
@@ -20,17 +21,16 @@ window.addEventListener('touchmove', e => {
     }
 }, {passive: true});
 
-// دالة التحديث اليدوي والفوري للأزرار والدائرة التي تدور
 async function manualRefresh() {
     const btn = document.getElementById('refresh-btn');
     if(btn) btn.classList.add('rotate-180', 'opacity-50');
     toast("⏳ جاري تحديث ومزامنة البيانات الفورية...");
-    
+
     await sync();
     await initProducts();
     await fetchAds();
     await fetchMessages();
-    
+
     if(btn) {
         setTimeout(() => {
             btn.classList.remove('rotate-180', 'opacity-50');
@@ -39,7 +39,6 @@ async function manualRefresh() {
     toast("✅ تم التحديث بنجاح");
 }
 
-// التحديث التلقائي الدوري الصامت كل 20 ثانية في الخلفية
 setInterval(() => {
     if(state.user) sync();
 }, 20000);
@@ -56,19 +55,33 @@ window.onload = () => {
 
 function ui() {
     if(!state.user) return;
-    
-    document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
-    document.getElementById('acc-name-display').innerText = state.user.name;
-    document.getElementById('acc-name').innerText = state.user.name;
-    document.getElementById('acc-phone').innerText = state.user.phone;
-    document.getElementById('acc-date').innerText = state.user.joinDate || "..";
-    document.getElementById('u-avatar').innerText = state.user.name.charAt(0);
 
+    // تحديث البيانات الشخصية والمحفظة بشكل آمن وبدون توقف
+    const topBal = document.getElementById('u-balance-top');
+    if(topBal) topBal.innerText = Number(state.user.bal).toLocaleString() + " YER";
+
+    const accName = document.getElementById('acc-name');
+    if(accName) accName.innerText = state.user.name;
+
+    const accPhone = document.getElementById('acc-phone');
+    if(accPhone) accPhone.innerText = state.user.phone;
+
+    const accDate = document.getElementById('acc-date');
+    if(accDate) accDate.innerText = state.user.joinDate || "مستمر";
+
+    const avatar = document.getElementById('u-avatar');
+    if(avatar) avatar.innerText = state.user.name.charAt(0);
+
+    const avatarLarge = document.getElementById('acc-avatar-large');
+    if(avatarLarge) avatarLarge.innerText = state.user.name.charAt(0);
+
+    // معالجة واحتساب سلة المشتريات وعرض زر السلة والتوتال
     const cartList = document.getElementById('cart-list');
     if(cartList) {
         const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
-        document.getElementById('cart-total').innerText = total.toLocaleString() + " YER";
-        
+        const cartTotal = document.getElementById('cart-total');
+        if(cartTotal) cartTotal.innerText = total.toLocaleString() + " YER";
+
         if(state.cart.length > 0) {
             cartList.innerHTML = state.cart.map(i => `
                 <div class="p-4 bg-white/5 rounded-2xl flex justify-between items-center border border-white/5">
@@ -116,7 +129,7 @@ async function fetchAds() {
         let ads = await res.json();
         const container = document.getElementById('ad-video-container');
         const player = document.getElementById('ad-video-player');
-        
+
         if (ads && ads.length > 0 && ads[0].videoUrl) {
             let embedUrl = ads[0].videoUrl;
             if(embedUrl.includes("watch?v=")) {
@@ -186,7 +199,7 @@ function selectGame(code) {
     document.getElementById('selected-game-title').innerText = g.game_name;
     document.getElementById('game-player-id').value = "";
     document.getElementById('player-name-display').classList.add('hidden');
-    
+
     const denomsDiv = document.getElementById('game-denoms-list');
     denomsDiv.innerHTML = g.denominations.map(d => `
         <div onclick="pickDenom(this, '${d.id}')" class="denom-card p-4 bg-black/40 border border-white/5 rounded-2xl text-center cursor-pointer transition">
@@ -194,7 +207,7 @@ function selectGame(code) {
             <p class="text-[10px] text-emerald-400 mt-1 font-bold">${d.price.toLocaleString()} YER</p>
         </div>
     `).join('');
-    
+
     state.selectedDenom = null;
     document.getElementById('game-topup-panel').classList.remove('hidden');
     document.getElementById('game-topup-panel').scrollIntoView({ behavior: 'smooth' });
@@ -226,9 +239,9 @@ async function validatePlayer() {
 async function processGameTopup() {
     const id = document.getElementById('game-player-id').value;
     if(!id || !state.selectedDenom) return toast("⚠️ أكمل البيانات وحدد الفئة");
-    
+
     if(state.user.bal < state.selectedDenom.price) return toast("❌ رصيد محفظتك غير كافٍ لشحن هذه الفئة");
-    
+
     toast("⚡ جاري الشحن الفوري عبر السيرفر...");
     let res = await fetch(`${API}/api/games/topup`, {
         method: 'POST',
@@ -270,7 +283,7 @@ function openCategory(catName) {
     document.getElementById('cat-title-display').innerText = catName;
     const list = document.getElementById('products-list');
     const filtered = state.prods.filter(p => p.cat === catName);
-    
+
     if(filtered.length > 0) {
         list.innerHTML = filtered.map(p => `
             <div onclick="openProductSheet('${p._id}')" class="p-4 bg-white/5 rounded-3xl border border-white/5 flex gap-4 items-center cursor-pointer active:scale-[0.99] transition">
@@ -285,8 +298,7 @@ function openCategory(catName) {
     } else {
         list.innerHTML = `<div class="opacity-30 text-center py-12 text-xs font-bold">لا توجد منتجات حالياً في هذا القسم</div>`;
     }
-    
-    // إخفاء الرئيسية وإظهار واجهة المنتجات
+
     document.getElementById('view-home').classList.add('hidden');
     document.getElementById('view-products').classList.remove('hidden');
 }
@@ -305,6 +317,7 @@ function openProductSheet(id) {
 function addToCart(p) {
     let i = state.cart.find(x => x._id === p._id);
     if(i) i.qty++; else state.cart.push({...p, qty:1});
+    ui();
     toast("🛒 أضيف للسلة بنجاح");
 }
 
@@ -374,13 +387,14 @@ async function changeView(viewId, btn) {
     playSound('snd-click');
     document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    
+
     document.getElementById(`view-${viewId}`).classList.remove('hidden');
     if(btn) btn.classList.add('active');
 
     if(viewId === 'orders') await loadOrders();
     if(viewId === 'notifications') await fetchMessages();
     if(viewId === 'home') await fetchAds();
+    ui();
 }
 
 async function sync() {
@@ -388,10 +402,10 @@ async function sync() {
     try {
         const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
         const data = await res.json();
-        if(res.ok && data.success) { 
-            state.user = data.user; 
-            localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); 
-            ui(); 
+        if(res.ok && data.success) {
+            state.user = data.user;
+            localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
+            ui();
         }
     } catch(e) { console.log("Sync failed silently"); }
 }
@@ -450,11 +464,20 @@ function toggleAuthMode() {
 
 function setLayout(mode) {
     const container = document.getElementById('categories-list');
+    if(!container) return;
+    
     container.classList.remove('mode-matrix', 'mode-dual', 'mode-list');
-    document.querySelectorAll('[id^="btn-layout-"]').forEach(b => b.classList.remove('bg-emerald-500', 'text-black'));
-    document.querySelectorAll('[id^="btn-layout-"]').forEach(b => b.classList.add('text-slate-400'));
+    document.querySelectorAll('[id^="btn-layout-"]').forEach(b => {
+        b.classList.remove('bg-emerald-500', 'text-black');
+        b.classList.add('text-slate-400');
+    });
 
-    document.getElementById(`btn-layout-${mode}`).classList.add('bg-emerald-500', 'text-black');
+    const activeBtn = document.getElementById(`btn-layout-${mode}`);
+    if(activeBtn) {
+        activeBtn.classList.remove('text-slate-400');
+        activeBtn.classList.add('bg-emerald-500', 'text-black');
+    }
+    
     if(mode === 0) container.classList.add('mode-dual');
     if(mode === 1) container.classList.add('mode-matrix');
     if(mode === 2) container.classList.add('mode-list');
@@ -463,9 +486,6 @@ function setLayout(mode) {
 
 function logout() { localStorage.clear(); location.reload(); }
 function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3500); }
-function closeSheet() { 
-    document.getElementById('product-sheet').style.bottom = "-100%"; 
-    setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); 
-}
+function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
 function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(e=>{}); } }
 

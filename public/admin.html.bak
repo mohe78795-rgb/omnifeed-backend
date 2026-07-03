@@ -3,309 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة المركزية | أبو حسين Prestige</title>
+    <title>لوحة تحكم أبو حسين المركزية</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Cairo', sans-serif; background-color: #05070a; }</style>
+    <style>*{font-family:'Cairo',sans-serif;}</style>
 </head>
-<body class="text-white p-6">
+<body class="bg-[#05070a] text-slate-100 min-h-screen pb-20">
 
-    <div class="max-w-7xl mx-auto space-y-8">
-        <!-- قفل الدخول الآمن للوحة -->
-        <div id="admin-auth" class="bg-slate-900/50 p-8 rounded-3xl border border-white/5 text-center max-w-md mx-auto mt-20">
-            <h2 class="text-2xl font-black mb-4">لوحة تحكم السيرفر الآمنة</h2>
-            <input type="password" id="admin-key" class="w-full p-4 bg-black/40 border border-emerald-500/20 rounded-xl text-center mb-4 outline-none focus:border-emerald-500" placeholder="أدخل رمز المدير السري">
-            <button onclick="loadDashboard()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-xl hover:bg-emerald-600 transition-all">فتح اللوحة</button>
+    <!-- شاشة قفل لوحة التحكم -->
+    <div id="admin-lock" class="fixed inset-0 z-[4000] bg-[#05070a] flex items-center justify-center p-6">
+        <div class="max-w-md w-full bg-slate-900/40 p-8 rounded-3xl border border-white/5 space-y-6 text-center">
+            <h2 class="text-2xl font-black text-emerald-400">منظومة الإدارة المركزية</h2>
+            <input type="password" id="admin-key-input" class="w-full p-4 bg-black/60 border border-white/5 rounded-xl text-center font-black text-emerald-500 text-lg outline-none" placeholder="أدخل الرمز السري الفوقي">
+            <button onclick="loginAdmin()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-xl shadow-lg shadow-emerald-500/10 active:scale-95 transition">ولوج آمن للسيرفر</button>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم الرئيسية -->
+    <div id="admin-content" class="hidden max-w-4xl mx-auto px-6 pt-10 space-y-8">
+        <header class="flex justify-between items-center border-b border-white/5 pb-6">
+            <div>
+                <h1 class="text-3xl font-black text-emerald-400">لوحة تحكم أبو حسين</h1>
+                <p class="text-xs text-slate-400 mt-1">إدارة الطلبات، الحسابات، والنظام البريد البرقي والمراسلات</p>
+            </div>
+            <button onclick="location.reload()" class="bg-white/5 px-4 py-2 rounded-xl text-xs border border-white/5 font-bold">تحديث البيانات</button>
+        </header>
+
+        <!-- التبويبات العلوية لإدارة اللوحة -->
+        <div class="flex gap-2 overflow-x-auto pb-2">
+            <button onclick="switchTab('orders')" id="tab-orders" class="bg-emerald-500 text-black px-5 py-2.5 rounded-xl text-xs font-black shrink-0">📦 الطلبات والعمليات</button>
+            <button onclick="switchTab('users')" id="tab-users" class="bg-white/5 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-black shrink-0">👥 إدارة المحافظ</button>
+            <button onclick="switchTab('messages')" id="tab-messages" class="bg-white/5 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-black shrink-0">📢 إرسال إشعار برقي</button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="bg-white/5 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-black shrink-0">⚙️ إضافة خدمات وفيديو</button>
         </div>
 
-        <!-- المحتوى الرئيسي للوحة بعد فك القفل -->
-        <div id="admin-content" class="hidden space-y-8">
-            <div class="flex justify-between items-center bg-slate-900/40 p-6 rounded-2xl border border-white/5">
-                <h1 class="text-xl md:text-2xl font-black text-emerald-500">👑 لوحة التحكم المركزية لـ MongoDB</h1>
-                <button onclick="location.reload()" class="bg-red-500/10 text-red-500 px-4 py-2 rounded-xl text-xs font-bold border border-red-500/10">قفل اللوحة</button>
-            </div>
+        <!-- 1️⃣ تبويب الطلبات والعمليات -->
+        <div id="panel-orders" class="admin-panel space-y-4">
+            <h3 class="font-black text-lg">سجل طلبات الفواتير الحالية</h3>
+            <div id="adm-orders-list" class="space-y-3"></div>
+        </div>
 
-            <!-- أزرار التنقل السريع بين أقسام اللوحة -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <button onclick="switchTab('orders-tab')" class="bg-slate-900 border border-white/5 p-4 rounded-xl font-bold text-sm hover:border-emerald-500 transition">📋 الطلبات</button>
-                <button onclick="switchTab('users-tab')" class="bg-slate-900 border border-white/5 p-4 rounded-xl font-bold text-sm hover:border-emerald-500 transition">👥 المستخدمون</button>
-                <button onclick="switchTab('add-product-tab')" class="bg-slate-900 border border-white/5 p-4 rounded-xl font-bold text-sm hover:border-emerald-500 transition">📦 إضافة منتج</button>
-                <button onclick="switchTab('categories-tab')" class="bg-slate-900 border border-white/5 p-4 rounded-xl font-bold text-sm hover:border-emerald-500 transition">🗂️ الأقسام</button>
-                <button onclick="switchTab('ads-tab')" class="bg-slate-900 border border-white/5 p-4 rounded-xl font-bold text-sm hover:border-emerald-500 transition">📢 الإعلانات</button>
-            </div>
+        <!-- 2️⃣ تبويب إدارة المحافظ والشحن -->
+        <div id="panel-users" class="admin-panel hidden space-y-4">
+            <h3 class="font-black text-lg">قائمة مستخدمي المنظومة ومحفظتهم</h3>
+            <div id="adm-users-list" class="space-y-3"></div>
+        </div>
 
-            <!-- ================= التبويب 1: الطلبات والفواتير ================= -->
-            <div id="orders-tab" class="tab-content bg-slate-900/20 p-6 rounded-2xl border border-white/5">
-                <h3 class="font-black text-lg mb-4 text-emerald-400">📋 الفواتير المستلمة الأخيرة في السيستم</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-white/5 text-slate-400">
-                                <th class="p-3">رقم الفاتورة / التاريخ</th>
-                                <th class="p-3">الهاتف</th>
-                                <th class="p-3">المنتجات المطلوبة</th>
-                                <th class="p-3">الإجمالي</th>
-                                <th class="p-3">الحالة</th>
-                                <th class="p-3">التحكم بالطلب</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-orders-table"></tbody>
-                    </table>
+        <!-- 3️⃣ تبويب نظام المراسلة والإشعارات الجديد -->
+        <div id="panel-messages" class="admin-panel hidden space-y-6">
+            <div class="bg-slate-900/30 p-6 rounded-3xl border border-white/5 max-w-lg space-y-4">
+                <h3 class="font-black text-lg text-emerald-400">📢 إرسال رسالة وإشعار دفع (Push Notification)</h3>
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400">نوع المستلم:</label>
+                    <select id="msg-receiver-type" class="w-full p-3.5 bg-black/60 border border-white/5 rounded-xl text-sm outline-none text-white">
+                        <option value="ALL">للجميع (إشعار وعرض عام لكافة المستخدمين)</option>
+                        <option value="INDIVIDUAL">لمستخدم محدد (عبر رقم هاتف حسابه)</option>
+                    </select>
                 </div>
+                <div id="msg-phone-container" class="space-y-1 hidden">
+                    <label class="text-xs text-slate-400">رقم هاتف العميل المستهدف:</label>
+                    <input type="tel" id="msg-phone" class="w-full p-3.5 bg-black/60 border border-white/5 rounded-xl text-sm text-white outline-none" placeholder="7xxxxxxxx">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400">عنوان الإشعار:</label>
+                    <input type="text" id="msg-title" class="w-full p-3.5 bg-black/60 border border-white/5 rounded-xl text-sm text-white outline-none" placeholder="أدخل عنواناً جذاباً...">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400">نص الرسالة التفصيلي:</label>
+                    <textarea id="msg-body" class="w-full p-3.5 bg-black/60 border border-white/5 rounded-xl text-sm text-white outline-none h-32" placeholder="اكتب تفاصيل العرض أو التنبيه هنا..."></textarea>
+                </div>
+                <button onclick="sendAdminMessage()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-xl text-sm shadow-xl active:scale-95 transition">بث وإرسال الإشعار فوراً</button>
             </div>
+        </div>
 
-            <!-- ================= التبويب 2: المستخدمين وشحن الرصيد ================= -->
-            <div id="users-tab" class="tab-content hidden space-y-6">
-                <div class="bg-slate-900/30 p-6 rounded-2xl border border-white/5 max-w-md space-y-3">
-                    <h3 class="font-black text-emerald-400">💵 إدارة وشحن رصيد حساب بالرقم</h3>
-                    <input type="tel" id="user-phone" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-center" placeholder="رقم هاتف العميل">
-                    <input type="number" id="user-new-bal" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-center" placeholder="الرصيد الفعلي الجديد">
-                    <button onclick="updateUserBalance()" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-sm">تحديث الرصيد الفوري</button>
-                </div>
-                <div class="bg-slate-900/20 p-6 rounded-2xl border border-white/5">
-                    <h3 class="font-black text-lg mb-4 text-emerald-400">👥 قائمة أعضاء ومشتركي المتجر</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right text-xs">
-                            <thead>
-                                <tr class="border-b border-white/5 text-slate-400">
-                                    <th class="p-3">الاسم</th>
-                                    <th class="p-3">رقم الهاتف</th>
-                                    <th class="p-3">الرصيد الحالي</th>
-                                    <th class="p-3">تاريخ الانضمام</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-users-table"></tbody>
-                        </table>
-                    </div>
-                </div>
+        <!-- 4️⃣ تبويب الإعدادات وإضافة الفئات والمنتجات والفيديو -->
+        <div id="panel-settings" class="admin-panel hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3">
+                <h4 class="font-black text-sm text-emerald-400">🎬 تحديث الفيديو الإعلاني الترويجي الأعلى</h4>
+                <input type="text" id="set-ad-url" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="رابط فيديو يوتيوب Embed">
+                <button onclick="addAd()" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">حفظ وتحديث الفيديو</button>
             </div>
-
-            <!-- ================= التبويب 3: إضافة منتج للكتالوج ================= -->
-            <div id="add-product-tab" class="tab-content hidden bg-slate-900/30 p-6 rounded-2xl border border-white/5 max-w-lg space-y-3">
-                <h3 class="font-black text-lg text-emerald-400">📦 إضافة منتج جديد للمتجر</h3>
-                <input type="text" id="p-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-sm" placeholder="اسم المنتج">
-                <input type="number" id="p-price" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-sm" placeholder="السعر بالريال">
-                <input type="text" id="p-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-sm" placeholder="رابط صورة المنتج">
-                <input type="text" id="p-cat" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-sm" placeholder="القسم المسند إليه">
-                <button onclick="addProduct()" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-sm">تنزيل في المتجر فورا</button>
+            <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3">
+                <h4 class="font-black text-sm text-emerald-400">📁 إضافة قسم/فئة جديدة</h4>
+                <input type="text" id="cat-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم القسم">
+                <input type="text" id="cat-sub" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="الوصف الفرعي">
+                <input type="text" id="cat-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="رابط صورة القسم">
+                <button onclick="addCategory()" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">إنشاء القسم</button>
             </div>
-
-            <!-- ================= التبويب 4: إدارة الأقسام بالفروع ================= -->
-            <div id="categories-tab" class="tab-content hidden space-y-6">
-                <div class="bg-slate-900/30 p-6 rounded-2xl border border-white/5 max-w-lg space-y-3">
-                    <h3 class="font-black text-lg text-emerald-400">🗂️ إضافة قسم جديد بالسيستم</h3>
-                    <input type="text" id="cat-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-sm" placeholder="اسم القسم (مثال: مواد غذائية)">
-                    <input type="text" id="cat-sub" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-sm" placeholder="الوصف الفرعي (مثال: تموينات مختارة)">
-                    <input type="text" id="cat-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-sm" placeholder="رابط أيقونة/صورة القسم">
-                    <button onclick="addCategory()" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-sm">حفظ القسم الجديد</button>
-                </div>
-                <div class="bg-slate-900/20 p-6 rounded-2xl border border-white/5">
-                    <h3 class="font-black text-lg mb-4 text-emerald-400">الأقسام الحالية بالمتجر</h3>
-                    <div id="categories-list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-                </div>
+            <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3 md:col-span-2">
+                <h4 class="font-black text-sm text-emerald-400">🛍️ إضافة منتج جديد تحت قسم محدد</h4>
+                <input type="text" id="p-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم منتج الخدمة">
+                <input type="number" id="p-price" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="السعر بالريال اليمني YER">
+                <input type="text" id="p-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="رابط الصورة التوضيحية">
+                <input type="text" id="p-cat" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم القسم المطابق تماماً لتتبعه">
+                <button onclick="addProduct()" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-xs">تثبيت المنتج في السيرفر</button>
             </div>
-
-            <!-- ================= التبويب 5: إدارة إعلانات الفيديو المتحركة ================= -->
-            <div id="ads-tab" class="tab-content hidden space-y-6">
-                <div class="bg-slate-900/30 p-6 rounded-2xl border border-white/5 max-w-lg space-y-3">
-                    <h3 class="font-black text-lg text-emerald-400">📢 إضافة فيديو إعلاني جديد للمتجر</h3>
-                    <input type="text" id="ad-videoUrl" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-sm" placeholder="رابط الفيديو المباشر (videoUrl)">
-                    <div class="flex items-center space-x-2 space-x-reverse py-2">
-                        <input type="checkbox" id="ad-active" checked class="w-4 h-4 accent-emerald-500">
-                        <label for="ad-active" class="text-sm font-bold text-slate-300">تفعيل الإعلان فوراً في المتجر</label>
-                    </div>
-                    <button onclick="addAd()" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-sm">نشر إعلان الفيديو فورا</button>
-                </div>
-                <div class="bg-slate-900/20 p-6 rounded-2xl border border-white/5">
-                    <h3 class="font-black text-lg mb-4 text-emerald-400">الإعلانات النشطة حالياً بالفيديو</h3>
-                    <div id="ads-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-                </div>
-            </div>
-
         </div>
     </div>
 
     <script>
-        let API = window.location.origin;
+        const API = window.location.origin;
         let masterKey = "";
 
-        // دالة التنقل بين التبويبات بدون تحميل الصفحة
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tabId).classList.remove('hidden');
+        document.getElementById('msg-receiver-type').addEventListener('change', function() {
+            document.getElementById('msg-phone-container').classList.toggle('hidden', this.value === 'ALL');
+        });
+
+        async function loginAdmin() {
+            const key = document.getElementById('admin-key-input').value;
+            if(!key) return alert("أدخل المفتاح السري أولاً");
+            masterKey = key;
+            await loadDashboard();
         }
 
-        // دالة التحقق والدخول لجلب بيانات الـ Dashboard
         async function loadDashboard() {
-            masterKey = document.getElementById('admin-key').value;
-            if(!masterKey) return alert("الرجاء إدخال المفتاح السري");
-
-            try {
-                let res = await fetch(`${API}/api/admin/dashboard`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ adminPass: masterKey })
-                });
-                let d = await res.json();
-                if(res.ok) {
-                    document.getElementById('admin-auth').classList.add('hidden');
-                    document.getElementById('admin-content').classList.remove('hidden');
-                    
-                    // توزيع وحقن البيانات المسترجعة داخل الجداول
-                    renderOrders(d.data.orders);
-                    renderUsers(d.data.users);
-                    renderCategories(d.data.categories);
-                    renderAds(d.data.ads);
-                } else { alert("الرمز السري خطأ!"); }
-            } catch(e) { alert("فشل الاتصال بالسيرفر"); }
+            let res = await fetch(`${API}/api/admin/dashboard`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey })
+            });
+            let reply = await res.json();
+            if(reply.success) {
+                document.getElementById('admin-lock').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                renderAdminData(reply.data);
+            } else {
+                alert("❌ الرمز السري غير صحيح الفوقي لا يمتلك صلاحية الكود المصدري");
+            }
         }
 
-        // دالة عرض الطلبات والمشتريات والكميات بالتفصيل
-        function renderOrders(orders) {
-            document.getElementById('admin-orders-table').innerHTML = orders.map(o => {
-                const itemsText = o.items && o.items.length > 0 
-                    ? o.items.map(i => `<div class="text-[10px] text-slate-300">• ${i.name} (الكمية: ${i.qty || 1})</div>`).join('')
-                    : '<span class="text-slate-500">لا توجد تفاصيل منتجات</span>';
-
-                return `
-                    <tr class="border-b border-white/5 hover:bg-white/5 transition-all">
-                        <td class="p-3 font-black text-emerald-500">
-                            <div>${o.id}</div>
-                            <div class="text-[9px] text-slate-500 font-normal mt-1">${o.date || ''}</div>
-                        </td>
-                        <td class="p-3"><div class="font-bold">${o.phone}</div></td>
-                        <td class="p-3">${itemsText}</td>
-                        <td class="p-3 text-emerald-400 font-black text-sm">${Number(o.total).toLocaleString()} YER</td>
-                        <td class="p-3">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-black ${
-                                o.status.includes('مكتمل') || o.status.includes('توصيل') 
-                                ? 'bg-emerald-500/10 text-emerald-400' 
-                                : o.status.includes('ملغي') 
-                                ? 'bg-red-500/10 text-red-400' 
-                                : 'bg-amber-500/10 text-amber-400'
-                            }">
-                                ${o.status}
-                            </span>
-                        </td>
-                        <td class="p-3">
-                            <div class="flex flex-col md:flex-row gap-1">
-                                <button onclick="updateOrderStatus('${o.id}', 'تم التوصيل ✅')" class="bg-emerald-500 text-black px-2 py-1 rounded font-bold text-[10px] hover:bg-emerald-600 transition">توصيل</button>
-                                <button onclick="updateOrderStatus('${o.id}', 'ملغي ❌')" class="bg-red-500 text-white px-2 py-1 rounded font-bold text-[10px] hover:bg-red-600 transition">إلغاء</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('') || "<tr><td colspan='6' class='text-center p-4 opacity-40'>لا توجد طلبات في السيستم بعد</td></tr>";
-        }
-
-        // دالة استعراض جدول المشتركين وتواريخ انضمامهم للمتجر
-        function renderUsers(users) {
-            document.getElementById('admin-users-table').innerHTML = users.map(u => `
-                <tr class="border-b border-white/5 hover:bg-white/5">
-                    <td class="p-3 font-bold">${u.name}</td>
-                    <td class="p-3 text-slate-400">${u.phone}</td>
-                    <td class="p-3 text-emerald-400 font-black">${Number(u.bal).toLocaleString()} YER</td>
-                    <td class="p-3 text-slate-500 text-[11px]">${u.joinDate || 'غير محدد'}</td>
-                </tr>
-            `).join('') || "<tr><td colspan='4' class='text-center p-4 opacity-40'>لا يوجد مستخدمون بعد</td></tr>";
-        }
-
-        // دالة عرض الأقسام الحالية مع فروعها
-        function renderCategories(cats) {
-            document.getElementById('categories-list').innerHTML = cats.map(c => `
-                <div class="bg-slate-900 p-4 rounded-xl border border-white/5 text-center space-y-1">
-                    <img src="${c.img}" class="w-12 h-12 mx-auto object-contain rounded-lg">
-                    <p class="font-bold text-xs">${c.name}</p>
-                    <p class="text-[10px] text-slate-500 font-medium">${c.sub || ''}</p>
-                </div>
-            `).join('') || "<p class='text-xs opacity-40 p-2'>لا توجد أقسام مضافة بعد</p>";
-        }
-
-        // دالة مشغل وعارض الإعلانات بالفيديو المتحرك
-        function renderAds(ads) {
-            document.getElementById('ads-list').innerHTML = ads.map(a => `
-                <div class="bg-slate-900 p-3 rounded-xl border border-white/5 space-y-2">
-                    <video src="${a.videoUrl}" controls muted autoplay loop class="w-full h-32 object-cover rounded-lg"></video>
-                    <div class="flex justify-between items-center px-1">
-                        <span class="text-[11px] font-bold text-slate-400">الحالة:</span>
-                        <span class="${a.active ? 'text-emerald-400' : 'text-red-400'} text-[11px] font-black">
-                            ${a.active ? 'نشط ✅' : 'متوقف ❌'}
-                        </span>
+        function renderAdminData(data) {
+            const oList = document.getElementById('adm-orders-list');
+            oList.innerHTML = data.orders.map(o => `
+                <div class="p-5 bg-white/5 rounded-2xl border border-white/5 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-3"><span class="font-black text-emerald-400">${o.id}</span><span class="text-[10px] text-slate-400">📞 ${o.phone}</span></div>
+                        <div class="text-xs text-slate-300 mt-2">${o.items.map(i=>`${i.name} (x${i.qty})`).join(' | ')}</div>
+                        <p class="text-[9px] text-slate-500 mt-1">${o.date} - <b class="text-emerald-500">${o.total.toLocaleString()} YER</b></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="updateStatus('${o.id}', 'مكتمل ✅')" class="bg-emerald-500 text-black px-3 py-1.5 rounded-lg text-xs font-bold">اعتماد كـ مكتمل</button>
+                        <button onclick="updateStatus('${o.id}', 'مرفوض ❌')" class="bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold">رفض الطلب</button>
                     </div>
                 </div>
-            `).join('') || "<p class='text-xs opacity-40 p-2'>لا توجد إعلانات نشطة</p>";
+            `).join('');
+
+            const uList = document.getElementById('adm-users-list');
+            uList.innerHTML = data.users.map(u => `
+                <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-black text-sm">${u.name}</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">📞 ${u.phone} | 💰 <span class="text-emerald-400 font-bold">${u.bal.toLocaleString()} YER</span></p>
+                    </div>
+                    <button onclick="promptBalance('${u.phone}', ${u.bal})" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-xs font-black">شحن وتعديل المحفظة</button>
+                </div>
+            `).join('');
         }
 
-        // دالة شحن وتحديث الرصيد الفوري للعملاء بالـ Phone
-        async function updateUserBalance() {
-            const phone = document.getElementById('user-phone').value;
-            const newBalance = document.getElementById('user-new-bal').value;
-            if(!phone || !newBalance) return alert("أكمل البيانات أولاً");
+        async function updateStatus(id, status) {
+            await fetch(`${API}/api/admin/order/update-status`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, id, status })
+            });
+            await loadDashboard();
+        }
 
+        async function promptBalance(phone, currentBal) {
+            const amount = prompt(`الرصيد الحالي: ${currentBal} YER\nأدخل الرصيد الإجمالي الجديد الكلي المستهدف للمحفظة:`);
+            if(!amount || isNaN(amount)) return;
             let res = await fetch(`${API}/api/admin/user/update-balance`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, phone, newBalance })
+                body: JSON.stringify({ adminPass: masterKey, phone, newBalance: Number(amount) })
             });
-            if(res.ok) { alert("✅ تم شحن وتحديث رصيد العميل بنجاح!"); loadDashboard(); }
-            else { alert("❌ حدث خطأ، تأكد من صحة رقم العميل"); }
+            if(res.ok) { alert("✅ تم تحديث محفظة العميل وإرسال إشعار فوري له!"); await loadDashboard(); }
         }
 
-        // دالة تنزيل منتج جديد للكتالوج
+        async function sendAdminMessage() {
+            const type = document.getElementById('msg-receiver-type').value;
+            const receiver = type === 'ALL' ? 'ALL' : document.getElementById('msg-phone').value;
+            const title = document.getElementById('msg-title').value;
+            const body = document.getElementById('msg-body').value;
+
+            if(!title || !body || (type !== 'ALL' && !receiver)) return alert("⚠️ يرجى ملء حقول الإشعار البرقي بالكامل!");
+
+            let res = await fetch(`${API}/api/messages/send`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, receiver, title, body })
+            });
+            if(res.ok) {
+                alert("✅ تم بث وإرسال الإشعار بنجاح عبر السيرفر والفايربيس!");
+                document.getElementById('msg-title').value = "";
+                document.getElementById('msg-body').value = "";
+            } else { alert("❌ فشل الإرسال"); }
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('cat-name').value;
+            const sub = document.getElementById('cat-sub').value;
+            const img = document.getElementById('cat-img').value;
+            await fetch(`${API}/api/admin/category/add`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, name, sub, img })
+            });
+            alert("✅ أضيف القسم"); loadDashboard();
+        }
+
         async function addProduct() {
             const name = document.getElementById('p-name').value;
             const price = document.getElementById('p-price').value;
             const img = document.getElementById('p-img').value;
             const cat = document.getElementById('p-cat').value;
-            if(!name || !price || !img || !cat) return alert("يرجى ملء جميع حقول المنتج");
-
-            let res = await fetch(`${API}/api/admin/product/add`, {
+            await fetch(`${API}/api/admin/product/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name, price, img, cat })
             });
-            if(res.ok) { alert("✅ تم نشر المنتج الجديد بنجاح!"); loadDashboard(); }
+            alert("✅ أضيف المنتج لبنية الخدمات"); loadDashboard();
         }
 
-        // دالة حفظ قسم فئة جديد بوصفه الفرعي
-        async function addCategory() {
-            const name = document.getElementById('cat-name').value;
-            const sub = document.getElementById('cat-sub').value;
-            const img = document.getElementById('cat-img').value;
-            if(!name || !img) return alert("اسم القسم وصورته مطلوبان");
-
-            let res = await fetch(`${API}/api/admin/category/add`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, name, sub, img })
-            });
-            if(res.ok) { alert("✅ تم حفظ وإضافة القسم الجديد بنجاح!"); loadDashboard(); }
-        }
-
-        // دالة نشر فيديو إعلاني جديد
         async function addAd() {
-            const videoUrl = document.getElementById('ad-videoUrl').value;
-            const active = document.getElementById('ad-active').checked;
-            if(!videoUrl) return alert("الرجاء وضع رابط الفيديو المباشر أولاً");
-
-            let res = await fetch(`${API}/api/admin/ad/add`, {
+            const videoUrl = document.getElementById('set-ad-url').value;
+            await fetch(`${API}/api/admin/ad/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, videoUrl, active })
+                body: JSON.stringify({ adminPass: masterKey, videoUrl })
             });
-            if(res.ok) { alert("✅ تم نشر فيديو الإعلان الجديد فوراً!"); loadDashboard(); }
+            alert("✅ تم تحديث الفيديو الإعلاني بنجاح الفوري");
         }
 
-        // دالة معالجة الفواتير (توصيل أو إلغاء)
-        async function updateOrderStatus(id, status) {
-            let res = await fetch(`${API}/api/admin/order/update-status`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, id, status })
-            });
-            if(res.ok) { loadDashboard(); }
+        function switchTab(tabId) {
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.replace('bg-emerald-500', 'bg-white/5'));
+            document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.replace('text-black', 'text-slate-400'));
+
+            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.replace('bg-white/5', 'bg-emerald-500');
+            document.getElementById(`tab-${tabId}`).classList.replace('text-slate-400', 'text-black');
         }
     </script>
 </body>
 </html>
-

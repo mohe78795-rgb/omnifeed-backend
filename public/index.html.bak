@@ -11,8 +11,9 @@
 </head>
 <body class="bg-[#05070a] text-white min-h-screen pb-32">
 
-    <audio id=\"snd-click\" src="https://assets.mixkit.co/active_storage/sfx/2568/2358-preview.mp3" preload="auto"></audio>
-    <audio id=\"snd-cashier\" src="https://assets.mixkit.co/active_storage/sfx/592/592-preview.mp3" preload="auto"></audio>
+    <audio id="snd-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2358-preview.mp3" preload="auto"></audio>
+    <audio id="snd-cashier" src="https://assets.mixkit.co/active_storage/sfx/592/592-preview.mp3" preload="auto"></audio>
+    <audio id="snd-notification" src="https://assets.mixkit.co/active_storage/sfx/911/911-preview.mp3" preload="auto"></audio>
 
     <div class="blob"></div>
     <div class="blob blob-2"></div>
@@ -41,7 +42,7 @@
                     <input type="password" id="auth-pass" class="royal-input" placeholder="••••••••">
                 </div>
             </div>
-            <button id="auth-btn" onclick="handleAuth()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/10 active:scale-95 transition">دخول آمن</button>
+            <button id="auth-btn" onclick="handleAuth()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">دخول آمن</button>
             <div class="text-center pt-2">
                 <span id="auth-toggle-text" class="text-xs text-slate-400">ليس لديك حساب؟</span>
                 <button id="auth-toggle-btn" onclick="toggleAuthMode()" class="text-xs text-emerald-400 font-bold underline mr-1">إنشاء حساب جديد</button>
@@ -69,10 +70,9 @@
 
         <div id="view-home" class="view-content space-y-6 animate-fadeIn">
             <div id="ad-video-container" class="hidden w-full aspect-video rounded-3xl overflow-hidden border border-white/5 bg-slate-950">
-                <iframe id="ad-video-player" class="w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <iframe id="ad-video-player" class="w-full h-full" src="" frameborder="0" allowfullscreen></iframe>
             </div>
-
-            <div class="flex justify-between items-center bg-white/20 p-2 rounded-2xl border border-white/5">
+            <div class="flex justify-between items-center bg-white/5 p-2 rounded-2xl border border-white/5">
                 <span class="text-xs font-bold text-slate-300 mr-2">شكل عرض الأقسام:</span>
                 <div class="flex gap-1">
                     <button id="btn-layout-0" onclick="setLayout(0)" class="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-black transition"><i class="fas fa-th-large"></i></button>
@@ -80,7 +80,6 @@
                     <button id="btn-layout-2" onclick="setLayout(2)" class="px-3 py-1.5 rounded-xl text-xs font-black text-slate-400 transition"><i class="fas fa-bars"></i></button>
                 </div>
             </div>
-
             <div id="categories-list" class="cards-container mode-dual"></div>
         </div>
 
@@ -95,9 +94,8 @@
         <div id="view-games" class="view-content hidden space-y-6 animate-fadeIn">
             <h2 class="text-2xl font-black">بوابة الشحن الفوري للألعاب ⚡</h2>
             <div id="games-list" class="grid grid-cols-1 gap-3"></div>
-            
             <div id="game-topup-panel" class="hidden bg-slate-900/30 p-6 rounded-[2rem] border border-white/5 space-y-5">
-                <h3 id="selected-game-title" class="font-black text-emerald-400 text-lg">اسم اللعبة المختارة</h3>
+                <h3 id="selected-game-title" class="font-black text-emerald-400 text-lg">اسم اللعبة</h3>
                 <div class="space-y-2">
                     <label class="text-xs text-slate-400">أدخل معرّف اللاعب (Player ID):</label>
                     <div class="flex gap-2">
@@ -115,8 +113,19 @@
         </div>
 
         <div id="view-notifications" class="view-content hidden space-y-6 animate-fadeIn">
-            <h2 class="text-2xl font-black">الرسائل والتنبيهات البرقية</h2>
-            <div id="messages-list" class="space-y-4"></div>
+            <h2 class="text-2xl font-black">صندوق الوارد والدردشة ✉️</h2>
+            
+            <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex justify-between items-center">
+                <div>
+                    <h3 class="text-sm font-black text-emerald-400">محادثة الإدارة المباشرة</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">راسل أبو حسين وفريق الدعم مباشرة من هنا</p>
+                </div>
+                <a href="https://wa.me/967773030310" target="_blank" class="bg-emerald-500 text-black px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1">
+                    <i class="fab fa-whatsapp text-sm"></i> بدء الدردشة
+                </a>
+            </div>
+
+            <div id="messages-list" class="space-y-4 pt-2"></div>
         </div>
 
         <div id="view-orders" class="view-content hidden space-y-6 animate-fadeIn">
@@ -131,7 +140,7 @@
                 <span class="text-sm text-slate-400 font-bold">الإجمالي الكلي للسلة:</span>
                 <span id="cart-total" class="text-xl font-black text-emerald-400">0 YER</span>
             </div>
-            <button onclick="checkout()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl text-sm shadow-xl shadow-emerald-500/10 active:scale-95 transition">تأكيد الدفع وإرسال الفاتورة</button>
+            <button onclick="checkout()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl text-sm shadow-xl active:scale-95 transition">تأكيد الدفع وإرسال الفاتورة</button>
         </div>
 
         <div id="view-account" class="view-content hidden space-y-6 animate-fadeIn">
@@ -149,17 +158,16 @@
             <button onclick="logout()" class="w-full bg-red-500/10 text-red-400 border border-red-500/20 font-black py-4 rounded-2xl text-sm active:scale-95 transition">تسجيل الخروج من الحساب</button>
         </div>
 
-        <nav class="fixed bottom-0 left-0 right-0 h-24 bg-black/80 backdrop-blur-2xl border-t border-white/5 grid grid-cols-5 items-center z-[500] px-2">
-            <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home text-lg"></i><span>الرئيسية</span></button>
-            <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-gamepad text-lg"></i><span>الألعاب</span></button>
-            <button onclick="changeView('cart', this)" class="nav-item relative">
-                <i class="fas fa-shopping-bag text-lg"></i><span>السلة</span>
-                </button>
-            <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt text-lg"></i><span>فواتيري</span></button>
+        <nav class="fixed bottom-0 left-0 right-0 h-24 bg-black/80 backdrop-blur-2xl border-t border-white/5 grid grid-cols-6 items-center z-[500] px-1">
+            <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home text-base"></i><span>الرئيسية</span></button>
+            <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-gamepad text-base"></i><span>الألعاب</span></button>
+            <button onclick="changeView('cart', this)" class="nav-item"><i class="fas fa-shopping-bag text-base"></i><span>السلة</span></button>
+            <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt text-base"></i><span>فواتيري</span></button>
             <button onclick="changeView('notifications', this)" class="nav-item relative">
-                <i class="fas fa-bell text-lg"></i><span>الرسائل</span>
-                <span id="msg-dot" class="hidden absolute top-4 right-6 w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                <i class="fas fa-bell text-base"></i><span>الرسائل</span>
+                <span id="msg-dot" class="hidden absolute top-4 right-5 w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
             </button>
+            <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-circle text-base"></i><span>حسابي</span></button>
         </nav>
     </div>
 

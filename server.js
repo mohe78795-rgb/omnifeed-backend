@@ -49,7 +49,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
 
 const Message = mongoose.model('Message', new mongoose.Schema({
     sender: { type: String, default: "ADMIN" },
-    receiver: { type: String, required: true }, // قد تكون "ALL" أو رقم هاتف محدد
+    receiver: { type: String, required: true }, 
     title: { type: String, required: true },
     body: { type: String, required: true },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
@@ -63,6 +63,37 @@ const Ad = mongoose.model('Ad', new mongoose.Schema({
 
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
 
+// --- 🛠️ دوال المعالجة والفلترة الذكية في الخلفية ---
+
+// معالج وتنظيف روابط الصور المدخلة من الأدمن (روابط جوجل ومحركات البحث)
+function processAndFixImageUrl(url) {
+    if (!url) return 'https://placehold.co/600x400/0c0f14/emerald?text=No+Image';
+    
+    let cleanedUrl = url.trim();
+
+    // 1. معالجة روابط تحويل صور بحث جوجل المباشر واستخراج رابط الصورة الأصلي النظيف منها
+    if (cleanedUrl.includes('google.com/url?')) {
+        try {
+            const urlParams = new URLSearchParams(cleanedUrl.split('?')[1]);
+            if (urlParams.has('imgurl')) {
+                return decodeURIComponent(urlParams.get('imgurl'));
+            } else if (urlParams.has('q')) {
+                return decodeURIComponent(urlParams.get('q'));
+            }
+        } catch (e) { console.error("خطأ سيرفر في فك رابط جوجل الموجه:", e); }
+    }
+
+    // 2. معالجة روابط عرض الصور من جوجل درايف وتحويلها تلقائياً لرابط عرض ويب مباشر
+    if (cleanedUrl.includes('drive.google.com/file/d/')) {
+        const matches = cleanedUrl.match(/\/file\/d\/([^\/]+)/);
+        if (matches && matches[1]) {
+            return `https://drive.google.com/uc?export=view&id=${matches[1]}`;
+        }
+    }
+
+    return cleanedUrl;
+}
+
 // تحويل روابط يوتيوب العادية لتعمل داخل المتجر
 function makeEmbedUrl(url) {
     if (!url) return "";
@@ -74,68 +105,61 @@ function makeEmbedUrl(url) {
     return url;
 }
 
+
 // ==========================================
-// 🌐 1️⃣ مسارات العميل الرئيسي (المطلوبة في script.js)
+// 🌐 1️⃣ مسارات العميل الرئيسي (المتجر)
 // ==========================================
 
-// جلب الأقسام للمتجر
 app.get('/api/categories', async (req, res) => {
-    try {
-        const categories = await Category.find({});
-        res.json(categories);
-    } catch (e) { res.status(500).json([]); }
+    try { res.json(await Category.find({})); } catch (e) { res.status(500).json([]); }
 });
 
-// جلب المنتجات للمتجر
 app.get('/api/products', async (req, res) => {
-    try {
-        const products = await Product.find({});
-        res.json(products);
-    } catch (e) { res.status(500).json([]); }
+    try { res.json(await Product.find({})); } catch (e) { res.status(500).json([]); }
 });
 
-// جلب الإعلانات النشطة للمتجر
 app.get('/api/ads', async (req, res) => {
-    try {
-        const ads = await Ad.find({ active: true }).sort({ _id: -1 });
-        res.json(ads);
-    } catch (e) { res.status(500).json([]); }
+    try { res.json(await Ad.find({ active: true }).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
-// جلب الرسائل والإشعارات الخاصة بالعميل (الخاصة به أو العامة للكل)
 app.get('/api/messages/:phone', async (req, res) => {
     try {
         const messages = await Message.find({
-            $or: [ { receiver: req.params.phone }, { receiver: 'ALL' } ]
-        }).sort({ _id: -1 });
+            $or: [ { receiver: req.params.phone }, { receiver: 'ALL' }, { sender: req.params.phone } ]
+        }).sort({ _id: 1 }); // ترتيب تصاعدي لتبدو كالدردشة المتسلسلة
         res.json(messages);
     } catch (e) { res.status(500).json([]); }
 });
 
-// تسجيل حساب جديد للعميل
+// مسار استقبال رسائل العملاء الفورية وحفظها داخل قاعدة البيانات للأدمن
+app.post('/api/messages/send-from-client', async (req, res) => {
+    const { phone, title, body } = req.body;
+    try {
+        await new Message({ sender: phone, receiver: "ADMIN", title, body }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
 app.post('/api/auth/signup', async (req, res) => {
     const { name, phone, pass } = req.body;
     try {
         const exist = await User.findOne({ phone });
         if (exist) return res.json({ success: false, message: "رقم الهاتف مسجل مسبقاً!" });
-        
         const newUser = new User({ name, phone, pass, bal: 0 });
         await newUser.save();
         res.json({ success: true, user: newUser });
-    } catch (e) { res.status(500).json({ success: false, message: "خطأ في السيرفر" }); }
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// تسجيل دخول العميل
 app.post('/api/auth/login', async (req, res) => {
     const { phone, pass } = req.body;
     try {
         const user = await User.findOne({ phone, pass });
-        if (!user) return res.json({ success: false, message: "رقم الهاتف أو كلمة المرور غير صحيحة" });
+        if (!user) return res.json({ success: false, message: "رقم الهاتف أو كلمة المرور خطأ" });
         res.json({ success: true, user });
-    } catch (e) { res.status(500).json({ success: false, message: "خطأ في السيرفر" }); }
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// تحديث ومزامنة بيانات العميل ورصيده تلقائياً (Sync)
 app.get('/api/auth/user/:phone', async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.params.phone });
@@ -144,44 +168,28 @@ app.get('/api/auth/user/:phone', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// إرسال طلب شراء جديد من السلة
 app.post('/api/orders/add', async (req, res) => {
     const { phone, order } = req.body;
     try {
         const user = await User.findOne({ phone });
-        if (!user || user.bal < order.total) {
-            return res.status(400).json({ success: false, message: "الرصيد غير كافٍ" });
-        }
-        // خصم الرصيد من المحفظة
+        if (!user || user.bal < order.total) return res.status(400).json({ success: false, message: "الرصيد غير كافٍ" });
+        
         user.bal -= order.total;
         await user.save();
-
-        // حفظ الفاتورة
-        const newOrder = new Order({
-            phone,
-            items: order.items,
-            total: order.total
-        });
-        await newOrder.save();
-
+        await new Order({ phone, items: order.items, total: order.total }).save();
         res.json({ success: true, currentBal: user.bal });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// جلب أرشيف الفواتير السابقة للعميل
 app.get('/api/orders/:phone', async (req, res) => {
-    try {
-        const orders = await Order.find({ phone: req.params.phone }).sort({ _id: -1 });
-        res.json(orders);
-    } catch (e) { res.status(500).json([]); }
+    try { res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
 
 // ==========================================
-// 🕹️ 2️⃣ مسارات شحن الألعاب المباشر (API الألعاب)
+// 🕹️ 2️⃣ منظومة شحن الألعاب التلقائية
 // ==========================================
 
-// قائمة الألعاب المتوفرة (يمكنك تعديلها وتوسيعها حسب رغبتك)
 app.get('/api/games', (req, res) => {
     res.json({
         success: true,
@@ -197,7 +205,7 @@ app.get('/api/games', (req, res) => {
             },
             {
                 game_code: "free_fire",
-                game_name: "فانيليا فري فاير - Free Fire",
+                game_name: "فري فاير - Free Fire",
                 denominations: [
                     { id: "dia_100", name: "100 جوهرة 💎", price: 950 },
                     { id: "dia_210", name: "210 جوهرة 💎", price: 1900 },
@@ -208,36 +216,32 @@ app.get('/api/games', (req, res) => {
     });
 });
 
-// التحقق من اسم اللاعب عبر الـ ID (محاكاة ذكية أو ربط خارجي مستقبلي)
 app.post('/api/games/validate-user', (req, res) => {
-    const { user_id } = req.body;
-    res.json({ success: true, player_name: "عميل تمويناتي (" + user_id + ")" });
+    res.json({ success: true, player_name: "لاعب تمويناتي المعتمد (" + req.body.user_id + ")" });
 });
 
-// تنفيذ عملية الشحن الفوري للألعاب وخصم الرصيد
 app.post('/api/games/topup', async (req, res) => {
     const { phone, price, game_code, user_id, denomination_id } = req.body;
     try {
         const user = await User.findOne({ phone });
-        if (!user || user.bal < price) return res.json({ success: false, message: "رصيدك الحالي غير كافٍ للشحن" });
+        if (!user || user.bal < price) return res.json({ success: false, message: "رصيدك لا يكفي" });
 
         user.bal -= Number(price);
         await user.save();
 
-        // إرسال إشعار داخلي بنجاح العملية
         await new Message({
             receiver: phone,
             title: "نجاح الشحن التلقائي ⚡",
-            body: `تم شحن معرف اللاعب ${user_id} بنجاح في لعبة [${game_code}] الفئة [${denomination_id}]. تم خصم ${price} YER`
+            body: `تم شحن المعرف ${user_id} في لعبة [${game_code}] الفئة [${denomination_id}] بنجاح، وخصم ${price} YER`
         }).save();
 
         res.json({ success: true, currentBal: user.bal });
-    } catch (e) { res.json({ success: false, message: "فشل السيرفر في إتمام الشحن" }); }
+    } catch (e) { res.json({ success: false }); }
 });
 
 
 // ==========================================
-// 💼 3️⃣ مسارات لوحة التحكم للأدمن (admin.html)
+// 💼 3️⃣ مسارات لوحة تحكم الأدمن والتحصين والمعالجة
 // ==========================================
 
 app.post('/api/admin/dashboard', async (req, res) => {
@@ -249,7 +253,10 @@ app.post('/api/admin/dashboard', async (req, res) => {
         const categories = await Category.find({});
         const products = await Product.find({});
         const ads = await Ad.find({ active: true }).sort({ _id: -1 });
-        res.json({ success: true, data: { orders, users, categories, products, ads } });
+        // جلب الرسائل الواردة من العملاء للإدارة
+        const clientMessages = await Message.find({ receiver: "ADMIN" }).sort({ _id: -1 });
+        
+        res.json({ success: true, data: { orders, users, categories, products, ads, clientMessages } });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
@@ -298,20 +305,24 @@ app.post('/api/admin/ad/add', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// إضافة قسم مع معالجة الرابط تلقائياً لحل مشكلة صور جوجل
 app.post('/api/admin/category/add', async (req, res) => {
     const { adminPass, name, sub, img } = req.body;
     if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
-        await new Category({ name, sub, img }).save();
+        const safeImgUrl = processAndFixImageUrl(img); // معالجة وحفظ الرابط الأصلي النظيف
+        await new Category({ name, sub, img: safeImgUrl }).save();
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// إضافة منتج مع معالجة الرابط تلقائياً لحل مشكلة صور جوجل
 app.post('/api/admin/product/add', async (req, res) => {
     const { adminPass, name, price, img, cat } = req.body;
     if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
-        await new Product({ name, price: Number(price), img, cat }).save();
+        const safeImgUrl = processAndFixImageUrl(img); // معالجة وحفظ الرابط الأصلي النظيف
+        await new Product({ name, price: Number(price), img: safeImgUrl, cat }).save();
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
@@ -321,6 +332,6 @@ app.get('/admin', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 منظومة تمويناتي تعمل بنجاح على المنفذ ${PORT}`);
+    console.log(`🚀 منظومة تمويناتي تعمل بنجاح واستقرار على المنفذ ${PORT}`);
 });
 

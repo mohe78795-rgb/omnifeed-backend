@@ -60,17 +60,18 @@ while true; do
             echo -e "${RED}🗑️  جاري حذف النسخة السابقة من مجلد YTM...${NC}"
             rm -rf /sdcard/YTM
             mkdir -p /sdcard/YTM/
-            
+
             echo -e "${GOLD}🔄 جاري نسخ الملفات الجديدة وآخر تحديث...${NC}"
             # نسخ محتويات مجلد public بالكامل
             cp -r ~/omnifeed-backend/public/* /sdcard/YTM/ 2>/dev/null
-            # نسخ ملف السيرفر الرئيسي أيضاً كما طلبت
-            if [ -f "~/omnifeed-backend/server.js" ]; then
+            
+            # التعديل هنا: فحص المسار الصحيح للملف بدون علامات تنصيص تعيق الـ ~
+            if [ -f ~/omnifeed-backend/server.js ]; then
                 cp ~/omnifeed-backend/server.js /sdcard/YTM/
-            elif [ -f "./server.js" ]; then
+            elif [ -f ./server.js ]; then
                 cp ./server.js /sdcard/YTM/
             fi
-            
+
             echo -e "${GREEN}✅ تم تنظيف المجلد واعتماد آخر نسخة بنجاح في YTM شاملة ملف السيرفر!${NC}"
             read -p "اضغط Enter للعودة..."
             ;;
@@ -108,7 +109,7 @@ while true; do
             ;;
         555)
             echo -e "${GREEN}🚀 جاري تشغيل سكريبت الرفع المباشر...${NC}"
-            if [ -f "~/omnifeed-backend/up" ] || [ -f "./up" ]; then
+            if [ -f ~/omnifeed-backend/up ] || [ -f "./up" ]; then
                 cd ~/omnifeed-backend && chmod +x ./up && ./up
             else
                 cd ~/omnifeed-backend && ./up

@@ -1,3 +1,4 @@
+/* --- الإعدادات الأساسية والثيم العام لمتجر أبو حسين --- */
 body {
     font-family: 'Cairo', sans-serif;
     background-color: #05070a;
@@ -6,6 +7,7 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+/* الخلفيات المتوهجة العائمة لجمالية التطبيق */
 .blob {
     position: fixed;
     width: 300px;
@@ -22,45 +24,36 @@ body {
     background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(0,0,0,0) 70%);
 }
 
-/* تعديل خصائص عناصر النافبار الستة */
+/* --- شريط التنقل السفلي المطور (النافبار) --- */
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 4px;
     color: #94a3b8;
-    transition: all 0.25s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     height: 100%;
+    width: 60px;
 }
 .nav-item span {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     white-space: nowrap;
 }
-.nav-item.active {
-    color: #34d399;
-    transform: translateY(-2px);
+.nav-item i {
+    font-size: 18px;
+    transition: transform 0.2s ease;
+}
+.nav-item:active i {
+    transform: scale(0.85);
 }
 
-.royal-input {
-    width: 100%;
-    padding: 1rem 1.25rem;
-    background-color: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 1rem;
-    font-size: 13px;
-    color: #ffffff;
-    outline: none;
-    transition: all 0.3s ease;
-    text-align: right;
-}
-.royal-input:focus {
-    border-color: rgba(52, 211, 153, 0.4);
-}
-
+/* --- تصميم الكروت الزجاجية الفخمة (Card Glass) --- */
 .card-glass {
-    background-color: rgba(255, 255, 255, 0.03);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 1.5rem;
     padding: 1rem;
@@ -70,9 +63,10 @@ body {
 }
 .card-glass:active {
     transform: scale(0.96);
+    border-color: rgba(16, 185, 129, 0.2);
 }
 
-/* أنظمة التخطيط الثلاثية الشغالة بالكامل */
+/* --- أنظمة التخطيط الثلاثية الشغالة بالكامل للمنتجات --- */
 .cards-container.mode-dual {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -83,9 +77,17 @@ body {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.6rem;
 }
-.cards-container.mode-matrix .card-glass { padding: 0.75rem; border-radius: 1.25rem; }
-.cards-container.mode-matrix .card-glass img { height: 5rem; border-radius: 1rem; }
-.cards-container.mode-matrix .card-glass h3 { font-size: 11px; }
+.cards-container.mode-matrix .card-glass { 
+    padding: 0.75rem; 
+    border-radius: 1.25rem; 
+}
+.cards-container.mode-matrix .card-glass img { 
+    height: 5rem; 
+    border-radius: 1rem; 
+}
+.cards-container.mode-matrix .card-glass h3 { 
+    font-size: 11px; 
+}
 
 .cards-container.mode-list {
     display: flex;
@@ -95,15 +97,77 @@ body {
 .cards-container.mode-list .card-glass {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
     text-align: right;
+    gap: 1rem;
     padding: 0.85rem;
 }
-.cards-container.mode-list .card-glass img { width: 4.5rem; height: 4.5rem; margin-bottom: 0 !important; border-radius: 1rem; }
+.cards-container.mode-list .card-glass img {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin-bottom: 0;
+    border-radius: 1rem;
+}
+.cards-container.mode-list .card-glass > div {
+    flex: 1;
+}
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
+/* --- تخصيص رقاقات الأقسام (Chips) --- */
+.cat-chip {
+    white-space: nowrap;
+    outline: none;
+}
+.active-chip {
+    background-color: #10b981 !important;
+    color: #000000 !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
 
-@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.animate-slideUp { animation: slideUp 0.35s ease forwards; }
+/* --- تأثير وحركة نظام الـ Toast السريع --- */
+@keyframes slideUp {
+    from {
+        transform: translateY(2rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+.animate-slideUp {
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- شريط التمرير المخفي (Scrollbar Hider) --- */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* --- مشغل الفيديو وتأثير حماية التحكم والتفاعل --- */
+iframe#yt-player {
+    transform-origin: center;
+    pointer-events: none; /* حظر اللمس الافتراضي للمتصفحات */
+}
+
+/* زر كتم وفتح الصوت المطور */
+#btn-toggle-mute {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#btn-toggle-mute:active {
+    transform: scale(0.92);
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* تحسينات المدخلات وصناديق الدردشة */
+input[type="text"], input[type="tel"], input[type="password"] {
+    transition: all 0.25s ease;
+}
+input[type="text"]:focus, input[type="tel"]:focus, input[type="password"]:focus {
+    border-color: rgba(16, 185, 129, 0.4) !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.05);
+}
 

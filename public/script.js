@@ -1,94 +1,501 @@
-const API = window.location.origin; // ليعمل السيرفر تلقائياً محلياً أو على ريندر
+// --- 📦 إدارة حالة التطبيق المركزية (State Management) ---
 let state = {
     categories: [],
     prods: [],
-    cart: [],
-    layoutMode: 0,
-    user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
-    games: [],
+    user: null,
+    activeCategory: 'ALL',
+    currentLayoutMode: 0, // 0: ثنائي، 1: مصفوفة صغيرة، 2: قائمة طولية
+    // حزم البيانات المستقرة والموثقة لشحن الألعاب تلقائياً
+    games: [
+        {
+            id: 'pubg_mobile',
+            name: 'ببجي موبايل (PUBG Mobile)',
+            img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80',
+            denoms: [
+                { name: '60 شدة (UC)', price: 450 },
+                { name: '325 شدة (UC)', price: 2200 },
+                { name: '660 شدة (UC)', price: 4300 }
+            ]
+        },
+        {
+            id: 'free_fire',
+            name: 'فري فاير (Free Fire)',
+            img: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=400&q=80',
+            denoms: [
+                { name: '100 جوهرة', price: 380 },
+                { name: '210 جوهرة', price: 750 },
+                { name: '530 جوهرة', price: 1850 }
+            ]
+        }
+    ],
     selectedGame: null,
     selectedDenom: null
 };
 
-// --- دالة ذكية لمعالجة وتنظيف روابط الصور (بما فيها روابط جوجل المعقدة) ---
-function fixImageUrl(url) {
-    if (!url) return 'https://placehold.co/600x400/0c0f14/emerald?text=No+Image';
+// --- 🎧 إعدادات الأصوات وتأثيرات المنظومة ---
+function playSound(type) {
+    try {
+        const snd = document.getElementById(`snd-${type}`);
+        if (snd) { snd.currentTime = 0; snd.play(); }
+    } catch(e) {}
+}
+
+// --- 🚀 دالة بدء التشغيل والمزامنة الفورية عند فتح التطبيق ---
+document.addEventListener("DOMContentLoaded", () => {
+    // استعادة جلسة المستخدم إذا كانت مسجلة مسبقاً
+    const savedUser = localStorage.getItem('tamwinati_user');
+    if (savedUser) {
+        state.user = JSON.parse(savedUser);
+        updateProfileUI();
+    }
     
-    let cleanedUrl = url.trim();
-
-    // 1. معالجة روابط تحويل بحث جوجل المباشر واستخراج الرابط الأصلي منها
-    if (cleanedUrl.includes('google.com/url?')) {
-        try {
-            const urlParams = new URLSearchParams(cleanedUrl.split('?')[1]);
-            if (urlParams.has('imgurl')) {
-                return decodeURIComponent(urlParams.get('imgurl'));
-            } else if (urlParams.has('q')) {
-                return decodeURIComponent(urlParams.get('q'));
-            }
-        } catch (e) { console.error("خطأ في فك رابط جوجل:", e); }
-    }
-
-    // 2. معالجة روابط عرض الصور من جوجل درايف وتحويلها لرابط عرض مباشر
-    if (cleanedUrl.includes('drive.google.com/file/d/')) {
-        const matches = cleanedUrl.match(/\/file\/d\/([^\/]+)/);
-        if (matches && matches[1]) {
-            return `https://drive.google.com/uc?export=view&id=${matches[1]}`;
-        }
-    }
-
-    // 3. معالجة الصور المشفرة Base64 النصية المباشرة (تترك كما هي لأن المتصفح يقرأها)
-    if (cleanedUrl.startsWith('data:image/')) {
-        return cleanedUrl;
-    }
-
-    return cleanedUrl;
-}
-
-// --- تفعيل ميزة السحب للأسفل للتحديث (Pull to Refresh) ---\nlet touchStart = 0;
-window.addEventListener('touchstart', e => { touchStart = e.touches[0].pageY; }, {passive: true});
-window.addEventListener('touchmove', e => {
-    const touchMove = e.touches[0].pageY;
-    if (window.scrollY === 0 && touchMove > touchStart + 160) {
-        touchStart = 999999; // منع التكرار العشوائي
-        manualRefresh();
-    }
-}, {passive: true});
-
-async function manualRefresh() {
-    const btn = document.getElementById('refresh-btn');
-    if(btn) btn.classList.add('rotate-180', 'opacity-50');
-    toast("⏳ جاري تحديث ومزامنة البيانات الفورية...");
-
-    await sync();
-    await initProducts();
-    await fetchAds();
-    await fetchMessages();
-
-    if(btn) {
-        setTimeout(() => {
-            btn.classList.remove('rotate-180', 'opacity-50');
-        }, 500);
-    }
-    toast("✅ تم التحديث بنجاح");
-}
-
-// المزامنة الدورية الصامتة كل 15 ثانية
-setInterval(async () => {
-    if(state.user) {
-        await sync();
-        await fetchMessages();
-    }
-}, 15000);
-
-window.addEventListener('DOMContentLoaded', async () => {
-    checkLocalUser();
-    await initProducts();
-    await fetchAds();
-    await fetchMessages();
-    setLayout(0);
+    // تشغيل الـ Pull to Refresh للهواتف الذكية لمس اليد
+    initPullToRefresh();
+    
+    // مزامنة البيانات الأساسية من السيرفر
+    syncData();
+    // تحميل الإعلانات والبث النشط
+    loadActiveAd();
 });
 
-function checkLocalUser() {
+// --- 🔄 دالة المزامنة وجلب البيانات من السيرفر (Fetch & Sync) ---
+async function syncData() {
+    try {
+        const res = await fetch('/api/sync');
+        const data = await res.json();
+        if (data.success) {
+            state.categories = data.categories;
+            state.prods = data.prods;
+            
+            renderCategoriesChips();
+            renderProductsGrid();
+            renderGamesGrid();
+        }
+    } catch (e) {
+        showToast("⚠️ خطأ في الاتصال بالسيرفر، اسحب الشاشة للتحديث");
+    }
+}
+
+// --- 📱 تخصيص أنظمة وأنماط شبكات العرض الفوري للأقسام ---
+function setLayout(mode) {
+    playSound('click');
+    state.currentLayoutMode = mode;
+    
+    // تحديث شكل أزرار التحكم بالتخطيط
+    [0, 1, 2].forEach(i => {
+        const btn = document.getElementById(`btn-layout-${i}`);
+        if(btn) {
+            if(i === mode) {
+                btn.className = "w-8 h-8 rounded-xl flex items-center justify-center text-xs bg-emerald-500 text-black transition duration-200";
+            } else {
+                btn.className = "w-8 h-8 rounded-xl flex items-center justify-center text-xs text-slate-400 transition duration-200";
+            }
+        }
+    });
+
+    renderProductsGrid();
+}
+
+// --- 📁 بناء ورقاقات الأقسام العلوية (Category Chips Rendering) ---
+function renderCategoriesChips() {
+    const container = document.getElementById('categories-chips');
+    if (!container) return;
+    
+    let html = `
+        <button onclick="filterCategory('ALL')" class="px-5 py-2.5 rounded-xl text-xs font-black shrink-0 transition-all duration-300 ${state.activeCategory === 'ALL' ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-white/5 text-slate-400 border border-white/5'}">
+            الكل
+        </button>
+    `;
+    
+    state.categories.forEach(cat => {
+        const isAct = state.activeCategory === cat.name;
+        html += `
+            <button onclick="filterCategory('${cat.name}')" class="px-5 py-2.5 rounded-xl text-xs font-black shrink-0 transition-all duration-300 ${isAct ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-white/5 text-slate-400 border border-white/5'}">
+                ${cat.name}
+            </button>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function filterCategory(catName) {
+    playSound('click');
+    state.activeCategory = catName;
+    renderCategoriesChips();
+    renderProductsGrid();
+}
+
+// --- 🕹️ بناء شبكة بوابات شحن الألعاب التلقائية والثابتة ---
+function renderGamesGrid() {
+    const container = document.getElementById('games-grid-container');
+    if (!container) return;
+    
+    let html = '';
+    state.games.forEach(game => {
+        html += `
+            <div onclick="openGameSheet('${game.id}')" class="bg-slate-900/40 border border-white/5 rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all duration-300 group">
+                <div class="w-14 h-14 rounded-xl overflow-hidden mb-2 border border-white/10 group-hover:border-emerald-500/50 transition">
+                    <img src="${game.img}" class="w-full h-full object-cover">
+                </div>
+                <h3 class="text-[10px] font-black text-slate-200">${game.name}</h3>
+                <span class="text-[8px] text-emerald-400 font-bold mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full">شحن تلقائي ⚡</span>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// --- 🛍️ بناء وعرض المنتجات حسب نمط التخطيط النشط (Grid Rendering) ---
+function renderProductsGrid() {
+    const container = document.getElementById('categories-list');
+    if (!container) return;
+    
+    // فرز وتصفية المنتجات حسب القسم المحدد
+    const filtered = state.activeCategory === 'ALL' 
+        ? state.prods 
+        : state.prods.filter(p => p.cat === state.activeCategory);
+        
+    if(filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center py-12 text-[11px] text-slate-600 font-bold">لا توجد منتجات أو خدمات متوفرة في هذا القسم حالياً.</div>`;
+        return;
+    }
+
+    // إعداد الكلاس المناسب لنمط الشبكة المختار
+    container.className = "cards-container pb-12";
+    if (state.currentLayoutMode === 0) container.classList.add("mode-dual");
+    else if (state.currentLayoutMode === 1) container.classList.add("mode-grid");
+    else container.classList.add("mode-list");
+
+    let html = '';
+    filtered.forEach(p => {
+        html += `
+            <div onclick="openProductSheet('${p._id}')" class="card-glass border border-white/5 rounded-[1.8rem] overflow-hidden flex flex-col justify-between group cursor-pointer active:scale-[0.98] transition-all duration-300">
+                <div class="relative overflow-hidden aspect-square w-full bg-slate-950">
+                    <img src="${p.img || 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=400&q=80'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                </div>
+                <div class="p-4 space-y-2 text-right flex-1 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-black text-[11px] text-slate-200 line-clamp-2 leading-relaxed">${p.name}</h3>
+                        <span class="text-[8px] text-slate-500 font-bold bg-white/5 px-2 py-0.5 rounded mt-1.5 inline-block">${p.cat}</span>
+                    </div>
+                    <div class="pt-3 border-t border-white/5 flex justify-between items-center mt-2">
+                        <span class="text-[8px] text-slate-500 font-bold">طلب فوري</span>
+                        <span class="text-[11px] font-black text-emerald-400">${p.price} <span class="text-[9px] text-emerald-500">YER</span></span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// --- 🛍️ إدارة شيت المنتجات وتقديم طلبات الشراء العادية ---
+let selectedProductId = null;
+function openProductSheet(id) {
+    playSound('click');
+    selectedProductId = id;
+    const prod = state.prods.find(p => p._id === id);
+    if(!prod) return;
+    
+    document.getElementById('sh-img').src = prod.img || 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&w=400&q=80';
+    document.getElementById('sh-name').innerText = prod.name;
+    document.getElementById('sh-cat').innerText = prod.cat;
+    document.getElementById('sh-price').innerText = `${prod.price} YER`;
+    
+    document.getElementById('sheet-overlay').classList.remove('hidden');
+    const sheet = document.getElementById('product-sheet');
+    sheet.style.bottom = "0";
+}
+
+function closeSheet() {
+    document.getElementById('sheet-overlay').classList.add('hidden');
+    document.getElementById('product-sheet').style.bottom = "-100%";
+}
+
+async function handleOrderSubmit() {
+    if (!state.user) {
+        closeSheet();
+        changeView('account', document.querySelector('nav button:last-child'));
+        showToast("⚠️ يرجى تسجيل الدخول أو إنشاء حساب لإتمام الطلب!");
+        return;
+    }
+    const prod = state.prods.find(p => p._id === selectedProductId);
+    if(!prod) return;
+
+    closeSheet();
+    
+    try {
+        const response = await fetch('/api/order/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phone: state.user.phone,
+                items: [{ name: prod.name, price: prod.price, qty: 1 }],
+                total: prod.price
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            playSound('cashier');
+            showToast(data.msg);
+            refreshUserProfile();
+        } else {
+            showToast(data.msg);
+        }
+    } catch(e) {
+        showToast("❌ حدث خطأ غير متوقع أثناء معالجة الفاتورة");
+    }
+}
+
+// --- 🕹️ إدارة شيت شحن الألعاب التلقائي (Game Topup Logic) ---
+function openGameSheet(gameId) {
+    playSound('click');
+    const game = state.games.find(g => g.id === gameId);
+    if(!game) return;
+    
+    state.selectedGame = game;
+    state.selectedDenom = null;
+    
+    document.getElementById('game-title').innerText = `شحن باقات | ${game.name}`;
+    document.getElementById('game-user-id').value = '';
+    
+    const denomContainer = document.getElementById('denom-list');
+    let html = '';
+    game.denoms.forEach((denom, index) => {
+        html += `
+            <div id="denom-item-${index}" onclick="selectDenom(${index}, ${denom.price})" class="bg-black/40 border border-white/5 rounded-xl p-4 flex justify-between items-center cursor-pointer active:scale-[0.99] transition duration-200">
+                <span class="text-xs font-black text-slate-300">${denom.name}</span>
+                <span class="text-xs font-black text-emerald-400">${denom.price} YER</span>
+            </div>
+        `;
+    });
+    denomContainer.innerHTML = html;
+    
+    document.getElementById('game-topup-sheet').classList.remove('hidden');
+}
+
+function closeGameSheet() {
+    document.getElementById('game-topup-sheet').classList.add('hidden');
+}
+
+function selectDenom(index, price) {
+    playSound('click');
+    state.selectedGame.denoms.forEach((d, i) => {
+        const item = document.getElementById(`denom-item-${i}`);
+        if(item) item.className = "bg-black/40 border border-white/5 rounded-xl p-4 flex justify-between items-center cursor-pointer active:scale-[0.99] transition duration-200";
+    });
+    
+    const target = document.getElementById(`denom-item-${index}`);
+    if(target) target.className = "bg-emerald-500/10 border-2 border-emerald-500 rounded-xl p-4 flex justify-between items-center cursor-pointer transition duration-200";
+    
+    state.selectedDenom = state.selectedGame.denoms[index];
+}
+
+async function validateAndPayGame() {
+    if(!state.user) {
+        closeGameSheet();
+        changeView('account', document.querySelector('nav button:last-child'));
+        showToast("⚠️ سجل دخولك أولاً لشحن حسابك اللعب!");
+        return;
+    }
+    
+    const playerId = document.getElementById('game-user-id').value.trim();
+    if(!playerId) { showToast("⚠️ يرجى إدخال معرف اللاعب (ID)!"); return; }
+    if(!state.selectedDenom) { showToast("⚠️ يرجى اختيار الفئة أو الحزمة المراد شحنها!"); return; }
+    
+    closeGameSheet();
+    
+    try {
+        const response = await fetch('/api/order/game-topup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phone: state.user.phone,
+                gameId: state.selectedGame.id,
+                playerId: playerId,
+                denomName: state.selectedDenom.name,
+                price: state.selectedDenom.price
+            })
+        });
+        const data = await response.json();
+        if(data.success) {
+            playSound('cashier');
+            showToast(data.msg);
+            refreshUserProfile();
+        } else {
+            showToast(data.msg);
+        }
+    } catch(e) {
+        showToast("❌ فشل السيرفر في معالجة طلب الشحن التلقائي");
+    }
+}
+
+// --- 🧭 نظام التوجيه والتبديل بين شاشات التطبيق السفلي (Routing) ---
+function changeView(viewId, btnElement) {
+    playSound('click');
+    
+    // إخفاء كافة لوحات العرض
+    document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
+    
+    // إظهار اللوحة المطلوبة
+    const targetView = document.getElementById(`view-${viewId}`);
+    if(targetView) targetView.classList.remove('hidden');
+    
+    // تحديث الشكل الجمالي لأزرار النافبار السفلي
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('text-emerald-400'));
+    if(btnElement) btnElement.classList.add('text-emerald-400');
+    
+    // تحميل البيانات الخاصة باللوحات عند زيارتها
+    if(viewId === 'orders') fetchOrdersHistory();
+    if(viewId === 'notifications') fetchMessagesHistory();
+}
+
+// --- 🧾 جلب وعرض أرشيف الفواتير والمشتريات ---
+async function fetchOrdersHistory() {
+    if(!state.user) {
+        document.getElementById('orders-list').innerHTML = `<div class="text-center py-12 text-xs text-slate-600 font-bold">سجل دخولك لاستعراض أرشيف فواتيرك.</div>`;
+        return;
+    }
+    try {
+        const res = await fetch('/api/orders/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: state.user.phone })
+        });
+        const data = await res.json();
+        if(data.success) {
+            const container = document.getElementById('orders-list');
+            if(data.orders.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-xs text-slate-600 font-bold">لا يوجد لديك أي طلبات أو فواتير سابقة حتى الآن.</div>`;
+                return;
+            }
+            let html = '';
+            data.orders.forEach(o => {
+                html += `
+                    <div class="bg-slate-900/30 border border-white/5 rounded-2xl p-5 text-right space-y-3">
+                        <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                            <span class="text-[10px] text-slate-500 font-bold">${o.date}</span>
+                            <span class="text-xs font-black text-emerald-400 tracking-wider">${o.id}</span>
+                        </div>
+                        <div class="text-xs font-black text-slate-300">${o.items.map(i => i.name).join(' ، ')}</div>
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black bg-white/5 text-slate-300 border border-white/5">${o.status}</span>
+                            <span class="text-xs font-black text-slate-200">${o.total} YER</span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    } catch(e) {}
+}
+
+// --- 💬 جلب وعرض صندوق الإشعارات والبرقيات الإدارية ---
+async function fetchMessagesHistory() {
+    if(!state.user) {
+        document.getElementById('notifications-list').innerHTML = `<div class="text-center py-12 text-xs text-slate-600 font-bold">يرجى تسجيل الدخول لعرض الرسائل الموجهة لك.</div>`;
+        return;
+    }
+    try {
+        const res = await fetch('/api/messages/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: state.user.phone })
+        });
+        const data = await res.json();
+        if(data.success) {
+            document.getElementById('msg-dot').classList.add('hidden');
+            const container = document.getElementById('notifications-list');
+            if(data.messages.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-xs text-slate-600 font-bold">صندوق الوارد فارغ، لا توجد برقيات جديدة.</div>`;
+                return;
+            }
+            let html = '';
+            data.messages.forEach(m => {
+                html += `
+                    <div class="bg-gradient-to-l from-slate-900 to-slate-950 border border-white/5 rounded-2xl p-5 text-right space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] text-slate-600 font-bold">${m.date}</span>
+                            <h3 class="text-xs font-black text-emerald-400">${m.title}</h3>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed font-bold">${m.body}</p>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    } catch(e) {}
+}
+
+// --- 💬 مراسلة الدعم الفني الداخلي للعمليات ---
+async function sendSupportMessage() {
+    if(!state.user) { showToast("⚠️ سجل دخولك أولاً لتتمكن من إرسال رسالة!"); return; }
+    const input = document.getElementById('support-msg-input');
+    const msg = input.value.trim();
+    if(!msg) return;
+    
+    try {
+        const res = await fetch('/api/messages/send-support', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sender: state.user.phone, body: msg })
+        });
+        const data = await res.json();
+        if(data.success) {
+            input.value = '';
+            showToast("✅ تم إرسال رسالتك لفريق الدعم والأدمن بنجاح!");
+        }
+    } catch(e) {}
+}
+
+// --- 👤 إدارة التوثيق (تسجيل الدخول / إنشاء حساب جديد) ---
+let isRegisterMode = false;
+function toggleAuthMode() {
+    playSound('click');
+    isRegisterMode = !isRegisterMode;
+    document.getElementById('auth-title').innerText = isRegisterMode ? "إنشاء حساب مشترك جديد" : "تسجيل الدخول للمنظومة";
+    document.getElementById('auth-submit-btn').innerText = isRegisterMode ? "تسجيل الحساب الجديد" : "دخول آمن";
+    document.getElementById('auth-toggle-btn').innerText = isRegisterMode ? "لديك حساب بالفعل؟ سجل دخولك" : "إنشاء حساب مشترك جديد";
+    
+    if(isRegisterMode) document.getElementById('auth-name-box').classList.remove('hidden');
+    else document.getElementById('auth-name-box').classList.add('hidden');
+}
+
+async function handleAuth() {
+    const name = document.getElementById('auth-name').value.trim();
+    const phone = document.getElementById('auth-phone').value.trim();
+    const pass = document.getElementById('auth-pass').value.trim();
+    
+    if(!phone || !pass || (isRegisterMode && !name)) {
+        showToast("⚠️ يرجى ملء الحقول المطلوبة بشكل صحيح!");
+        return;
+    }
+    
+    const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
+    const payload = isRegisterMode ? { name, phone, pass } : { phone, pass };
+    
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if(data.success) {
+            state.user = data.user;
+            localStorage.setItem('tamwinati_user', JSON.stringify(data.user));
+            updateProfileUI();
+            showToast(isRegisterMode ? "🎉 مبارك! تم إنشاء حسابك المعتمد بنجاح" : "🔓 تم الدخول الآمن للمنظومة بنجاح");
+        } else {
+            showToast(data.msg || "❌ فشلت العملية، يرجى التحقق من المدخلات");
+        }
+    } catch(e) {
+        showToast("❌ حدث خطأ في معالجة طلب المصادقة");
+    }
+}
+
+function updateProfileUI() {
     if(state.user) {
         document.getElementById('auth-section').classList.add('hidden');
         document.getElementById('profile-section').classList.remove('hidden');
@@ -101,457 +508,92 @@ function checkLocalUser() {
     }
 }
 
-async function sync() {
-    if(!state.user) return;
+async function refreshUserProfile() {
+    if (!state.user) return;
     try {
-        const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
-        const reply = await res.json();
-        if(reply.success) {
-            state.user = reply.user;
-            localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
-            const balView = document.getElementById('user-display-balance');
-            if(balView) balView.innerText = state.user.bal;
+        const res = await fetch('/api/user/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: state.user.phone })
+        });
+        const data = await res.json();
+        if(data.success) {
+            state.user = data.user;
+            localStorage.setItem('tamwinati_user', JSON.stringify(data.user));
+            updateProfileUI();
         }
-    } catch(e){}
+    } catch(e) {}
 }
 
-// جلب المنتجات والأقسام وعرضها مع معالجة الصور الذكية
-async function initProducts() {
+function logout() {
+    playSound('click');
+    state.user = null;
+    localStorage.removeItem('tamwinati_user');
+    updateProfileUI();
+    showToast("🔒 تم تسجيل الخروج وإغلاق الجلسة المفتوحة");
+}
+
+// --- 📺 جلب وبناء بنر إعلان البث المحمي من اليوتيوب ---
+async function loadActiveAd() {
     try {
-        const resCat = await fetch(`${API}/api/categories`);
-        state.categories = await resCat.json();
-
-        const resProd = await fetch(`${API}/api/products`);
-        state.prods = await resProd.json();
-
-        renderCategories();
-        renderProducts("ALL");
-    } catch (e) {
-        toast("❌ عطل في جلب البيانات من السيرفر");
-    }
-}
-
-function renderCategories() {
-    const container = document.getElementById('categories-chips');
-    if(!container) return;
-    
-    let html = `<button onclick="filterCategory('ALL', this)" class="cat-chip active-chip shrink-0 px-5 py-2.5 rounded-xl font-bold text-xs">الكل</button>`;
-    state.categories.forEach(c => {
-        html += `<button onclick="filterCategory('${c.name}', this)" class="cat-chip shrink-0 bg-white/5 text-slate-400 border border-white/5 px-5 py-2.5 rounded-xl font-bold text-xs transition">${c.name}</button>`;
-    });
-    container.innerHTML = html;
-}
-
-function filterCategory(catName, btn) {
-    document.querySelectorAll('.cat-chip').forEach(b => {
-        b.classList.remove('active-chip', 'bg-emerald-500', 'text-black');
-        b.classList.add('bg-white/5', 'text-slate-400');
-    });
-    btn.classList.remove('bg-white/5', 'text-slate-400');
-    btn.classList.add('active-chip');
-    renderProducts(catName);
-}
-
-function renderProducts(catName) {
-    const container = document.getElementById('categories-list');
-    if(!container) return;
-
-    let filtered = state.prods;
-    if(catName !== "ALL") {
-        filtered = state.prods.filter(p => p.cat === catName);
-    }
-
-    if(filtered.length === 0) {
-        container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500 font-bold text-xs">لا توجد خدمات أو منتجات متوفرة حالياً في هذا القسم</div>`;
-        return;
-    }
-
-    container.innerHTML = filtered.map(p => `
-        <div onclick="openProductSheet('${p.name}', ${p.price}, '${p.img}', '${p.cat}')" class="card-glass flex flex-col justify-between">
-            <img src="${fixImageUrl(p.img)}" alt="${p.name}" class="w-full h-32 object-cover rounded-2xl mb-3 bg-slate-900/60" loading="lazy" onerror="this.src='https://placehold.co/600x400/0c0f14/emerald?text=Image+Error'">
-            <div>
-                <h3 class="font-black text-xs text-right leading-relaxed text-slate-100">${p.name}</h3>
-                <div class="flex justify-between items-center mt-2">
-                    <span class="text-[10px] font-black text-emerald-400">${p.price} YER</span>
-                    <span class="text-[9px] text-slate-500 font-bold bg-white/5 px-2 py-0.5 rounded-md">${p.cat}</span>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// --- معالجة وعرض فيديو الإعلان الترويجي الأعلى وحظر التحكم فيه ---
-async function fetchAds() {
-    try {
-        const res = await fetch(`${API}/api/ads`);
-        const ads = await res.json();
+        const res = await fetch('/api/ads/active');
+        const data = await res.json();
         const container = document.getElementById('ad-banner-container');
-        if(!container) return;
-
-        if(ads && ads.length > 0) {
-            const videoUrl = ads[0].videoUrl;
-            let videoId = "";
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = videoUrl.match(regExp);
-            if (match && match[2].length == 11) { videoId = match[2]; }
-
-            if(videoId) {
-                container.innerHTML = `
-                    <div class="relative w-full rounded-3xl overflow-hidden aspect-video border border-white/5 shadow-2xl bg-black">
-                        <div class="absolute inset-0 z-10 bg-transparent"></div>
-                        
-                        <iframe id="yt-player" class="w-full h-full pointer-events-none scale-[1.35]" 
-                            src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&autoplay=1&mute=1&loop=1&playlist=${videoId}" 
-                            frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-                        </iframe>
-
-                        <button id="btn-toggle-mute" onclick="toggleVideoMute()" class="absolute bottom-4 left-4 z-20 bg-black/75 text-emerald-400 px-4 py-2 rounded-xl text-xs font-black border border-white/10 flex items-center gap-2 backdrop-blur-md active:scale-95 transition">
-                            <i id="mute-icon" class="fas fa-volume-mute"></i>
-                            <span id="mute-text">فتح الصوت</span>
-                        </button>
-                    </div>
-                `;
-                container.classList.remove('hidden');
-            }
+        if(data.success && data.ad) {
+            container.innerHTML = `
+                <div class="relative w-full rounded-3xl overflow-hidden aspect-video border border-white/5 bg-black shadow-xl">
+                    <iframe class="w-full h-full pointer-events-none" src="${data.ad.videoUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    <div class="absolute inset-0 bg-transparent z-10"></div>
+                </div>
+            `;
+            container.classList.remove('hidden');
         } else {
             container.classList.add('hidden');
         }
-    } catch(e) { console.error(e); }
+    } catch(e) {}
 }
 
-let isVideoMuted = true;
-function toggleVideoMute() {
-    const iframe = document.getElementById('yt-player');
-    const icon = document.getElementById('mute-icon');
-    const text = document.getElementById('mute-text');
-    if(!iframe) return;
-
-    if(isVideoMuted) {
-        iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-        icon.className = "fas fa-volume-up";
-        text.innerText = "كتم الصوت";
-        isVideoMuted = false;
-    } else {
-        iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
-        icon.className = "fas fa-volume-mute";
-        text.innerText = "فتح الصوت";
-        isVideoMuted = true;
-    }
-}
-
-// --- مراسلة السيرفر وقاعدة البيانات مباشرة (بدون الخروج لواتساب) ---
-async function sendSupportMessage() {
-    if(!state.user) return toast("⚠️ يجب تسجيل الدخول أولاً لإرسال رسالة");
+// --- 📱 تخصيص ميزة السحب لأسفل لتحديث البيانات (Pull to Refresh) ---
+function initPullToRefresh() {
+    let touchStartOffsetY = 0;
+    const refreshBtn = document.getElementById('refresh-btn');
     
-    const input = document.getElementById('support-msg-input');
-    if(!input || !input.value.trim()) return;
-
-    const bodyText = input.value.trim();
+    window.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0) touchStartOffsetY = e.touches[0].clientY;
+    }, { passive: true });
     
-    try {
-        const res = await fetch(`${API}/api/messages/send-from-client`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                phone: state.user.phone,
-                title: `رسالة من العميل: ${state.user.name}`,
-                body: bodyText
-            })
-        });
-        
-        const reply = await res.json();
-        if(reply.success) {
-            input.value = "";
-            toast("✅ تم إرسال رسالتك إلى لوحة التحكم بنجاح");
-            await fetchMessages(); // تحديث صندوق الرسائل فوراً لترى ما أرسلته
-        } else {
-            toast("❌ فشل إرسال الرسالة");
+    window.addEventListener('touchend', (e) => {
+        const touchEndOffsetY = e.changedTouches[0].clientY;
+        const deltaY = touchEndOffsetY - touchStartOffsetY;
+        // إذا سحب المستخدم مسافة تزيد عن 140 بكسل لأسفل وهو بأعلى الصفحة
+        if (window.scrollY === 0 && deltaY > 140) {
+            manualRefresh();
         }
-    } catch(e) {
-        toast("❌ خطأ في الاتصال بالسيرفر");
-    }
+    }, { passive: true });
 }
 
-// جلب رسائل واستجابات الإدارة من السيرفر
-async function fetchMessages() {
-    if(!state.user) return;
-    try {
-        const res = await fetch(`${API}/api/messages/${state.user.phone}`);
-        const list = await res.json();
-        
-        const dot = document.getElementById('msg-dot');
-        const container = document.getElementById('notifications-list');
-        if(!container) return;
-
-        if(list.length > 0) {
-            if(dot) dot.classList.remove('hidden');
-            container.innerHTML = list.map(m => `
-                <div class="p-5 bg-white/5 border border-white/5 rounded-2xl space-y-2 text-right">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] text-slate-500">${m.date}</span>
-                        <h4 class="font-black text-xs text-emerald-400">${m.title}</h4>
-                    </div>
-                    <p class="text-xs text-slate-300 leading-relaxed">${m.body}</p>
-                </div>
-            `).join('');
-        } else {
-            if(dot) dot.classList.add('hidden');
-            container.innerHTML = `<div class="py-12 text-center text-slate-600 font-bold text-xs">صندوق الرسائل والإشعارات فارغ حالياً</div>`;
-        }
-    } catch(e){}
-}
-
-// فتح شيت تفاصيل المنتج والمعالجة الفورية لصورتها
-function openProductSheet(name, price, img, cat) {
-    playSound('snd-click');
-    document.getElementById('sh-img').src = fixImageUrl(img);
-    document.getElementById('sh-name').innerText = name;
-    document.getElementById('sh-price').innerText = `${price} YER`;
-    document.getElementById('sh-cat').innerText = cat;
+function manualRefresh() {
+    const btn = document.getElementById('refresh-btn');
+    if(btn) btn.classList.add('animate-spin');
     
-    document.getElementById('sheet-overlay').classList.remove('hidden');
-    const sheet = document.getElementById('product-sheet');
-    sheet.style.bottom = "0";
+    playSound('notification');
+    showToast("⚡ جاري مزامنة السيرفر وتحديث البيانات الرقمية...");
     
-    state.cart = [{ name, price, img, cat, qty: 1 }];
-}
-
-async function handleOrderSubmit() {
-    if(!state.user) { closeSheet(); return toast("⚠️ يرجى تسجيل الدخول أولاً لإتمام الشراء"); }
-    if(state.cart.length === 0) return;
-
-    const currentItem = state.cart[0];
-    if(state.user.bal < currentItem.price) {
-        closeSheet();
-        return toast("❌ رصيدك الحالي غير كافٍ، اتصل بالأدمن لتعبئة حسابك");
-    }
-
-    playSound('snd-cashier');
-    toast("⏳ جاري معالجة الفاتورة وسحب الرصيد...");
-
-    try {
-        const res = await fetch(`${API}/api/orders/add`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                phone: state.user.phone,
-                order: { items: state.cart, total: currentItem.price }
-            })
-        });
-
-        const reply = await res.json();
-        if(reply.success) {
-            await sync();
-            closeSheet();
-            toast("✅ تم إرسال الطلب بنجاح! راجع التحديثات في فواتيري");
-        } else {
-            toast("❌ فشل في إتمام عملية الشراء من قاعدة البيانات");
-        }
-    } catch(e) {
-        toast("❌ خطأ في الشبكة أثناء الشراء");
-    }
-}
-
-// فتح شيت تعبئة رصيد الألعاب
-async function openGameTopup(gameCode) {
-    playSound('snd-click');
-    if(!state.user) return toast("⚠️ يجب تسجيل الدخول لشحن الألعاب");
-    
-    toast("⏳ جاري تحميل حزم الشحن...");
-    try {
-        const res = await fetch(`${API}/api/games`);
-        const reply = await res.json();
-        if(reply.success) {
-            const game = reply.game_list.find(g => g.game_code === gameCode);
-            if(!game) return;
-
-            state.selectedGame = game;
-            document.getElementById('game-title').innerText = game.game_name;
-            
-            const denomList = document.getElementById('denom-list');
-            denomList.innerHTML = game.denominations.map(d => `
-                <button onclick="selectDenom('${d.id}', ${d.price}, '${d.name}')" id="denom-${d.id}" class="w-full text-right p-4 bg-white/5 border border-white/5 rounded-2xl flex justify-between items-center transition active:scale-95">
-                    <span class="text-xs font-black text-emerald-400">${d.price} YER</span>
-                    <span class="text-xs font-bold text-slate-200">${d.name}</span>
-                </button>
-            `).join('');
-
-            document.getElementById('game-topup-sheet').classList.remove('hidden');
-        }
-    } catch(e) { toast("❌ عطل في جلب باقات الشحن"); }
-}
-
-function selectDenom(id, price, name) {
-    state.selectedDenom = { id, price, name };
-    document.querySelectorAll('[id^="denom-"]').forEach(b => b.classList.replace('border-emerald-500', 'border-white/5'));
-    document.getElementById(`denom-${id}`).classList.replace('border-white/5', 'border-emerald-500');
-}
-
-async function validateAndPayGame() {
-    const gameUserId = document.getElementById('game-user-id').value.trim();
-    if(!gameUserId) return toast("⚠️ يرجى إدخال معرف اللاعب (ID)");
-    if(!state.selectedDenom) return toast("⚠️ يرجى اختيار الفئة المطلوبة للشحن");
-
-    if(state.user.bal < state.selectedDenom.price) return toast("❌ رصيدك لا يكفي لشراء هذه الباقة");
-
-    toast("⏳ جاري التحقق من المعرف وتثبيت العملية...");
-    try {
-        const checkRes = await fetch(`${API}/api/games/validate-user`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ user_id: gameUserId })
-        });
-        const checkReply = await checkRes.json();
-        
-        if(checkReply.success) {
-            const confirmAction = confirm(`هل أنت متأكد من الشحن للاعب:\n[ ${checkReply.player_name} ]\nالتكلفة: ${state.selectedDenom.price} YER؟`);
-            if(!confirmAction) return;
-
-            const topupRes = await fetch(`${API}/api/games/topup`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    phone: state.user.phone,
-                    price: state.selectedDenom.price,
-                    game_code: state.selectedGame.game_code,
-                    user_id: gameUserId,
-                    denomination_id: state.selectedDenom.id
-                })
-            });
-            
-            const topupReply = await topupRes.json();
-            if(topupReply.success) {
-                await sync();
-                closeGameSheet();
-                toast(`⚡ تم شحن [ ${state.selectedDenom.name} ] بنجاح وتحديث المحفظة!`);
-            } else {
-                toast("❌ فشلت عملية شحن اللعبة بالسيرفر");
-            }
-        }
-    } catch(e) { toast("❌ خطأ أثناء الاتصال بمنظومة الشحن السحابية"); }
-}
-
-// جلب وعرض أرشيف الفواتير السابقة للعميل
-async function fetchOrders() {
-    if(!state.user) return;
-    try {
-        const res = await fetch(`${API}/api/orders/${state.user.phone}`);
-        const list = await res.json();
-        const container = document.getElementById('orders-list');
-        if(!container) return;
-
-        if(list.length > 0) {
-            container.innerHTML = list.map(o => `
-                <div class="p-5 bg-white/5 border border-white/5 rounded-3xl space-y-3 text-right">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] text-slate-500">${o.date}</span>
-                        <span class="text-xs font-black text-emerald-400">${o.id}</span>
-                    </div>
-                    <div class="text-xs text-slate-300 font-bold">${o.items.map(i=> i.name).join(' | ')}</div>
-                    <div class="flex justify-between items-center border-t border-white/5 pt-2">
-                        <span class="px-3 py-1 bg-white/5 border border-white/5 rounded-xl text-[10px] font-black text-amber-400">${o.status}</span>
-                        <span class="text-xs font-black text-emerald-400">${o.total} YER</span>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = `<div class="py-12 text-center text-slate-600 font-bold text-xs">لا توجد لديك فواتير أو طلبات سابقة</div>`;
-        }
-    } catch(e){}
-}
-
-// الحسابات والتسجيل
-async function handleAuth() {
-    const isLogin = document.getElementById('auth-title').innerText === "تسجيل الدخول";
-    const name = document.getElementById('auth-name').value.trim();
-    const phone = document.getElementById('auth-phone').value.trim();
-    const pass = document.getElementById('auth-pass').value.trim();
-
-    if(!phone || !pass || (!isLogin && !name)) return toast("⚠️ يرجى ملء كافة الحقول المطلوبة");
-
-    toast("⏳ جاري المزامنة الآمنة مع السيرفر...");
-    const path = isLogin ? '/api/auth/login' : '/api/auth/signup';
-    
-    try {
-        const res = await fetch(`${API}${path}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ name, phone, pass })
-        });
-        const reply = await res.json();
-
-        if(reply.success) {
-            state.user = reply.user;
-            localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
-            checkLocalUser();
-            await fetchMessages();
-            toast(`👋 أهلاً بك بنجاح في تطبيق تموينات أبو حسين`);
-        } else {
-            toast(`❌ ${reply.message || "حدث خطأ غير متوقع"}`);
-        }
-    } catch(e) { toast("❌ فشل الاتصال بالسيرفر المركزي لتوثيق الحساب"); }
-}
-
-function toggleAuthMode() {
-    const title = document.getElementById('auth-title');
-    const nameBox = document.getElementById('auth-name-box');
-    const btn = document.getElementById('auth-submit-btn');
-    const toggleBtn = document.getElementById('auth-toggle-btn');
-    const toggleText = document.getElementById('auth-toggle-text');
-
-    if(title.innerText === "تسجيل الدخول") {
-        title.innerText = "إنشاء حساب جديد";
-        nameBox.classList.remove('hidden');
-        btn.innerText = "تأكيد وتثبيت الحساب";
-        toggleText.innerText = "لديك حساب بالفعل؟";
-        toggleBtn.innerText = "تسجيل دخول فوراً";
-    } else {
-        title.innerText = "تسجيل الدخول";
-        nameBox.classList.add('hidden');
-        btn.innerText = "دخول آمن";
-        toggleText.innerText = "ليس لديك حساب؟";
-        toggleBtn.innerText = "إنشاء حساب جديد";
-    }
-}
-
-function changeView(viewId, btn) {
-    playSound('snd-click');
-    document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('text-emerald-400'));
-    
-    const targetPanel = document.getElementById(`view-${viewId}`);
-    if(targetPanel) targetPanel.classList.remove('hidden');
-    if(btn) btn.classList.add('text-emerald-400');
-
-    if(viewId === 'home') { renderProducts("ALL"); }
-    if(viewId === 'orders') { fetchOrders(); }
-    if(viewId === 'notifications') { fetchMessages(); }
-}
-
-function setLayout(mode) {
-    const container = document.getElementById('categories-list');
-    if(!container) return;
-    
-    container.classList.remove('mode-matrix', 'mode-dual', 'mode-list');
-    document.querySelectorAll('[id^="btn-layout-"]').forEach(b => {
-        b.classList.remove('bg-emerald-500', 'text-black');
-        b.classList.add('text-slate-400');
+    Promise.all([syncData(), refreshUserProfile(), loadActiveAd()]).then(() => {
+        setTimeout(() => {
+            if(btn) btn.classList.remove('animate-spin');
+        }, 800);
     });
-
-    const activeBtn = document.getElementById(`btn-layout-${mode}`);
-    if(activeBtn) {
-        activeBtn.classList.remove('text-slate-400');
-        activeBtn.classList.add('bg-emerald-500', 'text-black');
-    }
-    
-    if(mode === 0) container.classList.add('mode-dual');
-    if(mode === 1) container.classList.add('mode-matrix');
-    if(mode === 2) container.classList.add('mode-list');
-    state.layoutMode = mode;
 }
 
-function logout() { localStorage.clear(); location.reload(); }
-function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3500); }
-function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; document.getElementById('sheet-overlay').classList.add('hidden'); }
-function closeGameSheet() { document.getElementById('game-topup-sheet').classList.add('hidden'); state.selectedGame = null; state.selectedDenom = null; document.getElementById('game-user-id').value = ""; }
-function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(e=>{}); } }
+// --- 🔔 نظام إطلاق التنبيهات والرسائل السريعة للمستخدم (Toast) ---
+function showToast(msg) {
+    const box = document.getElementById('toast');
+    if(!box) return;
+    box.innerText = msg;
+    box.classList.remove('hidden');
+    
+    // إخفاء التنبيه تلقائياً بعد 3.5 ثوانٍ
+    setTimeout(() => { box.classList.add('hidden'); }, 3500);
+}
+

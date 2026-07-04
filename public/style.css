@@ -1,66 +1,159 @@
-body {
+/* --- 🪐 الإعدادات العامة للمنظومة والخطوط --- */
+* {
     font-family: 'Cairo', sans-serif;
-    background-color: #05070a;
-    overflow-x: hidden;
-    position: relative;
     -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
 }
 
-/* حل مشكلة تداخل وفوضى الخلفيات */
-.main-blob-1 {
-    position: fixed;
+/* تخصيص شريط التمرير ليكون مخفياً وجمالياً */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* --- 🌌 الخلفيات الفخمة والمؤثرات الضبابية (Blobs) --- */
+body {
+    position: relative;
+    overflow-x: hidden;
+}
+
+.blob {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(0,0,0,0) 70%);
+    top: -50px;
+    left: -50px;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.blob-2 {
+    position: absolute;
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, rgba(0,0,0,0) 70%);
-    top: -50px;
-    right: -50px;
-    z-index: -1;
-    pointer-events: none;
-}
-.main-blob-2 {
-    position: fixed;
-    width: 350px;
-    height: 350px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.04) 0%, rgba(0,0,0,0) 70%);
-    bottom: -100px;
-    left: -100px;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.1) 0%, rgba(0,0,0,0) 70%);
+    top: 400px;
+    right: -100px;
     z-index: -1;
     pointer-events: none;
 }
 
-/* القوالب الزجاجية المعتمدة للمتجر */
+/* تأثير الزجاج الفخم للكروت */
 .card-glass {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
+    background: rgba(13, 18, 30, 0.45);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: 1.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.card-glass:active {
-    transform: scale(0.96);
-    border-color: rgba(16, 185, 129, 0.2);
 }
 
-/* أشرطة التنقل والمحاذاة المضمونة للـ الألعاب والمتجر */
+/* --- 📱 نظام التخطيط المرئي الفوري والمتحرك لشاشات العرض --- */
+.cards-container {
+    display: grid;
+    gap: 1rem;
+    transition: all 0.4s ease-in-out;
+}
+
+/* النمط 0: العرض الثنائي الفخم (Default) */
+.cards-container.mode-dual {
+    grid-template-cols: repeat(2, minmax(0, 1fr));
+}
+
+/* النمط 1: المصفوفة الصغيرة ثلاثية الأعمدة */
+.cards-container.mode-grid {
+    grid-template-cols: repeat(3, minmax(0, 1fr));
+}
+.cards-container.mode-grid .card-glass {
+    border-radius: 1.2rem;
+}
+.cards-container.mode-grid .p-4 {
+    padding: 0.5rem;
+}
+.cards-container.mode-grid h3 {
+    font-size: 9px;
+}
+.cards-container.mode-grid span {
+    font-size: 9px;
+}
+
+/* النمط 2: القائمة الطولية المستطيلة */
+.cards-container.mode-list {
+    grid-template-cols: 1fr;
+}
+.cards-container.mode-list .card-glass {
+    flex-direction: row-reverse;
+    height: 100px;
+    align-items: center;
+}
+.cards-container.mode-list .aspect-square {
+    width: 100px;
+    height: 100px;
+    aspect-ratio: auto;
+    flex-shrink: 0;
+}
+.cards-container.mode-list .p-4 {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+}
+
+/* --- 🧭 شريط التنقل السفلي الفاخر (Navbar Items) --- */
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    color: #94a3b8;
-    transition: all 0.2s ease;
-    width: 60px;
+    gap: 0.25rem;
+    color: #64748b;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 700;
+    cursor: pointer;
+    flex: 1;
 }
-.nav-item span { font-size: 10px; font-weight: 700; }
-.nav-item i { font-size: 18px; }
 
-/* أنظمة تخطيط المنتجات الشغالة والمنظمة دون تراكب */
-.cards-container.mode-dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.cards-container.mode-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
-.cards-container.mode-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.nav-item span {
+    font-size: 9px;
+}
 
-.scrollbar-none::-webkit-scrollbar { display: none; }
-.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+.nav-item.text-emerald-400 {
+    color: #34d399;
+    transform: translateY(-2px);
+}
+
+.nav-item.text-emerald-400 i {
+    text-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+}
+
+/* دعم هواتف الآيفون الحديثة للحواف السفلية الشفافة */
+.pb-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* --- 🔔 الحركات المخصصة والتوست (Animations & Toast) --- */
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-slideUp {
+    animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* تنسيق توست التنبيهات */
+#toast {
+    box-shadow: 0 10px 30px -5px rgba(16, 185, 129, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
 

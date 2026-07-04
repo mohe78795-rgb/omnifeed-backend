@@ -151,7 +151,6 @@ function renderProductsGrid() {
     const container = document.getElementById('categories-list');
     if (!container) return;
     
-    // فرز وتصفية المنتجات حسب القسم المحدد
     const filtered = state.activeCategory === 'ALL' 
         ? state.prods 
         : state.prods.filter(p => p.cat === state.activeCategory);
@@ -161,7 +160,6 @@ function renderProductsGrid() {
         return;
     }
 
-    // إعداد الكلاس المناسب لنمط الشبكة المختار
     container.className = "cards-container pb-12";
     if (state.currentLayoutMode === 0) container.classList.add("mode-dual");
     else if (state.currentLayoutMode === 1) container.classList.add("mode-grid");
@@ -248,7 +246,7 @@ async function handleOrderSubmit() {
     }
 }
 
-// --- 🕹️ إدارة شيت شحن الألعاب التلقائي (Game Topup Logic) ---
+// --- 🕹️ إدارة شيت المنظومة المخصص لشحن الألعاب التلقائي ---
 function openGameSheet(gameId) {
     playSound('click');
     const game = state.games.find(g => g.id === gameId);
@@ -331,24 +329,63 @@ async function validateAndPayGame() {
     }
 }
 
-// --- 🧭 نظام التوجيه والتبديل بين شاشات التطبيق السفلي (Routing) ---
+// --- 🧭 نظام التوجيه والتبديل المطور (بين 6 أزرار سفلية) ---
 function changeView(viewId, btnElement) {
     playSound('click');
     
-    // إخفاء كافة لوحات العرض
+    // 1. إخفاء كافة لوحات العرض والشاشات
     document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
     
-    // إظهار اللوحة المطلوبة
+    // 2. إظهار اللوحة المطلوبة فقط
     const targetView = document.getElementById(`view-${viewId}`);
     if(targetView) targetView.classList.remove('hidden');
     
-    // تحديث الشكل الجمالي لأزرار النافبار السفلي
+    // 3. تحديث الشكل الجمالي لأزرار النافبار الستة (Navbar Items)
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('text-emerald-400'));
     if(btnElement) btnElement.classList.add('text-emerald-400');
     
-    // تحميل البيانات الخاصة باللوحات عند زيارتها
+    // 4. 🔒 التحكم الذكي بالفيديو: يظهر فقط في الواجهة الرئيسية 'home'
+    const adContainer = document.getElementById('ad-banner-container');
+    if (adContainer) {
+        if (viewId === 'home') {
+            loadActiveAd(); // استدعاء وبناء الإعلان في الرئيسية
+        } else {
+            adContainer.classList.add('hidden');
+            container.innerHTML = ''; // تفريغ لإيقاف تشغيل صوت الفيديو في الخلفية فوراً
+        }
+    }
+    
+    // 5. تحميل بيانات اللوحات ديناميكياً عند زيارتها
     if(viewId === 'orders') fetchOrdersHistory();
     if(viewId === 'notifications') fetchMessagesHistory();
+}
+
+// --- 📺 جلب وبناء بنر إعلان البث المحمي (يستدعى في الرئيسية فقط) ---
+async function loadActiveAd() {
+    // التأكد أولاً أننا في الشاشة الرئيسية قبل جلب وتوليد الفيديو
+    const homePanel = document.getElementById('view-home');
+    if (homePanel && homePanel.classList.contains('hidden')) {
+        return; 
+    }
+
+    try {
+        const res = await fetch('/api/ads/active');
+        const data = await res.json();
+        const container = document.getElementById('ad-banner-container');
+        if(!container) return;
+
+        if(data.success && data.ad) {
+            container.innerHTML = `
+                <div class="relative w-full rounded-3xl overflow-hidden aspect-video border border-white/5 bg-black shadow-xl animate-slideUp">
+                    <iframe class="w-full h-full pointer-events-none" src="${data.ad.videoUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    <div class="absolute inset-0 bg-transparent z-10"></div>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    } catch(e) {}
 }
 
 // --- 🧾 جلب وعرض أرشيف الفواتير والمشتريات ---
@@ -533,30 +570,9 @@ function logout() {
     showToast("🔒 تم تسجيل الخروج وإغلاق الجلسة المفتوحة");
 }
 
-// --- 📺 جلب وبناء بنر إعلان البث المحمي من اليوتيوب ---
-async function loadActiveAd() {
-    try {
-        const res = await fetch('/api/ads/active');
-        const data = await res.json();
-        const container = document.getElementById('ad-banner-container');
-        if(data.success && data.ad) {
-            container.innerHTML = `
-                <div class="relative w-full rounded-3xl overflow-hidden aspect-video border border-white/5 bg-black shadow-xl">
-                    <iframe class="w-full h-full pointer-events-none" src="${data.ad.videoUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                    <div class="absolute inset-0 bg-transparent z-10"></div>
-                </div>
-            `;
-            container.classList.remove('hidden');
-        } else {
-            container.classList.add('hidden');
-        }
-    } catch(e) {}
-}
-
 // --- 📱 تخصيص ميزة السحب لأسفل لتحديث البيانات (Pull to Refresh) ---
 function initPullToRefresh() {
     let touchStartOffsetY = 0;
-    const refreshBtn = document.getElementById('refresh-btn');
     
     window.addEventListener('touchstart', (e) => {
         if (window.scrollY === 0) touchStartOffsetY = e.touches[0].clientY;
@@ -565,7 +581,6 @@ function initPullToRefresh() {
     window.addEventListener('touchend', (e) => {
         const touchEndOffsetY = e.changedTouches[0].clientY;
         const deltaY = touchEndOffsetY - touchStartOffsetY;
-        // إذا سحب المستخدم مسافة تزيد عن 140 بكسل لأسفل وهو بأعلى الصفحة
         if (window.scrollY === 0 && deltaY > 140) {
             manualRefresh();
         }
@@ -579,7 +594,15 @@ function manualRefresh() {
     playSound('notification');
     showToast("⚡ جاري مزامنة السيرفر وتحديث البيانات الرقمية...");
     
-    Promise.all([syncData(), refreshUserProfile(), loadActiveAd()]).then(() => {
+    const homePanel = document.getElementById('view-home');
+    const isHomeActive = homePanel && !homePanel.classList.contains('hidden');
+
+    const promises = [syncData(), refreshUserProfile()];
+    if (isHomeActive) {
+        promises.push(loadActiveAd());
+    }
+
+    Promise.all(promises).then(() => {
         setTimeout(() => {
             if(btn) btn.classList.remove('animate-spin');
         }, 800);
@@ -592,8 +615,5 @@ function showToast(msg) {
     if(!box) return;
     box.innerText = msg;
     box.classList.remove('hidden');
-    
-    // إخفاء التنبيه تلقائياً بعد 3.5 ثوانٍ
     setTimeout(() => { box.classList.add('hidden'); }, 3500);
 }
-

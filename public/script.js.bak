@@ -596,3 +596,4 @@ function showToast(msg) {
     // إخفاء التنبيه تلقائياً بعد 3.5 ثوانٍ
     setTimeout(() => { box.classList.add('hidden'); }, 3500);
 }
+

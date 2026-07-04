@@ -4,17 +4,6 @@ const cors = require('cors');
 const path = require('path');                                                                                                                                     
 require('dotenv').config(); 
 
-// --- 1. إعداد وتفعيل Firebase Admin للإشعارات الخارجية ---
-const admin = require('firebase-admin');
-try {
-    // تأكد من وضع ملف الخدمة serviceAccountKey.json بجانب هذا الملف
-    const serviceAccount = require("./serviceAccountKey.json");
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-    console.log("🔥 تم تفعيل نظام إشعارات Firebase بنجاح");
-} catch (error) {
-    console.error("⚠️ تحذير: ملف serviceAccountKey.json غير موجود، الإشعارات الخارجية معطلة مؤقتاً");
-}
-
 const app = express();
 const PORT = process.env.PORT || 3000;                                           
 
@@ -22,322 +11,102 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- 2. الاتصال بقاعدة بيانات MongoDB ---
 const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(MONGO_URI)
     .then(() => console.log("✅ متصل بسحابة أبو حسين (MongoDB)"))
     .catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
 
-// ==========================================
-// 🗃️ تعريف موديلات وقواعد البيانات (Schemas)
-// ==========================================
-
-// تحديث موديل المستخدم ليشمل توكن الإشعارات (fcmToken)
-const UserSchema = new mongoose.Schema({
+// --- 🗃️ تعريف موديلات وقواعد البيانات ---
+const User = mongoose.model('User', new mongoose.Schema({
     name: { type: String, required: true },
     phone: { type: String, required: true, unique: true },
     pass: { type: String, required: true },
     bal: { type: Number, default: 0 },
-    fcmToken: { type: String, default: "" }, // لتخزين توكن العميل
     joinDate: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-});
-const User = mongoose.model('User', UserSchema);
+}));
 
-const ProductSchema = new mongoose.Schema({
+const Category = mongoose.model('Category', new mongoose.Schema({
+    name: { type: String, required: true, unique: true },
+    sub: String,
+    img: String
+}));
+
+const Product = mongoose.model('Product', new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
-    cat: { type: String, required: true },
-    img: { type: String, required: true }
-});
-const Product = mongoose.model('Product', ProductSchema);
+    img: String,
+    cat: { type: String, required: true }
+}));
 
-const CategorySchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    sub: { type: String, default: "" },
-    img: { type: String, required: true }
-});
-const Category = mongoose.model('Category', CategorySchema);
+const Order = mongoose.model('Order', new mongoose.Schema({
+    id: String,
+    phone: String,
+    items: Array,
+    total: Number,
+    status: { type: String, default: 'قيد المراجعة ⏳' },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
 
-const OrderSchema = new mongoose.Schema({
-    id: { type: String, required: true },
-    phone: { type: String, required: true },
-    total: { type: Number, required: true },
-    status: { type: String, default: "قيد المراجعة" },
-    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) },
-    items: { type: Array, required: true }
-});
-const Order = mongoose.model('Order', OrderSchema);
-
-const AdSchema = new mongoose.Schema({
-    videoUrl: { type: String, required: true },
-    active: { type: Boolean, default: true }
-});
-const Ad = mongoose.model('Ad', AdSchema);
-
-// موديل الرسائل الجديد (المراسلة الفردية والجماعية)
-const MessageSchema = new mongoose.Schema({
+const Message = mongoose.model('Message', new mongoose.Schema({
     sender: { type: String, default: "ADMIN" },
-    receiver: { type: String, required: true }, // رقم هاتف العميل أو "ALL" للجميع
+    receiver: { type: String, required: true },
     title: { type: String, required: true },
     body: { type: String, required: true },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-});
-const Message = mongoose.model('Message', MessageSchema);
+}));
 
-// ==========================================
-// 🔔 دالة برمجية لإرسال إشعارات الـ Push Notifications عبر الفايربيس
-// ==========================================
-async function sendPushNotification(targetPhone, title, body) {
-    try {
-        let tokens = [];
-        if (targetPhone === "ALL") {
-            const users = await User.find({ fcmToken: { $ne: "" } });
-            tokens = users.map(u => u.fcmToken);
-        } else {
-            const user = await User.findOne({ phone: targetPhone });
-            if (user && user.fcmToken) tokens.push(user.fcmToken);
-        }
+const Ad = mongoose.model('Ad', new mongoose.Schema({
+    videoUrl: { type: String, required: true },
+    active: { type: Boolean, default: true },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
 
-        if (tokens.length === 0) return;
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
 
-        const payload = {
-            notification: { title, body },
-            tokens: tokens
-        };
-
-        const response = await admin.messaging().sendEachForMulticast(payload);
-        console.log(`📡 تم إرسال ${response.successCount} إشعار بنجاح عبر Firebase`);
-    } catch (error) {
-        console.error("❌ خطأ أثناء إرسال إشعار Firebase:", error);
+// --- دالة تحويل وتحسين روابط اليوتيوب تلقائياً قبل الحفظ ---
+function makeEmbedUrl(url) {
+    if (!url) return "";
+    let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    let match = url.match(regExp);
+    if (match && match[2].length == 11) {
+        return "https://www.youtube.com/embed/" + match[2];
     }
+    return url;
 }
 
-// ==========================================
-// 🔐 مسارات واجهة المتجر والعملاء (Public API)
-// ==========================================
-
-app.post('/api/auth/signup', async (req, res) => {
-    const { name, phone, pass } = req.body;
-    try {
-        const exist = await User.findOne({ phone });
-        if (exist) return res.status(400).json({ success: false, message: "رقم الهاتف مسجل مسبقاً" });
-
-        const newUser = new User({ name, phone, pass, bal: 5000 });
-        await newUser.save();
-        res.json({ success: true, user: newUser });
-    } catch (e) { res.status(500).json({ success: false, message: "حدث خطأ في خادم التسجيل" }); }
-});
-
-app.post('/api/auth/login', async (req, res) => {
-    const { phone, pass } = req.body;
-    try {
-        const user = await User.findOne({ phone, pass });
-        if (!user) return res.status(400).json({ success: false, message: "بيانات الدخول خاطئة" });
-        res.json({ success: true, user });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-app.get('/api/auth/user/:phone', async (req, res) => {
-    try {
-        const user = await User.findOne({ phone: req.params.phone });
-        if (!user) return res.status(404).json({ success: false, message: "المستخدم غير موجود" });
-        res.json({ success: true, user });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-// تحديث توكن FCM للمستخدم عند دخوله للتطبيق
-app.post('/api/auth/update-fcm', async (req, res) => {
-    const { phone, token } = req.body;
-    try {
-        await User.findOneAndUpdate({ phone }, { fcmToken: token });
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-app.get('/api/categories', async (req, res) => {
-    try { res.json(await Category.find({})); } catch(e) { res.status(500).send(e); }
-});
-
-app.get('/api/products', async (req, res) => {
-    try { res.json(await Product.find({})); } catch(e) { res.status(500).send(e); }
-});
-
-app.get('/api/ads', async (req, res) => { 
-    try { res.json(await Ad.find({ active: true })); } catch(e) { res.status(500).send(e); }
-});
-
-app.post('/api/orders/add', async (req, res) => {
-    const { phone, order } = req.body;
-    try {
-        const user = await User.findOne({ phone });
-        if (!user || user.bal < order.total) return res.status(400).json({ message: "رصيد المحفظة غير كافٍ لإتمام الشراء" });
-
-        user.bal -= order.total;
-        await user.save();
-
-        const customId = "INV-" + Math.floor(100000 + Math.random() * 900000);
-        const newOrder = new Order({ id: customId, phone, total: order.total, items: order.items });
-        await newOrder.save();
-
-        res.json({ success: true, currentBal: user.bal });
-    } catch (e) { res.status(500).json({ message: "فشل تنفيذ عملية الشراء" }); }
-});
-
-app.get('/api/orders/:phone', async (req, res) => {
-    try { res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })); } catch(e) { res.status(500).send(e); }
-});
-
-// جلب رسائل وإشعارات العميل (الفردية والعامة)
-app.get('/api/messages/:phone', async (req, res) => {
-    try {
-        const msgs = await Message.find({ $or: [{ receiver: req.params.phone }, { receiver: "ALL" }] }).sort({ _id: -1 });
-        res.json(msgs);
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-// ==========================================
-// 🎮 مسارات نظام شحن الألعاب الفوري (UniPin API)
-// ==========================================
-const GAMES_DATA = [
-    {
-        game_name: "ببجي موبايل (PUBG Mobile)",
-        game_code: "PUBGM_GLOBAL",
-        denominations: [
-            { id: "pubg_60", name: "60 UC 💎", price: 1200 },
-            { id: "pubg_325", name: "325 UC 💎", price: 5800 },
-            { id: "pubg_660", name: "660 UC 💎", price: 11500 }
-        ]
-    },
-    {
-        game_name: "فري فاير (Free Fire)",
-        game_code: "FREEFIRE_GLOBAL",
-        denominations: [
-            { id: "ff_100", name: "100 Diamond 💎", price: 950 },
-            { id: "ff_210", name: "210 Diamond 💎", price: 1900 },
-            { id: "ff_530", name: "530 Diamond 💎", price: 4750 }
-        ]
-    }
-];
-
-app.get('/api/games', (req, res) => {
-    res.json({ success: true, game_list: GAMES_DATA });
-});
-
-app.post('/api/games/validate-user', (req, res) => {
-    const { game_code, user_id } = req.body;
-    if (!user_id) return res.json({ success: false, message: "يرجى إدخال المعرف أولاً" });
-    const mockNames = ["Abdu_Hero⚡", "Yemen_King🔥", "Prestige_User👑", "Supplies_Slayer⚔️"];
-    const nameIndex = user_id.length % mockNames.length;
-    res.json({ success: true, player_name: mockNames[nameIndex] });
-});
-
-app.post('/api/games/topup', async (req, res) => {
-    const { phone, game_code, user_id, denomination_id, price } = req.body;
-    try {
-        const user = await User.findOne({ phone });
-        if (!user) return res.status(404).json({ success: false, message: "الحساب غير موجود" });
-        if (user.bal < price) return res.status(400).json({ success: false, message: "رصيد محفظتك غير كافٍ" });
-
-        user.bal -= price;
-        await user.save();
-
-        const customId = "GAME-" + Math.floor(100000 + Math.random() * 900000);
-        const gameOrder = new Order({
-            id: customId,
-            phone: user.phone,
-            total: price,
-            status: "مشحون تلقائياً ⚡",
-            items: [{ name: `شحن فئة [${denomination_id}] لحساب اللاعب: (${user_id}) في لعبة: ${game_code}`, price: price, qty: 1 }]
-        });
-        await gameOrder.save();
-
-        res.json({ success: true, message: "تم الشحن بنجاح!", currentBal: user.bal });
-    } catch(e) { res.status(500).json({ success: false, message: "عطل طارئ" }); }
-});
-
-// ==========================================
-// 👑 مسارات لوحة تحكم الإدارة المركزية (Admin API)
-// ==========================================
-const ADMIN_SECRET_KEY = "123456"; 
+// --- 🌐 مسارات وإدارات الـ API للأدمن والعميل ---
 
 app.post('/api/admin/dashboard', async (req, res) => {
     const { adminPass } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false, message: "الرمز السري خطأ!" });
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
         const orders = await Order.find({}).sort({ _id: -1 });
         const users = await User.find({}).sort({ _id: -1 });
         const categories = await Category.find({});
-        const ads = await Ad.find({}).sort({ _id: -1 });
-        res.json({ success: true, data: { orders, users, categories, ads } });
+        const products = await Product.find({});
+        const ads = await Ad.find({ active: true }).sort({ _id: -1 });
+        res.json({ success: true, data: { orders, users, categories, products, ads } });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// التعديل الذكي لدالة شحن الرصيد لترسل إشعاراً آلياً فورياً للعميل داخلياً وخارجياً
+// شحن وتعديل محفظة المستخدم
 app.post('/api/admin/user/update-balance', async (req, res) => {
     const { adminPass, phone, newBalance } = req.body;
     if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
-        const oldUser = await User.findOne({ phone });
-        const addedAmount = Number(newBalance) - (oldUser ? oldUser.bal : 0);
-
-        await User.findOneAndUpdate({ phone }, { bal: Number(newBalance) });
-
-        if (oldUser && addedAmount > 0) {
-            const title = "تحديث الرصيد 💰";
-            const body = `تمت تعبئة رصيدك بنجاح بمبلغ ${addedAmount.toLocaleString()} YER. رصيدك الحالي هو: ${Number(newBalance).toLocaleString()} YER`;
-            
-            // 1. حفظ في قاعدة البيانات للـ App
-            await new Message({ receiver: phone, title, body }).save();
-            // 2. إرسال للهاتف عبر Firebase الفعلي
-            await sendPushNotification(phone, title, body);
+        const user = await User.findOneAndUpdate({ phone }, { bal: Number(newBalance) }, { new: true });
+        if(user) {
+            await new Message({
+                receiver: phone,
+                title: "تحديث المحفظة الرقمية 💰",
+                body: `تم تعديل وتعبئة رصيد حسابك بنجاح. رصيدك الحالي الجديد هو: ${newBalance} YER`
+            }).save();
         }
-
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// مسار لوحة التحكم لإرسال رسائل وعروض يدوية (فردية أو عامة للجميع)
-app.post('/api/messages/send', async (req, res) => {
-    const { adminPass, receiver, title, body } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        const msg = new Message({ receiver, title, body });
-        await msg.save();
-        
-        // إرسال الإشعار الخارجي فوراً عبر الفايربيس
-        await sendPushNotification(receiver, title, body);
-        
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-app.post('/api/admin/product/add', async (req, res) => {
-    const { adminPass, name, price, img, cat } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        await new Product({ name, price: Number(price), img, cat }).save();
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-app.post('/api/admin/category/add', async (req, res) => {
-    const { adminPass, name, sub, img } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        await new Category({ name, sub, img }).save();
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-app.post('/api/admin/ad/add', async (req, res) => {
-    const { adminPass, videoUrl, active } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        await new Ad({ videoUrl, active: active ?? true }).save();
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
+// تحديث حالة الفواتير
 app.post('/api/admin/order/update-status', async (req, res) => {
     const { adminPass, id, status } = req.body;
     if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
@@ -347,15 +116,89 @@ app.post('/api/admin/order/update-status', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// إرسال الإشعارات والرسائل البرقية
+app.post('/api/messages/send', async (req, res) => {
+    const { adminPass, receiver, title, body } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await new Message({ receiver, title, body }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// تحديث وحفظ فيديو الإعلان العلوي
+app.post('/api/admin/ad/add', async (req, res) => {
+    const { adminPass, videoUrl } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        const embedLink = makeEmbedUrl(videoUrl);
+        await Ad.updateMany({}, { active: false }); // إيقاف الإعلانات القديمة
+        await new Ad({ videoUrl: embedLink, active: true }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// --- الأقسام: إضافة، تعديل، حذف ---
+app.post('/api/admin/category/add', async (req, res) => {
+    const { adminPass, name, sub, img } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await new Category({ name, sub, img }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/category/edit', async (req, res) => {
+    const { adminPass, name, sub, img } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await Category.findOneAndUpdate({ name }, { sub, img });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/category/delete', async (req, res) => {
+    const { adminPass, name } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await Category.findOneAndDelete({ name });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// --- المنتجات: إضافة، تعديل، حذف ---
+app.post('/api/admin/product/add', async (req, res) => {
+    const { adminPass, name, price, img, cat } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await new Product({ name, price: Number(price), img, cat }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/product/edit', async (req, res) => {
+    const { adminPass, name, price, img, cat } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await Product.findOneAndUpdate({ name }, { price: Number(price), img, cat });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/product/delete', async (req, res) => {
+    const { adminPass, name } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await Product.findOneAndDelete({ name });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 app.listen(PORT, () => {
-    console.log(`🚀 خادم التطبيق يعمل بنجاح وكفاءة تامة على المنفذ: ${PORT}`);
+    console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
 });
 

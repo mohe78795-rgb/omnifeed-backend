@@ -9,36 +9,51 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+// التأكد من الوصول لمجلد public الذي يحتوي على ملفاتك
 app.use(express.static(path.join(__dirname, 'public')));
 
-mongoose.connect(process.env.MONGO_URI).then(() => console.log("✅ MongoDB Connected"));
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("✅ متصل بسحابة أبو حسين (MongoDB)"))
+    .catch(err => console.error("❌ خطأ قاعدة البيانات:", err));
 
-// النماذج (Schemas)
+// --- 🗃️ النماذج (Models) ---
 const User = mongoose.model('User', new mongoose.Schema({
     name: String, phone: { type: String, unique: true }, pass: String, bal: { type: Number, default: 0 },
     joinDate: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }));
+
 const Category = mongoose.model('Category', new mongoose.Schema({ name: String, sub: String, img: String }));
 const Product = mongoose.model('Product', new mongoose.Schema({ name: String, price: Number, img: String, cat: String }));
+
 const Order = mongoose.model('Order', new mongoose.Schema({
     id: { type: String, default: () => "INV-" + Math.floor(100000 + Math.random() * 900000) },
     phone: String, items: Array, total: Number, status: { type: String, default: 'قيد المراجعة ⏳' },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }));
+
 const Message = mongoose.model('Message', new mongoose.Schema({
     sender: String, receiver: String, title: String, body: String,
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }));
+
 const Ad = mongoose.model('Ad', new mongoose.Schema({ videoUrl: String, active: { type: Boolean, default: true } }));
 
-const ADMIN_KEY = process.env.ADMIN_SECRET_KEY || "123456";
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
 
-// المسارات (Routes)
+// وظيفة معالجة الروابط
+function makeEmbedUrl(url) {
+    if (!url) return "";
+    let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    let match = url.match(regExp);
+    return (match && match[2].length == 11) ? "https://www.youtube.com/embed/" + match[2] : url;
+}
+
+// --- 🌐 مسارات العميل ---
 app.get('/api/categories', async (req, res) => res.json(await Category.find({})));
 app.get('/api/products', async (req, res) => res.json(await Product.find({})));
 app.get('/api/ads', async (req, res) => res.json(await Ad.find({ active: true })));
 
-// الدردشة (جلب رسائل العميل + رسائل الإدارة له)
+// جلب الدردشة (رسائل العميل + ردود الإدارة)
 app.get('/api/messages/:phone', async (req, res) => {
     const messages = await Message.find({
         $or: [ { receiver: req.params.phone }, { receiver: 'ALL' }, { sender: req.params.phone } ]
@@ -48,17 +63,15 @@ app.get('/api/messages/:phone', async (req, res) => {
 
 // إرسال رسالة من العميل للإدارة
 app.post('/api/messages/user-send', async (req, res) => {
-    try {
-        const msg = new Message({ sender: req.body.sender, receiver: 'ADMIN', title: 'رسالة عميل', body: req.body.body });
-        await msg.save();
-        res.json({ success: true });
-    } catch(e) { res.status(500).send(); }
+    const msg = new Message({ sender: req.body.sender, receiver: 'ADMIN', title: 'رسالة عميل', body: req.body.body });
+    await msg.save();
+    res.json({ success: true });
 });
 
 app.post('/api/auth/signup', async (req, res) => {
     const { name, phone, pass } = req.body;
     if (await User.findOne({ phone })) return res.json({ success: false, message: "مسجل مسبقاً" });
-    const u = new User({ name, phone, pass }); await u.save();
+    const u = new User({ name, phone, pass, bal: 0 }); await u.save();
     res.json({ success: true, user: u });
 });
 
@@ -73,18 +86,17 @@ app.post('/api/orders/add', async (req, res) => {
     const u = await User.findOne({ phone: req.body.phone });
     if (!u || u.bal < req.body.order.total) return res.status(400).json({ success: false });
     u.bal -= req.body.order.total; await u.save();
-    const o = new Order({ phone: req.body.phone, items: req.body.order.items, total: req.body.order.total });
-    await o.save();
+    await new Order({ phone: req.body.phone, items: req.body.order.items, total: req.body.order.total }).save();
     res.json({ success: true, currentBal: u.bal });
 });
 
 app.get('/api/orders/:phone', async (req, res) => res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })));
 
-// شحن الألعاب
+// --- 🕹️ مسارات الألعاب ---
 app.get('/api/games', (req, res) => {
     res.json({ success: true, game_list: [
-        { game_code: "pubg", game_name: "ببجي", denominations: [{ id: "60", name: "60 UC", price: 1200 }, { id: "325", name: "325 UC", price: 5800 }] },
-        { game_code: "ff", game_name: "فري فاير", denominations: [{ id: "100", name: "100💎", price: 950 }, { id: "210", name: "210💎", price: 1900 }] }
+        { game_code: "pubg", game_name: "ببجي موبايل", denominations: [{ id: "60", name: "60 UC", price: 1200 }, { id: "325", name: "325 UC", price: 5800 }] },
+        { game_code: "ff", game_name: "فري فاير", denominations: [{ id: "100", name: "100 جوهرة", price: 950 }, { id: "210", name: "210 جوهرة", price: 1900 }] }
     ]});
 });
 
@@ -92,13 +104,15 @@ app.post('/api/games/topup', async (req, res) => {
     const u = await User.findOne({ phone: req.body.phone });
     if (!u || u.bal < req.body.price) return res.json({ success: false, message: "رصيد ناقص" });
     u.bal -= req.body.price; await u.save();
-    await new Message({ receiver: req.body.phone, title: "نجاح شحن", body: `تم شحن ${req.body.game_code} بنجاح` }).save();
+    await new Message({ receiver: req.body.phone, title: "نجاح الشحن ⚡", body: `تم شحن ${req.body.game_code} للآيدي ${req.body.user_id}` }).save();
     res.json({ success: true, currentBal: u.bal });
 });
 
-// لوحة التحكم (مختصرة جداً)
+// --- 💼 مسارات الإدارة ---
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+
 app.post('/api/admin/dashboard', async (req, res) => {
-    if (req.body.adminPass !== ADMIN_KEY) return res.status(401).json({ success: false });
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     res.json({ success: true, data: {
         orders: await Order.find({}).sort({ _id: -1 }),
         users: await User.find({}).sort({ _id: -1 }),
@@ -108,4 +122,24 @@ app.post('/api/admin/dashboard', async (req, res) => {
     }});
 });
 
-app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
+app.post('/api/admin/ad/add', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await Ad.updateMany({}, { active: false });
+    const newAd = new Ad({ videoUrl: makeEmbedUrl(req.body.videoUrl), active: true });
+    await newAd.save();
+    res.json({ success: true });
+});
+
+app.post('/api/admin/user/update-balance', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await User.findOneAndUpdate({ phone: req.body.phone }, { bal: req.body.newBalance });
+    res.json({ success: true });
+});
+
+app.post('/api/admin/order/update-status', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await Order.findOneAndUpdate({ id: req.body.id }, { status: req.body.status });
+    res.json({ success: true });
+});
+
+app.listen(PORT, () => console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`));

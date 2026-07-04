@@ -1,159 +1,110 @@
-/* --- 🪐 الإعدادات العامة للمنظومة والخطوط --- */
-* {
-    font-family: 'Cairo', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-    box-sizing: border-box;
-}
-
-/* تخصيص شريط التمرير ليكون مخفياً وجمالياً */
-.scrollbar-none::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* --- 🌌 الخلفيات الفخمة والمؤثرات الضبابية (Blobs) --- */
 body {
-    position: relative;
+    font-family: 'Cairo', sans-serif;
+    background-color: #05070a;
     overflow-x: hidden;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .blob {
-    position: absolute;
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(0,0,0,0) 70%);
-    top: -50px;
-    left: -50px;
-    z-index: -1;
-    pointer-events: none;
-}
-
-.blob-2 {
-    position: absolute;
+    position: fixed;
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(20, 184, 166, 0.1) 0%, rgba(0,0,0,0) 70%);
-    top: 400px;
-    right: -100px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0) 70%);
+    top: -50px;
+    right: -50px;
     z-index: -1;
     pointer-events: none;
 }
-
-/* تأثير الزجاج الفخم للكروت */
-.card-glass {
-    background: rgba(13, 18, 30, 0.45);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+.blob-2 {
+    bottom: -100px;
+    left: -100px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(0,0,0,0) 70%);
 }
 
-/* --- 📱 نظام التخطيط المرئي الفوري والمتحرك لشاشات العرض --- */
-.cards-container {
-    display: grid;
-    gap: 1rem;
-    transition: all 0.4s ease-in-out;
-}
-
-/* النمط 0: العرض الثنائي الفخم (Default) */
-.cards-container.mode-dual {
-    grid-template-cols: repeat(2, minmax(0, 1fr));
-}
-
-/* النمط 1: المصفوفة الصغيرة ثلاثية الأعمدة */
-.cards-container.mode-grid {
-    grid-template-cols: repeat(3, minmax(0, 1fr));
-}
-.cards-container.mode-grid .card-glass {
-    border-radius: 1.2rem;
-}
-.cards-container.mode-grid .p-4 {
-    padding: 0.5rem;
-}
-.cards-container.mode-grid h3 {
-    font-size: 9px;
-}
-.cards-container.mode-grid span {
-    font-size: 9px;
-}
-
-/* النمط 2: القائمة الطولية المستطيلة */
-.cards-container.mode-list {
-    grid-template-cols: 1fr;
-}
-.cards-container.mode-list .card-glass {
-    flex-direction: row-reverse;
-    height: 100px;
-    align-items: center;
-}
-.cards-container.mode-list .aspect-square {
-    width: 100px;
-    height: 100px;
-    aspect-ratio: auto;
-    flex-shrink: 0;
-}
-.cards-container.mode-list .p-4 {
-    flex: 1;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-}
-
-/* --- 🧭 شريط التنقل السفلي الفاخر (Navbar Items) --- */
+/* تعديل خصائص عناصر النافبار الستة */
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
-    color: #64748b;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 700;
-    cursor: pointer;
-    flex: 1;
+    gap: 2px;
+    color: #94a3b8;
+    transition: all 0.25s ease;
+    height: 100%;
 }
-
 .nav-item span {
     font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
 }
-
-.nav-item.text-emerald-400 {
+.nav-item.active {
     color: #34d399;
     transform: translateY(-2px);
 }
 
-.nav-item.text-emerald-400 i {
-    text-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+.royal-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    font-size: 13px;
+    color: #ffffff;
+    outline: none;
+    transition: all 0.3s ease;
+    text-align: right;
+}
+.royal-input:focus {
+    border-color: rgba(52, 211, 153, 0.4);
 }
 
-/* دعم هواتف الآيفون الحديثة للحواف السفلية الشفافة */
-.pb-safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+.card-glass {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+}
+.card-glass:active {
+    transform: scale(0.96);
 }
 
-/* --- 🔔 الحركات المخصصة والتوست (Animations & Toast) --- */
-@keyframes slideUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+/* أنظمة التخطيط الثلاثية الشغالة بالكامل */
+.cards-container.mode-dual {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
 }
+.cards-container.mode-matrix {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+}
+.cards-container.mode-matrix .card-glass { padding: 0.75rem; border-radius: 1.25rem; }
+.cards-container.mode-matrix .card-glass img { height: 5rem; border-radius: 1rem; }
+.cards-container.mode-matrix .card-glass h3 { font-size: 11px; }
 
-.animate-slideUp {
-    animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+.cards-container.mode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
+.cards-container.mode-list .card-glass {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    text-align: right;
+    padding: 0.85rem;
+}
+.cards-container.mode-list .card-glass img { width: 4.5rem; height: 4.5rem; margin-bottom: 0 !important; border-radius: 1rem; }
 
-/* تنسيق توست التنبيهات */
-#toast {
-    box-shadow: 0 10px 30px -5px rgba(16, 185, 129, 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
+
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.animate-slideUp { animation: slideUp 0.35s ease forwards; }
+
 

@@ -9,11 +9,12 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
 
-mongoose.connect(process.env.MONGO_URI).then(() => console.log("✅ متصل بقاعدة البيانات"));
+mongoose.connect(process.env.MONGO_URI).then(() => console.log("✅ Database Connected"));
 
-// --- النماذج (Models) ---
+// --- Models ---
 const User = mongoose.model('User', new mongoose.Schema({
     name: String, phone: { type: String, unique: true }, pass: String, bal: { type: Number, default: 0 },
     joinDate: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
@@ -33,7 +34,6 @@ const Ad = mongoose.model('Ad', new mongoose.Schema({ videoUrl: String, active: 
 
 const ADMIN_KEY = process.env.ADMIN_SECRET_KEY || "123456";
 
-// تحويل روابط يوتيوب لتصبح قابلة للتشغيل
 function makeEmbedUrl(url) {
     if (!url) return "";
     let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -41,31 +41,56 @@ function makeEmbedUrl(url) {
     return (match && match[2].length == 11) ? "https://www.youtube.com/embed/" + match[2] : url;
 }
 
-// --- المسارات (Routes) ---
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-
-// جلب الإعلانات النشطة
+// --- Routes ---
+app.get('/admin', (req, res) => res.sendFile(path.join(publicPath, 'admin.html')));
 app.get('/api/ads', async (req, res) => res.json(await Ad.find({ active: true })));
-
-// الدردشة: جلب الرسائل
+app.get('/api/categories', async (req, res) => res.json(await Category.find({})));
+app.get('/api/products', async (req, res) => res.json(await Product.find({})));
 app.get('/api/messages/:phone', async (req, res) => {
     res.json(await Message.find({ $or: [{ receiver: req.params.phone }, { receiver: 'ALL' }, { sender: req.params.phone }] }).sort({ _id: 1 }));
 });
 
-// إرسال رسالة من العميل للإدارة
 app.post('/api/messages/user-send', async (req, res) => {
     await new Message({ sender: req.body.sender, receiver: 'ADMIN', title: 'رسالة عميل', body: req.body.body }).save();
     res.json({ success: true });
 });
 
-// إرسال رسالة من الإدارة للعميل
-app.post('/api/messages/send', async (req, res) => {
-    if (req.body.adminPass !== ADMIN_KEY) return res.status(401).send();
-    await new Message({ sender: 'ADMIN', receiver: req.body.receiver, title: req.body.title, body: req.body.body }).save();
-    res.json({ success: true });
+app.post('/api/auth/signup', async (req, res) => {
+    const { name, phone, pass } = req.body;
+    if (await User.findOne({ phone })) return res.json({ success: false, message: "مسجل مسبقاً" });
+    const u = new User({ name, phone, pass, bal: 0 }); await u.save();
+    res.json({ success: true, user: u });
 });
 
-// تحديث الإعلان (الفيديو)
+app.post('/api/auth/login', async (req, res) => {
+    const u = await User.findOne({ phone: req.body.phone, pass: req.body.pass });
+    res.json(u ? { success: true, user: u } : { success: false, message: "بيانات خاطئة" });
+});
+
+app.get('/api/auth/user/:phone', async (req, res) => res.json({ success: true, user: await User.findOne({ phone: req.params.phone }) }));
+
+app.post('/api/orders/add', async (req, res) => {
+    const u = await User.findOne({ phone: req.body.phone });
+    if (!u || u.bal < req.body.order.total) return res.status(400).send();
+    u.bal -= req.body.order.total; await u.save();
+    await new Order({ phone: req.body.phone, items: req.body.order.items, total: req.body.order.total }).save();
+    res.json({ success: true, currentBal: u.bal });
+});
+
+app.get('/api/orders/:phone', async (req, res) => res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })));
+
+app.get('/api/games', (req, res) => {
+    res.json({ success: true, game_list: [
+        { game_code: "pubg", game_name: "ببجي موبايل", denominations: [{ id: "60", name: "60 UC", price: 1200 }, { id: "325", name: "325 UC", price: 5800 }] },
+        { game_code: "ff", game_name: "فري فاير", denominations: [{ id: "100", name: "100 جوهرة", price: 950 }, { id: "210", name: "210 جوهرة", price: 1900 }] }
+    ]});
+});
+
+app.post('/api/admin/dashboard', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_KEY) return res.status(401).send();
+    res.json({ success: true, data: { orders: await Order.find({}).sort({ _id: -1 }), users: await User.find({}), categories: await Category.find({}), products: await Product.find({}), ads: await Ad.find({}) } });
+});
+
 app.post('/api/admin/ad/add', async (req, res) => {
     if (req.body.adminPass !== ADMIN_KEY) return res.status(401).send();
     await Ad.updateMany({}, { active: false });
@@ -73,26 +98,4 @@ app.post('/api/admin/ad/add', async (req, res) => {
     res.json({ success: true });
 });
 
-// باقي المسارات (Categories, Products, Auth, Dashboard, Update Balance) تبقى كما هي في كودك الأصلي
-app.get('/api/categories', async (req, res) => res.json(await Category.find({})));
-app.get('/api/products', async (req, res) => res.json(await Product.find({})));
-app.post('/api/auth/signup', async (req, res) => {
-    if (await User.findOne({ phone: req.body.phone })) return res.json({ success: false, message: "مسجل مسبقاً" });
-    const u = new User(req.body); await u.save(); res.json({ success: true, user: u });
-});
-app.post('/api/auth/login', async (req, res) => {
-    const u = await User.findOne({ phone: req.body.phone, pass: req.body.pass });
-    res.json(u ? { success: true, user: u } : { success: false });
-});
-app.get('/api/auth/user/:phone', async (req, res) => res.json({ success: true, user: await User.findOne({ phone: req.params.phone }) }));
-app.post('/api/admin/dashboard', async (req, res) => {
-    if (req.body.adminPass !== ADMIN_KEY) return res.status(401).send();
-    res.json({ success: true, data: { orders: await Order.find({}).sort({ _id: -1 }), users: await User.find({}), categories: await Category.find({}), products: await Product.find({}), ads: await Ad.find({}) } });
-});
-app.post('/api/admin/user/update-balance', async (req, res) => {
-    if (req.body.adminPass !== ADMIN_KEY) return res.status(401).send();
-    await User.findOneAndUpdate({ phone: req.body.phone }, { bal: req.body.newBalance });
-    res.json({ success: true });
-});
-
-app.listen(PORT, () => console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));

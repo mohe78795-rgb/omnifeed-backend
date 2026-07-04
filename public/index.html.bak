@@ -11,14 +11,17 @@
 </head>
 <body class="bg-[#05070a] text-white min-h-screen pb-32">
 
+    <!-- ملفات الصوت -->
     <audio id="snd-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2358-preview.mp3" preload="auto"></audio>
     <audio id="snd-cashier" src="https://assets.mixkit.co/active_storage/sfx/592/592-preview.mp3" preload="auto"></audio>
     <audio id="snd-notification" src="https://assets.mixkit.co/active_storage/sfx/911/911-preview.mp3" preload="auto"></audio>
 
-    <div class="blob"></div>
-    <div class="blob blob-2"></div>
+    <!-- الخلفيات العائمة (محددة لتجنب التداخل) -->
+    <div class="main-blob-1"></div>
+    <div class="main-blob-2"></div>
 
-    <header class="sticky top-0 z-[1000] bg(#05070a)/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex justify-between items-center">
+    <!-- الهيدر العلوي -->
+    <header class="sticky top-0 z-[1000] bg-[#05070a]/90 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] shadow-lg shadow-emerald-500/10">
                 <div class="w-full h-full bg-[#05070a] rounded-full flex items-center justify-center">
@@ -30,7 +33,6 @@
                 <p class="text-[9px] text-emerald-400/80 font-bold">Line Services & Supplies</p>
             </div>
         </div>
-
         <button id="refresh-btn" onclick="manualRefresh()" class="w-9 h-9 bg-white/5 border border-white/5 text-slate-400 rounded-xl flex items-center justify-center active:scale-90 transition duration-300">
             <i class="fas fa-sync-alt text-xs"></i>
         </button>
@@ -38,10 +40,13 @@
 
     <main class="px-6 mt-6 space-y-6">
 
+        <!-- حاوية الفيديو الترويجي -->
         <div id="ad-banner-container" class="hidden transition-all duration-500"></div>
 
+        <!-- 🏢 1️⃣ لوحة المتجر الرئيسية -->
         <div id="view-home" class="view-panel space-y-6">
             
+            <!-- أزرار اختيار نظام التخطيط -->
             <div class="flex justify-between items-center bg-slate-950/60 p-2 rounded-2xl border border-white/5">
                 <span class="text-[10px] text-slate-400 font-bold pr-2">طريقة عرض المنتجات</span>
                 <div class="flex gap-1">
@@ -51,28 +56,31 @@
                 </div>
             </div>
 
+            <!-- تصنيفات الأقسام الفورية -->
             <div class="space-y-3">
                 <h2 class="font-black text-xs text-slate-400 flex items-center gap-2">
                     <i class="fas fa-tags text-emerald-400"></i> أقسام المتجر الفورية
                 </h2>
                 <div id="categories-chips" class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                    </div>
+                    <!-- تُبنى الأقسام هنا -->
+                </div>
             </div>
 
-            <div class="space-y-3">
+            <!-- 🕹️ قسم شحن الألعاب الثابت والظاهر دائماً -->
+            <div class="space-y-3 block clear-both" style="display: block !important;">
                 <h2 class="font-black text-xs text-slate-400 flex items-center gap-2">
                     <i class="fas fa-gamepad text-emerald-400"></i> قسم الشحن التلقائي للألعاب
                 </h2>
                 <div class="grid grid-cols-2 gap-3">
                     <div onclick="openGameTopup('pubg_mobile')" class="card-glass flex items-center gap-3 p-4 bg-slate-900/40 rounded-2xl border border-white/5 active:scale-95 transition cursor-pointer">
-                        <div class="w-10 h-10 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center text-sm"><i class="fas fa-crosshairs"></i></div>
+                        <div class="w-10 h-10 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center text-sm shrink-0"><i class="fas fa-crosshairs"></i></div>
                         <div class="text-right">
                             <h3 class="font-black text-xs text-slate-200">ببجي موبايل</h3>
                             <p class="text-[9px] text-slate-500 font-bold">شحن UC فوري</p>
                         </div>
                     </div>
                     <div onclick="openGameTopup('free_fire')" class="card-glass flex items-center gap-3 p-4 bg-slate-900/40 rounded-2xl border border-white/5 active:scale-95 transition cursor-pointer">
-                        <div class="w-10 h-10 bg-red-500/10 text-red-400 rounded-xl flex items-center justify-center text-sm"><i class="fas fa-fire"></i></div>
+                        <div class="w-10 h-10 bg-red-500/10 text-red-400 rounded-xl flex items-center justify-center text-sm shrink-0"><i class="fas fa-fire"></i></div>
                         <div class="text-right">
                             <h3 class="font-black text-xs text-slate-200">فري فاير</h3>
                             <p class="text-[9px] text-slate-500 font-bold">شحن جواهر فوري</p>
@@ -81,93 +89,81 @@
                 </div>
             </div>
 
-            <div class="space-y-3">
+            <!-- قائمة الخدمات والمنتجات -->
+            <div class="space-y-3 pt-2">
                 <h2 class="font-black text-xs text-slate-400 flex items-center gap-2">
                     <i class="fas fa-cubes text-emerald-400"></i> الخدمات والمنتجات المتوفرة
                 </h2>
                 <div id="categories-list" class="cards-container mode-dual pb-12">
-                    </div>
+                    <!-- تُعرض المنتجات ديناميكياً هنا -->
+                </div>
             </div>
         </div>
 
+        <!-- 🧾 2️⃣ لوحة أرشيف الفواتير السابقة -->
         <div id="view-orders" class="view-panel space-y-4 hidden">
             <h2 class="font-black text-sm text-slate-200 text-right mb-4 flex items-center gap-2"><i class="fas fa-receipt text-emerald-400"></i> سجل الفواتير والمشتريات</h2>
-            <div id="orders-list" class="space-y-3 pb-12">
-                </div>
+            <div id="orders-list" class="space-y-3 pb-12"></div>
         </div>
 
+        <!-- 💬 3️⃣ لوحة الرسائل والإشعارات -->
         <div id="view-notifications" class="view-panel space-y-6 hidden">
             <h2 class="font-black text-sm text-slate-200 text-right flex items-center gap-2"><i class="fas fa-bell text-emerald-400"></i> صندوق الإشعارات والمراسلة</h2>
-            
             <div class="bg-slate-900/40 p-5 rounded-3xl border border-white/5 space-y-4">
                 <h3 class="font-black text-emerald-400 text-xs flex items-center gap-2"><i class="fas fa-comments"></i> مراسلة الإدارة المركزية</h3>
-                <p class="text-[10px] text-slate-400 leading-relaxed">اكتب استفسارك أو طلب التعبئة هنا، وسيتم مراجعته والرد عليك في شاشة الإشعارات مباشرة بدون الحاجة لمغادرة المتجر.</p>
                 <div class="flex gap-2">
-                    <input type="text" id="support-msg-input" class="flex-1 bg-black/60 border border-white/10 rounded-xl p-3 text-xs outline-none text-white placeholder-slate-500 text-right" placeholder="اكتب رسالتك وتفاصيل طلبك هنا...">
-                    <button onclick="sendSupportMessage()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-black px-5 rounded-xl text-xs active:scale-95 transition duration-200">إرسال</button>
+                    <input type="text" id="support-msg-input" class="flex-1 bg-black/60 border border-white/10 rounded-xl p-3 text-xs outline-none text-white text-right" placeholder="اكتب رسالتك وتفاصيل طلبك هنا...">
+                    <button onclick="sendSupportMessage()" class="bg-emerald-500 text-black font-black px-5 rounded-xl text-xs active:scale-95 transition">إرسال</button>
                 </div>
             </div>
-
-            <div id="notifications-list" class="space-y-3 pb-12">
-                </div>
+            <div id="notifications-list" class="space-y-3 pb-12"></div>
         </div>
 
+        <!-- 👤 4️⃣ لوحة الحساب الشخصي والمحفظة الرقمية -->
         <div id="view-account" class="view-panel space-y-6 hidden">
-            
             <div id="auth-section" class="bg-slate-900/30 p-6 rounded-3xl border border-white/5 space-y-4 text-right">
                 <h2 id="auth-title" class="font-black text-sm text-emerald-400">تسجيل الدخول</h2>
-                
                 <div id="auth-name-box" class="space-y-2 hidden">
                     <label class="text-[10px] text-slate-400 font-bold block">الاسم الكامل</label>
-                    <input type="text" id="auth-name" class="w-full bg-black/50 border border-white/5 rounded-xl p-3 text-xs outline-none text-slate-100 text-right" placeholder="أدخل اسمك الثلاثي">
+                    <input type="text" id="auth-name" class="w-full bg-black/50 border border-white/5 rounded-xl p-3 text-xs text-right" placeholder="أدخل اسمك الثلاثي">
                 </div>
-
                 <div class="space-y-2">
-                    <label class="text-[10px] text-slate-400 font-bold block">رقم الهاتف (الرقم التعريفي)</label>
-                    <input type="tel" id="auth-phone" class="w-full bg-black/50 border border-white/5 rounded-xl p-3 text-xs outline-none text-slate-100 text-right" placeholder="77xxxxxxx">
+                    <label class="text-[10px] text-slate-400 font-bold block">رقم الهاتف</label>
+                    <input type="tel" id="auth-phone" class="w-full bg-black/50 border border-white/5 rounded-xl p-3 text-xs text-right" placeholder="77xxxxxxx">
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-[10px] text-slate-400 font-bold block">كلمة المرور</label>
-                    <input type="password" id="auth-pass" class="w-full bg-black/50 border border-white/5 rounded-xl p-3 text-xs outline-none text-slate-100 text-right" placeholder="••••••••">
+                    <input type="password" id="auth-pass" class="w-full bg-black/50 border border-white/5 rounded-xl p-3 text-xs text-right" placeholder="••••••••">
                 </div>
-
-                <button onclick="handleAuth()" id="auth-submit-btn" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-xs active:scale-95 transition">دخول آمن</button>
-                
+                <button onclick="handleAuth()" id="auth-submit-btn" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-xs transition">دخول آمن</button>
                 <div class="text-center pt-2">
-                    <span id="auth-toggle-text" class="text-[10px] text-slate-500 font-bold">ليس لديك حساب؟</span>
-                    <button id="auth-toggle-btn" onclick="toggleAuthMode()" class="text-[10px] text-emerald-400 font-black mr-1 underline">إنشاء حساب جديد</button>
+                    <button id="auth-toggle-btn" onclick="toggleAuthMode()" class="text-[10px] text-emerald-400 font-black underline">إنشاء حساب جديد</button>
                 </div>
             </div>
 
             <div id="profile-section" class="space-y-6 hidden">
-                <div class="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 rounded-[2rem] border border-white/10 text-right relative overflow-hidden shadow-2xl">
-                    <div class="absolute -top-12 -left-12 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl"></div>
-                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">المحفظة الرقمية المعتمدة</span>
-                    
+                <div class="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 rounded-[2rem] border border-white/10 text-right relative overflow-hidden">
+                    <span class="text-[9px] font-black text-slate-500 bg-white/5 px-3 py-1 rounded-full border border-white/5">المحفظة الرقمية المعتمدة</span>
                     <div class="mt-4">
                         <h3 id="user-display-name" class="font-black text-base text-slate-200">--</h3>
                         <p id="user-display-phone" class="text-xs text-slate-500 font-bold mt-0.5">--</p>
                     </div>
-
                     <div class="mt-6 pt-4 border-t border-white/5 flex justify-between items-end">
-                        <span class="text-[10px] text-slate-400 font-bold pb-1">الرصيد المتاح بالحساب</span>
-                        <div class="text-right">
+                        <span class="text-[10px] text-slate-400 font-bold">الرصيد المتاح</span>
+                        <div>
                             <span id="user-display-balance" class="text-2xl font-black text-emerald-400">0</span>
-                            <span class="text-xs font-black text-emerald-500/80 mr-1">YER</span>
+                            <span class="text-xs font-black text-emerald-500 mr-1">YER</span>
                         </div>
                     </div>
                 </div>
-
-                <button onclick="logout()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black py-3.5 rounded-xl text-xs border border-red-500/10 active:scale-95 transition">
-                    <i class="fas fa-sign-out-alt ml-1"></i> تسجيل الخروج من هذا الحساب
-                </button>
+                <button onclick="logout()" class="w-full bg-red-500/10 text-red-400 font-black py-3.5 rounded-xl text-xs border border-red-500/10 transition">تسجيل الخروج</button>
             </div>
         </div>
 
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 z-[2000] bg(#05070a)/70 backdrop-blur-2xl border-t border-white/5 px-4 pb-safe-bottom">
+    <!-- 🧭 شريط التنقل السفلي الثابت -->
+    <div class="fixed bottom-0 left-0 right-0 z-[2000] bg-[#05070a]/90 backdrop-blur-2xl border-t border-white/5 px-4 pb-safe-bottom">
         <nav class="flex justify-around items-center h-20">
             <button onclick="changeView('home', this)" class="nav-item text-emerald-400"><i class="fas fa-store text-base"></i><span>المتجر</span></button>
             <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt text-base"></i><span>فواتيري</span></button>
@@ -179,9 +175,11 @@
         </nav>
     </div>
 
-    <div id="toast" class="fixed bottom-28 left-6 right-6 z-[4000] bg-emerald-500 text-black px-5 py-4 rounded-2xl text-xs font-black shadow-2xl text-center hidden"></div>
+    <!-- 🔔 نظام التنبيهات -->
+    <div id="toast" class="fixed bottom-28 left-6 right-6 z-[4000] bg-emerald-500 text-black px-5 py-4 rounded-2xl text-xs font-black text-center hidden"></div>
 
-    <div id="sheet-overlay" class="fixed inset-0 bg-black/95 z-[1500] hidden" onclick="closeSheet()"></div>
+    <!-- 🛍️ شيت المنتجات -->
+    <div id="sheet-overlay" class="fixed inset-0 bg-black/80 z-[1500] hidden" onclick="closeSheet()"></div>
     <div id="product-sheet" class="fixed bottom-[-100%] left-0 right-0 z-[1600] bg-[#05070a] border-t border-white/10 rounded-t-[3rem] p-8 transition-all duration-500 max-h-[85vh] overflow-y-auto">
         <img id="sh-img" class="w-full h-56 object-cover rounded-[2rem] mb-5 bg-slate-900/60" onerror="this.src='https://placehold.co/600x400/0c0f14/emerald?text=Image+Error'">
         <div class="flex justify-between items-start text-right">
@@ -192,29 +190,26 @@
             <span id="sh-price" class="text-xs font-black text-emerald-400">0 YER</span>
         </div>
         <div class="mt-6 pt-4 border-t border-white/5">
-            <button onclick="handleOrderSubmit()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-xl text-xs active:scale-95 transition">تأكيد طلب الشراء الفوري</button>
+            <button onclick="handleOrderSubmit()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-xl text-xs transition">تأكيد طلب الشراء الفوري</button>
         </div>
     </div>
 
+    <!-- 🕹️ شيت شحن الألعاب من الأسفل -->
     <div id="game-topup-sheet" class="fixed inset-0 z-[3000] bg-black/95 flex items-end hidden">
         <div class="w-full bg-[#05070a] border-t border-white/10 rounded-t-[3rem] p-8 space-y-5 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center">
                 <button onclick="closeGameSheet()" class="w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-xs text-slate-400"><i class="fas fa-times"></i></button>
                 <h2 id="game-title" class="font-black text-sm text-slate-200">شحن الألعاب الفوري</h2>
             </div>
-
             <div class="space-y-2 text-right">
-                <label class="text-[10px] text-slate-400 font-bold">أدخل معرف اللاعب (ID) بدقة:</label>
-                <input type="text" id="game-user-id" class="w-full bg-black/50 border border-white/5 rounded-xl p-3.5 text-xs text-center outline-none text-emerald-400 font-black tracking-widest" placeholder="100484930">
+                <label class="text-[10px] text-slate-400 font-bold">أدخل معرف اللاعب (ID):</label>
+                <input type="text" id="game-user-id" class="w-full bg-black/50 border border-white/5 rounded-xl p-3.5 text-xs text-center text-emerald-400 font-black tracking-widest outline-none" placeholder="100484930">
             </div>
-
             <div class="space-y-3">
-                <label class="text-[10px] text-slate-400 font-bold block text-right">اختر فئة أو حزمة الشحن:</label>
-                <div id="denom-list" class="space-y-2">
-                    </div>
+                <label class="text-[10px] text-slate-400 font-bold block text-right">اختر الحزمة:</label>
+                <div id="denom-list" class="space-y-2"></div>
             </div>
-
-            <button onclick="validateAndPayGame()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-xl text-xs active:scale-95 transition">تثبيت عملية الشحن التلقائي</button>
+            <button onclick="validateAndPayGame()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-xl text-xs transition">تثبيت عملية الشحن التلقائي</button>
         </div>
     </div>
 

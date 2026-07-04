@@ -1,12 +1,13 @@
 const API = window.location.origin;
 let state = {
-    categories: [], prods: [], cart: [], user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
-    games: [], selectedGame: null, selectedDenom: null
+    categories: [], prods: [], cart: [],
+    user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
+    games: []
 };
 
 let videoPlayer;
 
-// استخراج ID اليوتيوب وتشغيل المشغل
+// --- 1. الفيديو المطور (Plyr + Database) ---
 async function fetchAds() {
     try {
         let res = await fetch(`${API}/api/ads`);
@@ -14,7 +15,7 @@ async function fetchAds() {
         const container = document.getElementById('ad-video-container');
         if (ads && ads.length > 0 && ads[0].videoUrl) {
             const vidUrl = ads[0].videoUrl;
-            // استخراج ID سواء كان رابط embed أو رابط عادي
+            // استخراج ID اليوتيوب
             const vidId = vidUrl.includes('embed/') ? vidUrl.split('embed/')[1].split('?')[0] : vidUrl.split('v=')[1];
 
             if (!videoPlayer) {
@@ -36,7 +37,7 @@ function toggleMute() {
     }
 }
 
-// نظام الدردشة الداخلية
+// --- 2. نظام الدردشة المطور ---
 async function fetchMessages() {
     if(!state.user) return;
     try {
@@ -47,7 +48,7 @@ async function fetchMessages() {
             list.innerHTML = data.map(m => {
                 const isAdmin = m.sender === "ADMIN";
                 return `
-                <div class="flex ${isAdmin ? 'justify-start' : 'justify-end'} mb-2">
+                <div class="flex ${isAdmin ? 'justify-start' : 'justify-end'} mb-2 animate-fadeIn">
                     <div class="max-w-[85%] p-3 ${isAdmin ? 'bg-white/10 rounded-t-2xl rounded-bl-2xl border border-white/5' : 'bg-emerald-600 text-black rounded-t-2xl rounded-br-2xl'}">
                         <p class="text-[12px] font-bold">${m.body}</p>
                         <span class="text-[8px] opacity-40 block mt-1">${m.date}</span>
@@ -71,66 +72,40 @@ async function sendUserMessage() {
     if(res.ok) { inp.value = ""; fetchMessages(); }
 }
 
-// مزامنة وفتح التطبيق
+// --- 3. وظائف المتجر والحساب ---
 async function unlockApp() {
     document.getElementById('splash').classList.add('hidden');
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('app-layout').classList.remove('hidden');
-    ui(); fetchAds(); initProducts(); fetchGames();
+    ui(); fetchAds(); initProducts();
 }
 
 function ui() {
     if(!state.user) return;
     document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
+    document.getElementById('u-avatar').innerText = state.user.name.charAt(0);
     document.getElementById('acc-name').innerText = state.user.name;
     document.getElementById('acc-phone').innerText = state.user.phone;
-    document.getElementById('u-avatar').innerText = state.user.name.charAt(0);
-    const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
-    document.getElementById('cart-total').innerText = total.toLocaleString() + " YER";
 }
 
 async function initProducts() {
     state.categories = await (await fetch(`${API}/api/categories`)).json();
     state.prods = await (await fetch(`${API}/api/products`)).json();
     document.getElementById('categories-list').innerHTML = state.categories.map(c => `
-        <div onclick="openCategory('${c.name}')" class="bg-white/5 p-4 rounded-3xl border border-white/5 text-center">
+        <div onclick="openCategory('${c.name}')" class="bg-white/5 p-4 rounded-3xl border border-white/5 text-center cursor-pointer active:scale-95 transition">
             <img src="${c.img}" class="w-full h-24 object-cover rounded-2xl mb-2">
             <h3 class="text-xs font-black">${c.name}</h3>
         </div>`).join('');
 }
 
-async function handleAuth() {
-    const isS = !document.getElementById('signup-name-container').classList.contains('hidden');
-    const name = document.getElementById('auth-name').value;
-    const phone = document.getElementById('auth-phone').value;
-    const pass = document.getElementById('auth-pass').value;
-    const res = await fetch(`${API}/api/auth/${isS?'signup':'login'}`, {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ name, phone, pass })
-    });
-    const d = await res.json();
-    if(d.success) { state.user = d.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); unlockApp(); }
-    else alert(d.message);
-}
-
-function changeView(v, btn) {
-    document.querySelectorAll('.view-content').forEach(x => x.classList.add('hidden'));
-    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-    document.getElementById(`view-${v}`).classList.remove('hidden');
-    if(btn) btn.classList.add('active');
-    if(v === 'notifications') fetchMessages();
-    if(v === 'orders') loadOrders();
-}
-
-// الألعاب والمتجر (مختصر)
 function openCategory(n) {
     document.getElementById('cat-title-display').innerText = n;
     const filtered = state.prods.filter(p => p.cat === n);
     document.getElementById('products-list').innerHTML = filtered.map(p => `
-        <div onclick="openProductSheet('${p._id}')" class="p-4 bg-white/5 rounded-2xl flex justify-between items-center">
+        <div onclick="openProductSheet('${p._id}')" class="p-4 bg-white/5 rounded-2xl flex justify-between items-center mb-2">
             <div class="flex items-center gap-4">
                 <img src="${p.img}" class="w-16 h-16 rounded-xl object-cover">
-                <div><h4 class="font-bold">${p.name}</h4><p class="text-emerald-400 font-bold">${p.price} YER</p></div>
+                <div><h4 class="font-bold text-sm">${p.name}</h4><p class="text-emerald-400 font-bold text-xs">${p.price} YER</p></div>
             </div>
             <i class="fas fa-plus-circle text-emerald-500"></i>
         </div>`).join('');
@@ -146,25 +121,66 @@ function openProductSheet(id) {
     document.getElementById('sheet-overlay').classList.remove('hidden');
     setTimeout(() => document.getElementById('product-sheet').style.bottom = "0", 10);
 }
-function addToCart(p) { let i = state.cart.find(x => x._id === p._id); if(i) i.qty++; else state.cart.push({...p, qty:1}); ui(); }
-function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
+
+function addToCart(p) {
+    let i = state.cart.find(x => x._id === p._id);
+    if(i) i.qty++; else state.cart.push({...p, qty:1});
+    toast("🛒 تمت الإضافة للسلة");
+}
 
 async function checkout() {
     const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
-    if(state.user.bal < total) return alert("الرصيد غير كافٍ");
-    const res = await fetch(`${API}/api/orders/add`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone: state.user.phone, order: { total, items: state.cart } }) });
-    if(res.ok) { state.cart = []; sync(); changeView('orders'); }
+    if(state.user.bal < total) return toast("❌ الرصيد غير كافٍ");
+    const res = await fetch(`${API}/api/orders/add`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ phone: state.user.phone, order: { total, items: state.cart } })
+    });
+    if(res.ok) { state.cart = []; sync(); changeView('orders'); toast("✅ تم إرسال الطلب"); }
 }
 
 async function loadOrders() {
     const orders = await (await fetch(`${API}/api/orders/${state.user.phone}`)).json();
-    document.getElementById('orders-list').innerHTML = orders.map(o => `<div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between"><div><h4 class="font-bold">${o.id}</h4><p class="text-xs text-slate-400">${o.status}</p></div><div class="font-black text-emerald-400">${o.total} YER</div></div>`).join('');
+    document.getElementById('orders-list').innerHTML = orders.map(o => `
+        <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between items-center mb-3">
+            <div><h4 class="font-bold text-xs">${o.id}</h4><p class="text-[10px] text-slate-400">${o.status}</p></div>
+            <div class="font-black text-emerald-400 text-sm">${o.total} YER</div>
+        </div>`).join('');
 }
 
-async function sync() {
+// --- 4. الدخول والمزامنة ---
+async function handleAuth() {
+    const isS = !document.getElementById('signup-name-container').classList.contains('hidden');
+    const name = document.getElementById('auth-name').value;
+    const phone = document.getElementById('auth-phone').value;
+    const pass = document.getElementById('auth-pass').value;
+    
+    const res = await fetch(`${API}/api/auth/${isS?'signup':'login'}`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, phone, pass })
+    });
+    const d = await res.json();
+    if(d.success) { 
+        state.user = d.user; 
+        localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); 
+        unlockApp(); 
+    } else toast("❌ " + d.message);
+}
+
+function sync() {
     if(!state.user) return;
-    const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
-    const d = await res.json(); if(d.success) { state.user = d.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); ui(); }
+    fetch(`${API}/api/auth/user/${state.user.phone}`).then(r => r.json()).then(d => {
+        if(d.success) { state.user = d.user; localStorage.setItem('abu_user_v30', JSON.stringify(state.user)); ui(); }
+    });
+}
+
+function changeView(v, btn) {
+    document.querySelectorAll('.view-content').forEach(x => x.classList.add('hidden'));
+    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+    document.getElementById(`view-${v}`).classList.remove('hidden');
+    if(btn) btn.classList.add('active');
+    if(v === 'notifications') fetchMessages();
+    if(v === 'orders') loadOrders();
 }
 
 function toggleAuthMode() {
@@ -174,6 +190,8 @@ function toggleAuthMode() {
     document.getElementById('auth-btn').innerText = isS ? "تسجيل جديد" : "دخول آمن";
 }
 
+function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3000); }
+function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
 function logout() { localStorage.clear(); location.reload(); }
 
-window.onload = () => { if(state.user) unlockApp(); else { document.getElementById('splash').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('hidden'); } };
+window.onload = () => { setTimeout(() => { if(state.user) unlockApp(); else { document.getElementById('splash').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('hidden'); } }, 2000); };

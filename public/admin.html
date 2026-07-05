@@ -28,7 +28,7 @@
         <header class="flex justify-between items-center border-b border-white/5 pb-6">
             <div>
                 <h1 class="text-3xl font-black text-emerald-400">لوحة تحكم أبو حسين</h1>
-                <p class="text-xs text-slate-400 mt-1">إدارة كاملة للمتجر والعمليات والمحتوى</p>
+                <p class="text-xs text-slate-400 mt-1">إدارة كاملة للمتجر والعمليات والمحتوى (معالج الروابط الذكي مفعل)</p>
             </div>
             <button onclick="manualDashboardRefresh()" class="bg-white/5 px-4 py-2 rounded-xl text-xs border border-white/5 font-bold text-emerald-400">تحديث البيانات 🔄</button>
         </header>
@@ -112,6 +112,26 @@
             document.getElementById('msg-phone-container').classList.toggle('hidden', this.value === 'ALL');
         });
 
+        // 🛠️ دالة ذكية لتنقية ومعالجة روابط الصور لتناسب قاعدة البيانات وتظهر للمستخدمين
+        function cleanImageUrl(url) {
+            if (!url) return '';
+            let cleanUrl = url.trim();
+
+            // إذا كان الرابط من Google Drive مشترك (روابط العرض والمشاركة)
+            if (cleanUrl.includes('drive.google.com/file/d/')) {
+                let fileId = cleanUrl.split('/d/')[1].split('/')[0];
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+            }
+            
+            // تحقق مبدئي إذا كان الرابط لا ينتهي بامتداد صورة معروف أو ليس رابطاً مباشراً
+            const isDirectImage = /\.(jpeg|jpg|gif|png|webp|svg|bmp)$/i.test(cleanUrl.split('?')[0]);
+            if (!isDirectImage && (cleanUrl.includes('share.google') || cleanUrl.includes('link') || cleanUrl.includes('forms'))) {
+                console.warn("تنبيه: الرابط المدخل قد لا يكون رابط صورة مباشر وقد لا يظهر في التطبيق.");
+            }
+
+            return cleanUrl;
+        }
+
         async function loginAdmin() {
             masterKey = document.getElementById('admin-key-input').value;
             await loadDashboard();
@@ -185,7 +205,7 @@
             document.getElementById('adm-categories-list').innerHTML = (data.categories || []).map(c => `
                 <div class="p-3 bg-slate-900/40 rounded-xl border border-white/5 flex justify-between items-center">
                     <div class="flex items-center gap-2">
-                        <img src="${c.img}" class="w-8 h-8 object-cover rounded-md bg-slate-800">
+                        <img src="${c.img}" class="w-8 h-8 object-cover rounded-md bg-slate-800" onerror="this.src='https://placehold.co/100x100?text=Error+Link'">
                         <h4 class="text-xs font-black">${c.name}</h4>
                     </div>
                     <div class="flex gap-1">
@@ -198,7 +218,7 @@
             document.getElementById('adm-products-list').innerHTML = (data.products || []).map(p => `
                 <div class="p-3 bg-slate-900/40 rounded-xl border border-white/5 flex justify-between items-center">
                     <div class="flex items-center gap-2">
-                        <img src="${p.img}" class="w-10 h-10 object-cover rounded-xl bg-slate-800">
+                        <img src="${p.img}" class="w-10 h-10 object-cover rounded-xl bg-slate-800" onerror="this.src='https://placehold.co/100x100?text=Error+Link'">
                         <div>
                             <h4 class="text-xs font-black">${p.name}</h4>
                             <p class="text-[10px] text-emerald-400">${p.price} YER <span class="text-slate-500">(${p.cat})</span></p>
@@ -252,34 +272,47 @@
         async function addCategory() {
             const name = document.getElementById('cat-name').value;
             const sub = document.getElementById('cat-sub').value;
-            const img = document.getElementById('cat-img').value;
+            const rawImg = document.getElementById('cat-img').value;
+            const img = cleanImageUrl(rawImg); // معالجة وتصفية الرابط تلقائياً
+            
             await fetch(`${API}/api/admin/category/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name, sub, img })
             });
             showAdminToast("📁 تم إضافة القسم!");
+            document.getElementById('cat-name').value = '';
+            document.getElementById('cat-sub').value = '';
+            document.getElementById('cat-img').value = '';
             loadDashboard();
         }
 
         async function addProduct() {
             const name = document.getElementById('p-name').value;
             const price = document.getElementById('p-price').value;
-            const img = document.getElementById('p-img').value;
+            const rawImg = document.getElementById('p-img').value;
+            const img = cleanImageUrl(rawImg); // معالجة وتصفية الرابط تلقائياً
             const cat = document.getElementById('p-cat').value;
+            
             await fetch(`${API}/api/admin/product/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name, price, img, cat })
             });
             showAdminToast("🛍️ تم إضافة المنتج!");
+            document.getElementById('p-name').value = '';
+            document.getElementById('p-price').value = '';
+            document.getElementById('p-img').value = '';
+            document.getElementById('p-cat').value = '';
             loadDashboard();
         }
 
         async function editCategoryPrompt(oldName, oldSub, oldImg) {
             const sub = prompt("تعديل الوصف:", oldSub);
-            const img = prompt("تعديل رابط الصورة:", oldImg);
-            if(sub === null || img === null) return;
+            const rawImg = prompt("تعديل رابط الصورة:", oldImg);
+            if(sub === null || rawImg === null) return;
+            const img = cleanImageUrl(rawImg); // تصفية الرابط
+            
             await fetch(`${API}/api/admin/category/edit`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -301,9 +334,11 @@
 
         async function editProductPrompt(oldName, oldPrice, oldImg, oldCat) {
             const price = prompt("تعديل السعر:", oldPrice);
-            const img = prompt("تعديل رابط الصورة:", oldImg);
+            const rawImg = prompt("تعديل رابط الصورة:", oldImg);
             const cat = prompt("تعديل القسم:", oldCat);
-            if(!price || isNaN(price) || img === null || !cat) return;
+            if(!price || isNaN(price) || rawImg === null || !cat) return;
+            const img = cleanImageUrl(rawImg); // تصفية الرابط
+            
             await fetch(`${API}/api/admin/product/edit`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -341,7 +376,3 @@
     </script>
 </body>
 </html>
-
-
-
-

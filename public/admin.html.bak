@@ -6,7 +6,7 @@
     <title>لوحة تحكم أبو حسين المركزية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
     <style>*{font-family:'Cairo',sans-serif;}</style>
 </head>
 <body class="bg-[#05070a] text-slate-100 min-h-screen pb-20">
@@ -249,36 +249,6 @@
             document.getElementById('set-ad-url').value = '';
         }
 
-        // دالة إرسال الإشعارات والرسائل (كانت مفقودة)
-        async function sendAdminMessage() {
-            const receiverType = document.getElementById('msg-receiver-type').value;
-            const receiver = receiverType === 'ALL' ? 'ALL' : document.getElementById('msg-phone').value;
-            const title = document.getElementById('msg-title').value;
-            const body = document.getElementById('msg-body').value;
-
-            if (receiverType === 'INDIVIDUAL' && !receiver) return alert("⚠️ يرجى إدخال رقم هاتف المستخدم");
-            if (!title || !body) return alert("⚠️ يرجى كتابة عنوان وتفاصيل الرسالة");
-
-            try {
-                let res = await fetch(`${API}/api/messages/send`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ adminPass: masterKey, receiver, title, body })
-                });
-                let result = await res.json();
-                if (result.success) {
-                    showAdminToast("📢 تم بث الإشعار بنجاح!");
-                    document.getElementById('msg-title').value = "";
-                    document.getElementById('msg-body').value = "";
-                    playAdminSound('snd-success');
-                } else {
-                    alert("❌ فشل إرسال الرسالة، تأكد من الرمز السري");
-                }
-            } catch (e) {
-                alert("❌ خطأ في الاتصال بالسيرفر");
-            }
-        }
-
         async function addCategory() {
             const name = document.getElementById('cat-name').value;
             const sub = document.getElementById('cat-sub').value;
@@ -306,29 +276,60 @@
             loadDashboard();
         }
 
-        // الدوال المتبقية...
+        async function editCategoryPrompt(oldName, oldSub, oldImg) {
+            const sub = prompt("تعديل الوصف:", oldSub);
+            const img = prompt("تعديل رابط الصورة:", oldImg);
+            if(sub === null || img === null) return;
+            await fetch(`${API}/api/admin/category/edit`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, name: oldName, sub, img })
+            });
+            showAdminToast("📁 تم الحفظ!");
+            loadDashboard();
+        }
+
         async function deleteCategoryReq(name) {
             if(!confirm(`حذف القسم [ ${name} ]؟`)) return;
-            // يجب توفر مسار في server.js لهذا الطلب
-            alert("ميزة الحذف تتطلب مسار API خاص");
+            await fetch(`${API}/api/admin/category/delete`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, name })
+            });
+            loadDashboard();
+        }
+
+        async function editProductPrompt(oldName, oldPrice, oldImg, oldCat) {
+            const price = prompt("تعديل السعر:", oldPrice);
+            const img = prompt("تعديل رابط الصورة:", oldImg);
+            const cat = prompt("تعديل القسم:", oldCat);
+            if(!price || isNaN(price) || img === null || !cat) return;
+            await fetch(`${API}/api/admin/product/edit`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, name: oldName, price: Number(price), img, cat })
+            });
+            showAdminToast("🛍️ تم تحديث المنتج!");
+            loadDashboard();
         }
 
         async function deleteProductReq(name) {
             if(!confirm(`حذف منتج [ ${name} ]؟`)) return;
-             // يجب توفر مسار في server.js لهذا الطلب
-            alert("ميزة الحذف تتطلب مسار API خاص");
+            await fetch(`${API}/api/admin/product/delete`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, name })
+            });
+            loadDashboard();
         }
 
         function switchTab(tabId) {
             document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('[id^="tab-"]').forEach(b => {
-                b.classList.remove('bg-emerald-500', 'text-black');
-                b.classList.add('bg-white/5', 'text-slate-400');
-            });
+            document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.replace('bg-emerald-500', 'bg-white/5'));
+            document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.replace('text-black', 'text-slate-400'));
             document.getElementById(`panel-${tabId}`).classList.remove('hidden');
-            const activeTab = document.getElementById(`tab-${tabId}`);
-            activeTab.classList.remove('bg-white/5', 'text-slate-400');
-            activeTab.classList.add('bg-emerald-500', 'text-black');
+            document.getElementById(`tab-${tabId}`).classList.replace('bg-white/5', 'bg-emerald-500');
+            document.getElementById(`tab-${tabId}`).classList.replace('text-slate-400', 'text-black');
         }
 
         function showAdminToast(m) {
@@ -340,3 +341,6 @@
     </script>
 </body>
 </html>
+
+
+

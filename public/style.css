@@ -22,7 +22,6 @@ body {
     background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(0,0,0,0) 70%);
 }
 
-/* تعديل خصائص عناصر النافبار الستة */
 .nav-item {
     display: flex;
     flex-direction: column;
@@ -68,43 +67,87 @@ body {
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     text-align: center;
 }
-.card-glass:active {
-    transform: scale(0.96);
-}
 
-/* أنظمة التخطيط الثلاثية الشغالة بالكامل */
-.cards-container.mode-dual {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-}
-.cards-container.mode-matrix {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.6rem;
-}
-.cards-container.mode-matrix .card-glass { padding: 0.75rem; border-radius: 1.25rem; }
-.cards-container.mode-matrix .card-glass img { height: 5rem; border-radius: 1rem; }
-.cards-container.mode-matrix .card-glass h3 { font-size: 11px; }
-
-.cards-container.mode-list {
+/* --- أزرار الدفع الجديدة --- */
+.cart-actions {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 12px;
+    margin-top: 20px;
 }
-.cards-container.mode-list .card-glass {
+
+.btn-payment {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    text-align: right;
-    padding: 0.85rem;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 1.1rem;
+    border-radius: 1.25rem;
+    font-size: 14px;
+    font-weight: 900;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
 }
-.cards-container.mode-list .card-glass img { width: 4.5rem; height: 4.5rem; margin-bottom: 0 !important; border-radius: 1rem; }
+
+.btn-wallet {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #000;
+    box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+}
+
+.btn-whatsapp {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    color: white;
+    box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.3);
+}
+
+.btn-cod {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3);
+}
+
+.btn-payment:active {
+    transform: scale(0.95);
+    filter: brightness(0.9);
+}
+
+.btn-payment::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg);
+    transition: 0.5s;
+    pointer-events: none;
+}
+
+.btn-payment:hover::after { left: 120%; }
+
+.location-status {
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+/* التخطيط */
+.cards-container.mode-dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.cards-container.mode-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+.cards-container.mode-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
 
 @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .animate-slideUp { animation: slideUp 0.35s ease forwards; }
-
-

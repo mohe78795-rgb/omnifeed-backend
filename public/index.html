@@ -114,7 +114,6 @@
 
         <div id="view-notifications" class="view-content hidden space-y-6 animate-fadeIn">
             <h2 class="text-2xl font-black">صندوق الوارد والدردشة ✉️</h2>
-            
             <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex justify-between items-center">
                 <div>
                     <h3 class="text-sm font-black text-emerald-400">محادثة الإدارة المباشرة</h3>
@@ -124,7 +123,6 @@
                     <i class="fab fa-whatsapp text-sm"></i> بدء الدردشة
                 </a>
             </div>
-
             <div id="messages-list" class="space-y-4 pt-2"></div>
         </div>
 
@@ -133,6 +131,7 @@
             <div id="orders-list" class="space-y-4"></div>
         </div>
 
+        <!-- السلة المحدثة بميزات الدفع المتعددة -->
         <div id="view-cart" class="view-content hidden space-y-6 animate-fadeIn">
             <h2 class="text-2xl font-black">حقيبة التسوق الحالية</h2>
             <div id="cart-list" class="space-y-3"></div>
@@ -140,7 +139,29 @@
                 <span class="text-sm text-slate-400 font-bold">الإجمالي الكلي للسلة:</span>
                 <span id="cart-total" class="text-xl font-black text-emerald-400">0 YER</span>
             </div>
-            <button onclick="checkout()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl text-sm shadow-xl active:scale-95 transition">تأكيد الدفع وإرسال الفاتورة</button>
+            
+            <!-- أزرار الدفع الجديدة -->
+            <div class="cart-actions">
+                <button onclick="processOrder('wallet')" class="btn-payment btn-wallet">
+                    <i class="fas fa-wallet"></i>
+                    <span>تأكيد الدفع من المحفظة</span>
+                </button>
+                
+                <button onclick="processOrder('whatsapp')" class="btn-payment btn-whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>طلب سريع عبر الواتساب</span>
+                </button>
+
+                <button onclick="processOrder('cod')" class="btn-payment btn-cod">
+                    <i class="fas fa-truck-moving"></i>
+                    <span>دفع عند الاستلام</span>
+                </button>
+
+                <p class="location-status">
+                    <i class="fas fa-map-marker-alt text-emerald-500"></i>
+                    يتطلب إذن الموقع الجغرافي لتحديد عنوان التوصيل
+                </p>
+            </div>
         </div>
 
         <div id="view-account" class="view-content hidden space-y-6 animate-fadeIn">

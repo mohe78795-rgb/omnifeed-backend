@@ -28,7 +28,7 @@
         <header class="flex justify-between items-center border-b border-white/5 pb-6">
             <div>
                 <h1 class="text-3xl font-black text-emerald-400">لوحة تحكم أبو حسين</h1>
-                <p class="text-xs text-slate-400 mt-1">إدارة كاملة للمتجر والعمليات والمحتوى (معالج الروابط الذكي مفعل)</p>
+                <p class="text-xs text-slate-400 mt-1">إدارة كاملة للمتجر والعمليات والمحتوى (نظام الرفع الذكي المباشر)</p>
             </div>
             <button onclick="manualDashboardRefresh()" class="bg-white/5 px-4 py-2 rounded-xl text-xs border border-white/5 font-bold text-emerald-400">تحديث البيانات 🔄</button>
         </header>
@@ -85,18 +85,39 @@
                 <input type="text" id="set-ad-url" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="ضع رابط فيديو يوتيوب هنا">
                 <button onclick="addAd()" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">حفظ وتحديث الفيديو</button>
             </div>
+            
+            <!-- 📁 إضافة قسم جديد (محدث بـ لقطة اختيار الملفات) -->
             <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3">
                 <h4 class="font-black text-sm text-emerald-400">📁 إضافة قسم جديد</h4>
                 <input type="text" id="cat-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم القسم">
                 <input type="text" id="cat-sub" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="وصف القسم الفرعي">
-                <input type="text" id="cat-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="رابط صورة القسم">
+                
+                <div class="space-y-1">
+                    <label class="block text-[10px] text-slate-400">صورة القسم (اختر ملف أو ضع رابط مالي):</label>
+                    <input type="file" id="cat-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 bg-black/30 p-2 rounded-xl border border-white/5">
+                    <input type="text" id="cat-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="أو اترك الملف فارغاً وضع رابطاً هنا">
+                </div>
+                
                 <button onclick="addCategory()" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">إنشاء القسم</button>
             </div>
+            
+            <!-- 🛍️ إضافة منتج جديد (محدث بـ لقطة اختيار الملفات) -->
             <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3 md:col-span-2">
                 <h4 class="font-black text-sm text-emerald-400">🛍️ إضافة منتج جديد</h4>
                 <input type="text" id="p-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم منتج الخدمة">
                 <input type="number" id="p-price" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="السعر (YER)">
-                <input type="text" id="p-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="رابط الصورة التوضيحية">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="block text-[10px] text-slate-400">صورة المنتج (اختر من المعرض مباشرة):</label>
+                        <input type="file" id="p-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 bg-black/30 p-2 rounded-xl border border-white/5">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] text-slate-400">أو رابط صورة جاهز:</label>
+                        <input type="text" id="p-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اتركه فارغاً في حال اخترت ملفاً">
+                    </div>
+                </div>
+                
                 <input type="text" id="p-cat" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم القسم التابع له (مطابق تماماً)">
                 <button onclick="addProduct()" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-xs">تثبيت المنتج</button>
             </div>
@@ -112,24 +133,14 @@
             document.getElementById('msg-phone-container').classList.toggle('hidden', this.value === 'ALL');
         });
 
-        // 🛠️ دالة ذكية لتنقية ومعالجة روابط الصور لتناسب قاعدة البيانات وتظهر للمستخدمين
-        function cleanImageUrl(url) {
-            if (!url) return '';
-            let cleanUrl = url.trim();
-
-            // إذا كان الرابط من Google Drive مشترك (روابط العرض والمشاركة)
-            if (cleanUrl.includes('drive.google.com/file/d/')) {
-                let fileId = cleanUrl.split('/d/')[1].split('/')[0];
-                return `https://drive.google.com/uc?export=view&id=${fileId}`;
-            }
-            
-            // تحقق مبدئي إذا كان الرابط لا ينتهي بامتداد صورة معروف أو ليس رابطاً مباشراً
-            const isDirectImage = /\.(jpeg|jpg|gif|png|webp|svg|bmp)$/i.test(cleanUrl.split('?')[0]);
-            if (!isDirectImage && (cleanUrl.includes('share.google') || cleanUrl.includes('link') || cleanUrl.includes('forms'))) {
-                console.warn("تنبيه: الرابط المدخل قد لا يكون رابط صورة مباشر وقد لا يظهر في التطبيق.");
-            }
-
-            return cleanUrl;
+        // 🧠 دالة ذكية لتحويل أي ملف صورة إلى كود نصي مضغوط جاهز لقاعدة البيانات فوراً
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
         }
 
         async function loginAdmin() {
@@ -205,7 +216,7 @@
             document.getElementById('adm-categories-list').innerHTML = (data.categories || []).map(c => `
                 <div class="p-3 bg-slate-900/40 rounded-xl border border-white/5 flex justify-between items-center">
                     <div class="flex items-center gap-2">
-                        <img src="${c.img}" class="w-8 h-8 object-cover rounded-md bg-slate-800" onerror="this.src='https://placehold.co/100x100?text=Error+Link'">
+                        <img src="${c.img}" class="w-8 h-8 object-cover rounded-md bg-slate-800" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
                         <h4 class="text-xs font-black">${c.name}</h4>
                     </div>
                     <div class="flex gap-1">
@@ -218,7 +229,7 @@
             document.getElementById('adm-products-list').innerHTML = (data.products || []).map(p => `
                 <div class="p-3 bg-slate-900/40 rounded-xl border border-white/5 flex justify-between items-center">
                     <div class="flex items-center gap-2">
-                        <img src="${p.img}" class="w-10 h-10 object-cover rounded-xl bg-slate-800" onerror="this.src='https://placehold.co/100x100?text=Error+Link'">
+                        <img src="${p.img}" class="w-10 h-10 object-cover rounded-xl bg-slate-800" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
                         <div>
                             <h4 class="text-xs font-black">${p.name}</h4>
                             <p class="text-[10px] text-emerald-400">${p.price} YER <span class="text-slate-500">(${p.cat})</span></p>
@@ -272,9 +283,15 @@
         async function addCategory() {
             const name = document.getElementById('cat-name').value;
             const sub = document.getElementById('cat-sub').value;
-            const rawImg = document.getElementById('cat-img').value;
-            const img = cleanImageUrl(rawImg); // معالجة وتصفية الرابط تلقائياً
             
+            let img = document.getElementById('cat-img').value;
+            const fileInput = document.getElementById('cat-file');
+            
+            // إذا اختار العميل ملف من الجهاز يتم تحويله فوراً لقاعدة البيانات
+            if (fileInput.files.length > 0) {
+                img = await fileToBase64(fileInput.files[0]);
+            }
+
             await fetch(`${API}/api/admin/category/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -284,16 +301,23 @@
             document.getElementById('cat-name').value = '';
             document.getElementById('cat-sub').value = '';
             document.getElementById('cat-img').value = '';
+            fileInput.value = '';
             loadDashboard();
         }
 
         async function addProduct() {
             const name = document.getElementById('p-name').value;
             const price = document.getElementById('p-price').value;
-            const rawImg = document.getElementById('p-img').value;
-            const img = cleanImageUrl(rawImg); // معالجة وتصفية الرابط تلقائياً
             const cat = document.getElementById('p-cat').value;
             
+            let img = document.getElementById('p-img').value;
+            const fileInput = document.getElementById('p-file');
+            
+            // إذا اختار المشرف ملف من الاستوديو
+            if (fileInput.files.length > 0) {
+                img = await fileToBase64(fileInput.files[0]);
+            }
+
             await fetch(`${API}/api/admin/product/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -304,15 +328,14 @@
             document.getElementById('p-price').value = '';
             document.getElementById('p-img').value = '';
             document.getElementById('p-cat').value = '';
+            fileInput.value = '';
             loadDashboard();
         }
 
         async function editCategoryPrompt(oldName, oldSub, oldImg) {
             const sub = prompt("تعديل الوصف:", oldSub);
-            const rawImg = prompt("تعديل رابط الصورة:", oldImg);
-            if(sub === null || rawImg === null) return;
-            const img = cleanImageUrl(rawImg); // تصفية الرابط
-            
+            const img = prompt("تعديل رابط الصورة:", oldImg);
+            if(sub === null || img === null) return;
             await fetch(`${API}/api/admin/category/edit`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -334,11 +357,9 @@
 
         async function editProductPrompt(oldName, oldPrice, oldImg, oldCat) {
             const price = prompt("تعديل السعر:", oldPrice);
-            const rawImg = prompt("تعديل رابط الصورة:", oldImg);
+            const img = prompt("تعديل رابط الصورة:", oldImg);
             const cat = prompt("تعديل القسم:", oldCat);
-            if(!price || isNaN(price) || rawImg === null || !cat) return;
-            const img = cleanImageUrl(rawImg); // تصفية الرابط
-            
+            if(!price || isNaN(price) || img === null || !cat) return;
             await fetch(`${API}/api/admin/product/edit`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},

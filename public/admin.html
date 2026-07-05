@@ -28,7 +28,7 @@
         <header class="flex justify-between items-center border-b border-white/5 pb-6">
             <div>
                 <h1 class="text-3xl font-black text-emerald-400">لوحة تحكم أبو حسين</h1>
-                <p class="text-xs text-slate-400 mt-1">إدارة كاملة للمتجر والعمليات والمحتوى (نظام الرفع الذكي المباشر)</p>
+                <p class="text-xs text-slate-400 mt-1">إدارة كاملة للمتجر والعمليات والمحتوى (مُعالج الرفع السحابي الفوري 🚀)</p>
             </div>
             <button onclick="manualDashboardRefresh()" class="bg-white/5 px-4 py-2 rounded-xl text-xs border border-white/5 font-bold text-emerald-400">تحديث البيانات 🔄</button>
         </header>
@@ -86,22 +86,20 @@
                 <button onclick="addAd()" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">حفظ وتحديث الفيديو</button>
             </div>
             
-            <!-- 📁 إضافة قسم جديد (محدث بـ لقطة اختيار الملفات) -->
             <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3">
                 <h4 class="font-black text-sm text-emerald-400">📁 إضافة قسم جديد</h4>
                 <input type="text" id="cat-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم القسم">
                 <input type="text" id="cat-sub" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="وصف القسم الفرعي">
                 
                 <div class="space-y-1">
-                    <label class="block text-[10px] text-slate-400">صورة القسم (اختر ملف أو ضع رابط مالي):</label>
-                    <input type="file" id="cat-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 bg-black/30 p-2 rounded-xl border border-white/5">
-                    <input type="text" id="cat-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="أو اترك الملف فارغاً وضع رابطاً هنا">
+                    <label class="block text-[10px] text-slate-400">ارفع صورة من جهازك مباشرة:</label>
+                    <input type="file" id="cat-file" accept="image/*" class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 bg-black/30 p-2 rounded-xl border border-white/5">
+                    <input type="text" id="cat-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs mt-2" placeholder="أو اترك الملف فارغاً وضع رابطاً هنا">
                 </div>
                 
-                <button onclick="addCategory()" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">إنشاء القسم</button>
+                <button onclick="addCategory()" id="btn-add-cat" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">إنشاء القسم</button>
             </div>
             
-            <!-- 🛍️ إضافة منتج جديد (محدث بـ لقطة اختيار الملفات) -->
             <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3 md:col-span-2">
                 <h4 class="font-black text-sm text-emerald-400">🛍️ إضافة منتج جديد</h4>
                 <input type="text" id="p-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم منتج الخدمة">
@@ -109,17 +107,17 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="space-y-1">
-                        <label class="block text-[10px] text-slate-400">صورة المنتج (اختر من المعرض مباشرة):</label>
-                        <input type="file" id="p-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 bg-black/30 p-2 rounded-xl border border-white/5">
+                        <label class="block text-[10px] text-slate-400">اختر صورة المنتج من الاستوديو:</label>
+                        <input type="file" id="p-file" accept="image/*" class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 bg-black/30 p-2 rounded-xl border border-white/5">
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-[10px] text-slate-400">أو رابط صورة جاهز:</label>
+                        <label class="block text-[10px] text-slate-400">أو رابط صورة خارجي جاهز:</label>
                         <input type="text" id="p-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اتركه فارغاً في حال اخترت ملفاً">
                     </div>
                 </div>
                 
                 <input type="text" id="p-cat" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs" placeholder="اسم القسم التابع له (مطابق تماماً)">
-                <button onclick="addProduct()" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-xs">تثبيت المنتج</button>
+                <button onclick="addProduct()" id="btn-add-p" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-xs">تثبيت المنتج</button>
             </div>
         </div>
     </div>
@@ -129,18 +127,28 @@
         let masterKey = "";
         let previousOrdersCount = -1;
 
+        // 🔑 مفتاح مجاني لرفع الصور سحابياً ومزامنتها فورياً بروابط مباشرة دوت PNG/JPG تناسب واجهة المستخدم
+        const IMGBB_API_KEY = "1df639c05c08365ef57319e992b8d009";
+
         document.getElementById('msg-receiver-type').addEventListener('change', function() {
             document.getElementById('msg-phone-container').classList.toggle('hidden', this.value === 'ALL');
         });
 
-        // 🧠 دالة ذكية لتحويل أي ملف صورة إلى كود نصي مضغوط جاهز لقاعدة البيانات فوراً
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
+        // 🧠 دالة لرفع الملفات إلى خادم السحاب الخارجي للحصول على رابط حقيقي ومباشر 100%
+        async function uploadImageToCloud(fileFile) {
+            let formData = new FormData();
+            formData.append("image", fileFile);
+            try {
+                let res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: "POST",
+                    body: formData
+                });
+                let json = await res.json();
+                if(json.success) {
+                    return json.data.url; // يُرجع الرابط المباشر للملف المنتهي بامتداد حقيقي
+                }
+            } catch(e) { console.error("فشل الرفع السحابي:", e); }
+            return null;
         }
 
         async function loginAdmin() {
@@ -283,25 +291,32 @@
         async function addCategory() {
             const name = document.getElementById('cat-name').value;
             const sub = document.getElementById('cat-sub').value;
+            const fileInput = document.getElementById('cat-file');
+            const btn = document.getElementById('btn-add-cat');
             
             let img = document.getElementById('cat-img').value;
-            const fileInput = document.getElementById('cat-file');
             
-            // إذا اختار العميل ملف من الجهاز يتم تحويله فوراً لقاعدة البيانات
             if (fileInput.files.length > 0) {
-                img = await fileToBase64(fileInput.files[0]);
+                btn.innerText = "جاري رفع ومعالجة الصورة سحابياً...⏳";
+                btn.disabled = true;
+                const cloudUrl = await uploadImageToCloud(fileInput.files[0]);
+                if(cloudUrl) { img = cloudUrl; }
             }
+
+            if(!img) { alert("⚠️ الرجاء اختيار ملف صورة أو كتابة رابط صحيح"); btn.innerText="إنشاء القسم"; btn.disabled=false; return;}
 
             await fetch(`${API}/api/admin/category/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name, sub, img })
             });
-            showAdminToast("📁 تم إضافة القسم!");
+            showAdminToast("📁 تم إضافة القسم وتوليد الرابط الحقيقي بنجاح!");
             document.getElementById('cat-name').value = '';
             document.getElementById('cat-sub').value = '';
             document.getElementById('cat-img').value = '';
             fileInput.value = '';
+            btn.innerText = "إنشاء القسم";
+            btn.disabled = false;
             loadDashboard();
         }
 
@@ -309,26 +324,33 @@
             const name = document.getElementById('p-name').value;
             const price = document.getElementById('p-price').value;
             const cat = document.getElementById('p-cat').value;
+            const fileInput = document.getElementById('p-file');
+            const btn = document.getElementById('btn-add-p');
             
             let img = document.getElementById('p-img').value;
-            const fileInput = document.getElementById('p-file');
             
-            // إذا اختار المشرف ملف من الاستوديو
             if (fileInput.files.length > 0) {
-                img = await fileToBase64(fileInput.files[0]);
+                btn.innerText = "جاري رفع وتوليد رابط للمنتج...⏳";
+                btn.disabled = true;
+                const cloudUrl = await uploadImageToCloud(fileInput.files[0]);
+                if(cloudUrl) { img = cloudUrl; }
             }
+
+            if(!img) { alert("⚠️ الرجاء اختيار ملف صورة أو كتابة رابط صحيح"); btn.innerText="تثبيت المنتج"; btn.disabled=false; return;}
 
             await fetch(`${API}/api/admin/product/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name, price, img, cat })
             });
-            showAdminToast("🛍️ تم إضافة المنتج!");
+            showAdminToast("🛍️ تم إضافة المنتج بالرابط المباشر!");
             document.getElementById('p-name').value = '';
             document.getElementById('p-price').value = '';
             document.getElementById('p-img').value = '';
             document.getElementById('p-cat').value = '';
             fileInput.value = '';
+            btn.innerText = "تثبيت المنتج";
+            btn.disabled = false;
             loadDashboard();
         }
 

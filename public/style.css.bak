@@ -1,312 +1,153 @@
-/* تنسيقات واجهة تموينات أبو حسين الرقمية */
-/* نمط الزجاج الفاخر (Glassmorphism) والإبهار البصري */
-
+/* تصميم واجهات الجيل الجديد الفاخرة */
 :root {
-    --bg-color: #030508;
-    --emerald-main: #10b981;
-    --emerald-light: #34d399;
-    --emerald-dark: #059669;
-    --emerald-glow: rgba(16, 185, 129, 0.4);
-    --glass-white: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.07);
-    --text-primary: #ffffff;
-    --text-secondary: #94a3b8;
-    --font-main: 'Cairo', sans-serif;
+    --bg-base: #050709;
+    --accent: #10b981;
+    --font-family: 'Cairo', sans-serif;
+    --border-subtle: rgba(255, 255, 255, 0.04);
 }
 
 body {
-    font-family: var(--font-main);
-    background-color: var(--bg-color);
-    overflow-x: hidden;
-    position: relative;
-    -webkit-tap-highlight-color: transparent;
-    color: var(--text-primary);
+    font-family: var(--font-family);
+    background-color: var(--bg-base);
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* --- الخلفية الحركية الساحرة (Dynamic Orbs) --- */
-.glass-background {
+/* هالات الضوء الخلفية الذكية - لمنح الواجهة عمقاً خفياً */
+.ambience-wrapper {
     position: fixed;
     inset: 0;
     z-index: -1;
     overflow: hidden;
+    pointer-events: none;
 }
-
-.orb {
+.glow-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.15;
-    pointer-events: none;
+    filter: blur(120px);
+    opacity: 0.04;
 }
-
-.orb-1 {
-    width: 400px; height: 400px;
-    background: radial-gradient(circle, var(--emerald-main) 0%, rgba(0,0,0,0) 70%);
-    top: -100px; right: -100px;
-    animation: orbMove 15s infinite alternate ease-in-out;
+.orb-primary {
+    width: 350px; height: 350px;
+    background: #10b981;
+    top: -50px; right: -50px;
 }
-
-.orb-2 {
+.orb-secondary {
     width: 300px; height: 300px;
-    background: radial-gradient(circle, #0ea5e9 0%, rgba(0,0,0,0) 70%); /* لون أزرق خفيف للتنوع */
+    background: #3b82f6;
     bottom: -50px; left: -50px;
-    animation: orbMove 12s infinite alternate-reverse ease-in-out;
 }
 
-.orb-3 {
-    width: 250px; height: 250px;
-    background: radial-gradient(circle, #a855f7 0%, rgba(0,0,0,0) 70%); /* لون بنفسجي خفيف جداً */
-    top: 40%; left: 30%;
-    opacity: 0.08;
+/* البارات والقوائم الفخمة بنقاء زجاجي (Opaque glass) */
+.top-bar, .bottom-nav {
+    background-color: rgba(5, 7, 9, 0.75);
+    border-color: var(--border-subtle);
 }
 
-@keyframes orbMove {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(50px, 30px) scale(1.1); }
-}
-
-/* --- أنماط الزجاج (Glassmorphism Utility Classes) --- */
-.glassmorphism-light {
-    background-color: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(5px);
-    border: 1px solid var(--glass-border);
-}
-
-.glassmorphism-medium {
-    background-color: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-}
-
-.glassmorphism-powerful {
-    background-color: rgba(6, 10, 15, 0.6);
-    backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-}
-
-.header-glass {
-    background-color: rgba(3, 5, 8, 0.8);
-    backdrop-filter: blur(20px);
-}
-
-.nav-glass {
-    background-color: rgba(3, 5, 8, 0.85);
-    backdrop-filter: blur(25px);
-}
-
-/* --- المدخلات الملكية المعدلة (Royal Input) --- */
-.royal-input {
-    width: 100%;
-    padding: 1.1rem 1.4rem;
-    background-color: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--glass-border);
-    border-radius: 1.1rem;
-    font-size: 13px;
-    color: #ffffff;
-    outline: none;
-    transition: all 0.3s ease;
-    text-align: right;
-}
-
-.royal-input:focus {
-    border-color: rgba(16, 185, 129, 0.5);
-    background-color: rgba(16, 185, 129, 0.03);
-    box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.2);
-}
-
-/* --- الأزرار المنبهرة (Buttons) --- */
-.btn-emerald-glow {
-    background: linear-gradient(135deg, var(--emerald-light) 0%, var(--emerald-dark) 100%);
-    box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.4);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-emerald-glow:active {
-    transform: scale(0.96);
-    box-shadow: 0 4px 10px -2px rgba(16, 185, 129, 0.4);
-}
-
-.btn-emerald-glow::after {
-    content: '';
-    position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: rgba(255, 255, 255, 0.15);
-    transform: rotate(45deg);
-    transition: 0.5s;
-    pointer-events: none;
-}
-.btn-emerald-glow:hover::after { left: 120%; }
-
-/* أزرار التخطيط */
-.btn-layout {
-    px-4 py-2;
-    border-radius: 1rem;
-    font-size: 11px;
-    font-weight: 900;
-    color: var(--text-secondary);
-    transition: var(--glass-white);
-    transition: all 0.3s ease;
-    border: 1px solid transparent;
-}
-.btn-layout.active {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--emerald-light);
-    border-color: rgba(16, 185, 129, 0.2);
-}
-
-/* --- بار التنقل السفلي المعدل (Nav) --- */
-.nav-item {
+/* التبويبات السفلية */
+.nav-tab {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    color: var(--text-secondary);
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    color: #64748b;
+    transition: all 0.2s ease;
     height: 100%;
-    position: relative;
 }
-.nav-item i {
-    font-size: 18px;
-    transition: transform 0.3s ease;
-}
-.nav-item span {
+.nav-tab i { font-size: 15px; }
+.nav-tab span { font-size: 9px; font-weight: 600; }
+.nav-tab.active { color: #ffffff; }
+
+/* أزرار تنسيق العرض المصغرة */
+.layout-pill {
     font-size: 10px;
-    font-weight: 700;
-    white-space: nowrap;
-    opacity: 0.8;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    color: #64748b;
+    transition: all 0.2s;
 }
-.nav-item.active {
-    color: var(--emerald-light);
-}
-.nav-item.active i {
-    transform: translateY(-4px) scale(1.1);
-    text-shadow: 0 0 10px var(--emerald-glow);
+.layout-pill.active {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
 }
 
-/* --- بطاقات الزجاج (Card Glass) --- */
-.card-glass {
+/* حقول المدخلات العالمية الملساء */
+.modern-input {
+    width: 100%;
+    padding: 14px 16px;
     background-color: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 1.75rem;
-    padding: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    font-size: 13px;
+    color: #ffffff;
+    outline: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modern-input:focus {
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* الكروت النظيفة الفخمة للكاشير والأقسام (Pure Clean Cards) */
+.premium-card {
+    background-color: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    padding: 14px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
 }
-.card-glass:active {
-    transform: scale(0.97);
-    border-color: rgba(16, 185, 129, 0.2);
-    background-color: rgba(16, 185, 129, 0.02);
-}
-.card-glass::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.05) 0%, rgba(0,0,0,0) 60%);
-    pointer-events: none;
+.premium-card:active {
+    transform: scale(0.98);
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* --- أزرار الدفع المنبهرة (Payment Buttons) --- */
-.cart-actions-panel {
-    margin-top: 25px;
+/* الأزرار الفاخرة الموحدة */
+.prime-btn {
+    background-color: #ffffff;
+    color: #000000;
+    transition: opacity 0.2s;
 }
+.prime-btn:active { opacity: 0.85; }
 
-.btn-payment {
+.checkout-btn {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 1.2rem 1.5rem;
-    border-radius: 1.4rem;
-    font-size: 14px;
-    font-weight: 900;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+.checkout-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+/* التحكم بمرونة الشبكات المستجابة */
+.categories-grid.grid-dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.categories-grid.grid-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.categories-grid.grid-list { display: flex; flex-direction: column; gap: 12px; }
+
+/* أنيميشن ناعم للواجهات السلسة */
+@keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.animate-slide-up { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* شاشة التحميل الرشيقة */
+.minimal-loader {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    margin-top: 24px;
+    animation: rotateLoader 0.8s linear infinite;
+}
+@keyframes rotateLoader { to { transform: rotate(360deg); } }
+
+.auth-card {
+    background-color: #0c0f14;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    position: relative;
-    overflow: hidden;
+    border-radius: 24px;
 }
-
-.btn-payment i:first-child { font-size: 1.2rem; }
-.btn-payment span { flex: 1; text-align: right; margin-right: 15px; }
-
-/* تأثير اللمعان الخلفي للأزرار */
-.btn-payment::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-.btn-payment:hover::before { opacity: 1; }
-
-.btn-wallet {
-    background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
-    color: var(--emerald-light);
-    border-color: rgba(16, 185, 129, 0.15);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-}
-.btn-wallet:active { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03); }
-
-.btn-whatsapp {
-    background: linear-gradient(135deg, #128C7E 0%, #075E54 100%);
-    color: white;
-    box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.2);
-}
-.btn-whatsapp:active { transform: scale(0.97); filter: brightness(0.9); }
-
-.btn-cod {
-    background: linear-gradient(135deg, #1d4ed8 0%, #172554 100%);
-    color: white;
-    border-color: rgba(59, 130, 246, 0.2);
-}
-.btn-cod:active { transform: scale(0.97); filter: brightness(0.9); }
-
-.location-status {
-    font-size: 10px;
-    color: var(--text-secondary);
-    text-align: center;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    opacity: 0.7;
-}
-
-/* --- التأثيرات الحركية (Animations & Miscs) --- */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
-
-@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.animate-slideUp { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-.shadow-glow-sm { text-shadow: 0 0 10px var(--emerald-glow); }
-.shadow-glow-md { filter: drop-shadow(0 0 15px var(--emerald-glow)); }
-.shadow-inner-pop { box-shadow: inset 0 2px 4px rgba(255,255,255,0.1); }
-
-/* لودر التحميل (Splash) */
-.logo-loader { text-align: center; }
-.loader-bar {
-    width: 100px; h-1; background-color: rgba(255,255,255,0.05);
-    border-radius: full; margin-top: 10px; overflow: hidden; position: relative;
-}
-.loader-bar::after {
-    content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 40%;
-    background-color: var(--emerald-main); border-radius: full;
-    animation: loaderX 1.5s infinite ease-in-out;
-}
-@keyframes loaderX { 0% { left: -10%; width: 10%; } 50% { left: 40%; width: 60%; } 100% { left: 110%; width: 10%; } }
-
-/* التخطيط (Grid layouts) */
-.cards-container.mode-dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
-.cards-container.mode-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
-.cards-container.mode-list { display: flex; flex-direction: column; gap: 1rem; }
-
-/* تكييف الصورة في كارت الأقسام */
-.card-glass img { transition: transform 0.3s ease; }
-.card-glass:hover img { transform: scale(1.05); }
-

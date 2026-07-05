@@ -1,1 +1,153 @@
-6
+body {
+    font-family: 'Cairo', sans-serif;
+    background-color: #05070a;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.blob {
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0) 70%);
+    top: -50px;
+    right: -50px;
+    z-index: -1;
+    pointer-events: none;
+}
+.blob-2 {
+    bottom: -100px;
+    left: -100px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(0,0,0,0) 70%);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: #94a3b8;
+    transition: all 0.25s ease;
+    height: 100%;
+}
+.nav-item span {
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.nav-item.active {
+    color: #34d399;
+    transform: translateY(-2px);
+}
+
+.royal-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    font-size: 13px;
+    color: #ffffff;
+    outline: none;
+    transition: all 0.3s ease;
+    text-align: right;
+}
+.royal-input:focus {
+    border-color: rgba(52, 211, 153, 0.4);
+}
+
+.card-glass {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+}
+
+/* --- أزرار الدفع الجديدة --- */
+.cart-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-payment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 1.1rem;
+    border-radius: 1.25rem;
+    font-size: 14px;
+    font-weight: 900;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-wallet {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #000;
+    box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+}
+
+.btn-whatsapp {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    color: white;
+    box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.3);
+}
+
+.btn-cod {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3);
+}
+
+.btn-payment:active {
+    transform: scale(0.95);
+    filter: brightness(0.9);
+}
+
+.btn-payment::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg);
+    transition: 0.5s;
+    pointer-events: none;
+}
+
+.btn-payment:hover::after { left: 120%; }
+
+.location-status {
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+/* التخطيط */
+.cards-container.mode-dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.cards-container.mode-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+.cards-container.mode-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
+
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.animate-slideUp { animation: slideUp 0.35s ease forwards; }

@@ -3,167 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم أبو حسين المركزية V2</title>
+    <title>إدارة تموينات أبو حسين</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
-    <style>*{font-family:'Cairo',sans-serif;}</style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *{font-family:'Cairo',sans-serif;}
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+        .panel-card { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); }
+    </style>
 </head>
-<body class="bg-[#05070a] text-slate-100 min-h-screen pb-20">
+<body class="bg-[#030712] text-slate-100 min-h-screen pb-32 selection:bg-emerald-500 selection:text-black">
     
     <audio id="snd-order-alert" src="https://assets.mixkit.co/active_storage/sfx/911/911-preview.mp3" preload="auto"></audio>
     <audio id="snd-success" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
 
-    <div id="adm-toast" class="fixed top-6 left-6 right-6 z-[5000] bg-emerald-500 text-black font-black p-5 rounded-2xl text-sm text-center shadow-2xl hidden transition-all duration-300"></div>
+    <div id="adm-toast" class="fixed top-6 left-6 right-6 z-[5000] bg-emerald-500 text-slate-950 font-black p-4 rounded-xl text-sm text-center shadow-2xl hidden transition-all duration-300 md:max-w-md md:mx-auto"></div>
 
-    <div id="admin-lock" class="fixed inset-0 z-[4000] bg-[#05070a] flex items-center justify-center p-6">
-        <div class="max-w-md w-full bg-slate-900/40 p-8 rounded-3xl border border-white/5 space-y-6 text-center backdrop-blur-md">
-            <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-emerald-500/20">
-                <i class="fas fa-shield-alt"></i>
+    <div id="admin-lock" class="fixed inset-0 z-[4000] bg-[#030712] flex items-center justify-center p-6 transition-all duration-500">
+        <div class="max-w-md w-full bg-slate-900/40 p-8 rounded-3xl border border-white/5 space-y-6 text-center backdrop-blur-lg shadow-xl">
+            <div class="w-14 h-14 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-xl border border-emerald-500/20">
+                <i class="fas fa-lock"></i>
             </div>
-            <h2 class="text-2xl font-black text-emerald-400">منظومة الإدارة المركزية</h2>
-            <p class="text-xs text-slate-400">يرجى إدخال رمز الصلاحية المشفر للولوج إلى السيرفر</p>
-            <input type="password" id="admin-key-input" class="w-full p-4 bg-black/60 border border-white/5 rounded-xl text-center font-black text-emerald-500 text-lg outline-none tracking-widest focus:border-emerald-500/40 transition" placeholder="••••••••">
-            <button onclick="loginAdmin()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-4 rounded-xl shadow-lg active:scale-95 transition">ولوج آمن للسيرفر</button>
+            <div>
+                <h2 class="text-xl font-black text-slate-100">إدارة تموينات أبو حسين</h2>
+                <p class="text-xs text-slate-400 mt-1">الرجاء إدخال رمز المرور للمتابعة</p>
+            </div>
+            <input type="password" id="admin-key-input" class="w-full p-3.5 bg-black/40 border border-white/10 rounded-xl text-center font-black text-emerald-400 text-lg outline-none tracking-widest focus:border-emerald-500/40 transition-all placeholder:font-normal placeholder:text-sm placeholder:tracking-normal" placeholder="أدخل رمز الدخول">
+            <button onclick="loginAdmin()" class="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-500/10 transition-all">دخول آمن</button>
         </div>
     </div>
 
-    <div id="admin-content" class="hidden max-w-4xl mx-auto px-6 pt-10 space-y-8">
+    <div id="admin-content" class="hidden max-w-6xl mx-auto px-4 pt-8 space-y-6">
         
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-6 gap-4">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-5 gap-4">
             <div>
-                <h1 class="text-3xl font-black text-emerald-400 flex items-center gap-2">
-                    <i class="fas fa-sliders-h text-2xl"></i> لوحة تحكم أبو حسين
+                <h1 class="text-2xl font-black text-slate-100 flex items-center gap-2">
+                    <span class="w-2 h-6 bg-emerald-500 rounded-full inline-block"></span> إدارة تموينات أبو حسين
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">إدارة كاملة للمتجر والعمليات والمحتوى (مُعالج الرفع السحابي الفوري 🚀)</p>
+                <p class="text-xs text-slate-400 mt-1">لوحة التحكم السريعة وتحديث الأسعار الفوري</p>
             </div>
-            <button onclick="manualDashboardRefresh()" class="w-full md:w-auto bg-white/5 hover:bg-white/10 px-5 py-2.5 rounded-xl text-xs border border-white/5 font-bold text-emerald-400 flex items-center justify-center gap-2 transition">
-                <span>تحديث البيانات</span> <i class="fas fa-sync-alt"></i>
-            </button>
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <button onclick="manualDashboardRefresh()" class="flex-1 md:flex-none bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-200 border border-white/5 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-sync-alt text-emerald-400"></i> <span>تحديث البيانات</span>
+                </button>
+                <button onclick="changePasswordPrompt()" class="bg-amber-500/10 hover:bg-amber-500/20 px-3 py-2.5 rounded-xl text-xs font-bold text-amber-400 border border-amber-500/10 transition flex items-center gap-1.5">
+                    <i class="fas fa-key text-[11px]"></i> تغيير كلمة السر
+                </button>
+                <button onclick="logoutAdmin()" class="bg-red-500/10 hover:bg-red-500/20 px-3 py-2.5 rounded-xl text-xs font-bold text-red-400 border border-red-500/10 transition flex items-center gap-1.5">
+                    <i class="fas fa-sign-out-alt text-[11px]"></i> خروج
+                </button>
+            </div>
         </header>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-slate-900/40 p-4 rounded-2xl border border-white/5">
-                <p class="text-[10px] text-slate-400 font-bold">إجمالي المبيعات</p>
-                <h3 id="stat-sales" class="text-lg font-black text-emerald-400 mt-1">0 YER</h3>
-            </div>
-            <div class="bg-slate-900/40 p-4 rounded-2xl border border-white/5">
-                <p class="text-[10px] text-slate-400 font-bold">الطلبات الحالية</p>
-                <h3 id="stat-orders" class="text-lg font-black text-amber-400 mt-1">0 طلب</h3>
-            </div>
-            <div class="bg-slate-900/40 p-4 rounded-2xl border border-white/5">
-                <p class="text-[10px] text-slate-400 font-bold">المحافظ المسجلة</p>
-                <h3 id="stat-users" class="text-lg font-black text-blue-400 mt-1">0 مستخدم</h3>
-            </div>
-            <div class="bg-slate-900/40 p-4 rounded-2xl border border-white/5">
-                <p class="text-[10px] text-slate-400 font-bold">الخدمات المتوفرة</p>
-                <h3 id="stat-products" class="text-lg font-black text-purple-400 mt-1">0 منتج</h3>
-            </div>
-        </div>
-
-        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            <button onclick="switchTab('orders')" id="tab-orders" class="bg-emerald-500 text-black px-5 py-2.5 rounded-xl text-xs font-black shrink-0 transition">📦 الطلبات والعمليات</button>
-            <button onclick="switchTab('users')" id="tab-users" class="bg-white/5 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-black shrink-0 transition">👥 إدارة المحافظ والشحن</button>
-            <button onclick="switchTab('inventory')" id="tab-inventory" class="bg-white/5 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-black shrink-0 transition">🛠️ تعديل وحذف الخدمات</button>
-            <button onclick="switchTab('messages')" id="tab-messages" class="bg-white/5 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-black shrink-0 transition">📢 بث إشعار برقي</button>
-            <button onclick="switchTab('settings')" id="tab-settings" class="bg-white/5 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-black shrink-0 transition">⚙️ إضافة خدمات وفيديوهات</button>
+        <div class="hidden md:flex gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-white/5">
+            <button onclick="switchTab('orders')" id="tab-orders" class="bg-emerald-500 text-slate-950 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap">📦 الطلبات</button>
+            <button onclick="switchTab('users')" id="tab-users" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap">👥 الحسابات والمحافظ</button>
+            <button onclick="switchTab('add-cat')" id="tab-add-cat" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap">📁 إضافة قسم جديد</button>
+            <button onclick="switchTab('add-product')" id="tab-add-product" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap">🛍️ إضافة منتج جديد</button>
+            <button onclick="switchTab('manage-cats')" id="tab-manage-cats" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap">🗂️ تعديل وحذف الأقسام</button>
+            <button onclick="switchTab('manage-products')" id="tab-manage-products" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap">⚙️ إدارة وتعديل المنتجات</button>
+            <button onclick="switchTab('broadcast')" id="tab-broadcast" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap">📢 إرسال إشعار</button>
+            <button onclick="switchTab('ads')" id="tab-ads" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap">🎬 فيديو الواجهة</button>
         </div>
 
         <div id="panel-orders" class="admin-panel space-y-4">
-            <h3 class="font-black text-lg flex items-center gap-2"><i class="fas fa-box text-emerald-400"></i> سجل طلبات الفواتير الحالية</h3>
+            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2"><i class="fas fa-inbox"></i> سجل الطلبات الواردة</h3>
             <div id="adm-orders-list" class="space-y-3"></div>
         </div>
 
         <div id="panel-users" class="admin-panel hidden space-y-4">
-            <h3 class="font-black text-lg flex items-center gap-2"><i class="fas fa-wallet text-emerald-400"></i> قائمة الحافظ الرقمية والشحن المباشر</h3>
+            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2"><i class="fas fa-users"></i> كشوفات حسابات العملاء</h3>
             <div id="adm-users-list" class="space-y-3"></div>
         </div>
 
-        <div id="panel-inventory" class="admin-panel hidden space-y-8">
-            <div>
-                <h3 class="font-black text-lg text-emerald-400 mb-3 flex items-center gap-2"><i class="fas fa-folder"></i> التحكم بالأقسام الحالية</h3>
-                <div id="adm-categories-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        <div id="panel-add-cat" class="admin-panel hidden max-w-xl mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
+            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2"><i class="fas fa-folder-plus"></i> إنشاء قسم رئيسي جديد</h3>
+            <input type="text" id="cat-name" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white outline-none focus:border-emerald-500/40" placeholder="اسم القسم (مثال: معلبات)">
+            <input type="text" id="cat-sub" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white outline-none focus:border-emerald-500/40" placeholder="وصف القسم الفرعي">
+            <div class="p-3 bg-black/20 rounded-xl border border-white/5 space-y-2">
+                <label class="block text-[11px] text-slate-400">صورة القسم:</label>
+                <input type="file" id="cat-file" accept="image/*" class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 bg-black/30 p-2 rounded-lg">
+                <input type="text" id="cat-img" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-emerald-500/40" placeholder="أو الصق رابط صورة جاهز هنا">
             </div>
-            <hr class="border-white/5">
-            <div>
-                <h3 class="font-black text-lg text-emerald-400 mb-3 flex items-center gap-2"><i class="fas fa-shopping-bag"></i> التحكم بالمنتجات والأسعار</h3>
-                <div id="adm-products-list" class="grid grid-cols-1 gap-3"></div>
-            </div>
+            <button onclick="addCategory()" id="btn-add-cat" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/5">حفظ وإنشاء القسم فوراً</button>
         </div>
 
-        <div id="panel-messages" class="admin-panel hidden grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-slate-900/30 p-6 rounded-3xl border border-white/5 space-y-4 md:col-span-1 h-fit">
-                <h3 class="font-black text-lg text-emerald-400 flex items-center gap-2"><i class="fas fa-bullhorn"></i> بث إشعار جديد</h3>
-                <select id="msg-receiver-type" class="w-full p-3.5 bg-black/60 border border-white/5 rounded-xl text-sm outline-none text-white focus:border-emerald-500/30">
-                    <option value="ALL">للجميع (عام)</option>
-                    <option value="INDIVIDUAL">لمستخدم محدد</option>
-                </select>
-                <div id="msg-phone-container" class="space-y-1 hidden">
-                    <input type="tel" id="msg-phone" class="w-full p-3.5 bg-black/60 border border-white/5 rounded-xl text-sm text-white outline-none" placeholder="7xxxxxxxx">
-                </div>
-                <input type="text" id="msg-title" class="w-full p-3.5 bg-black/60 border border-white/5 rounded-xl text-sm text-white outline-none" placeholder="عنوان الإشعار">
-                <textarea id="msg-body" class="w-full p-3.5 bg-black/60 border border-white/5 rounded-xl text-sm text-white h-24 outline-none resize-none" placeholder="تفاصيل الرسالة البرقية البثية..."></textarea>
-                <button onclick="sendAdminMessage()" id="btn-send-msg" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-sm shadow-md active:scale-95 transition">بث الإشعار فوراً 🚀</button>
+        <div id="panel-add-product" class="admin-panel hidden max-w-xl mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
+            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2"><i class="fas fa-cart-plus"></i> إدخال منتج جديد بالمتجر</h3>
+            <input type="text" id="p-name" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white outline-none focus:border-emerald-500/40" placeholder="اسم المنتج أو السلعة">
+            <input type="number" id="p-price" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white outline-none focus:border-emerald-500/40" placeholder="السعر (YER)">
+            
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-amber-400">⚠️ تحديد القسم التابع له (إجباري):</label>
+                <select id="p-cat-select" class="w-full p-3 bg-black/80 border border-white/10 rounded-xl text-sm outline-none text-white font-bold focus:border-amber-500/40">
+                    </select>
             </div>
 
-            <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 md:col-span-2 space-y-3">
-                <h4 class="font-black text-sm text-slate-400 flex items-center gap-2"><i class="fas fa-history"></i> تاريخ البث البرقي الأخير</h4>
-                <div id="adm-messages-history" class="space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                    <p class="text-xs text-slate-500 text-center py-8">لم يتم بث إشعارات في هذه الجلسة بعد.</p>
-                </div>
+            <div class="p-3 bg-black/20 rounded-xl border border-white/5 space-y-2">
+                <label class="block text-[11px] text-slate-400">صورة المنتج:</label>
+                <input type="file" id="p-file" accept="image/*" class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 bg-black/30 p-2 rounded-lg">
+                <input type="text" id="p-img" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-emerald-500/40" placeholder="أو الصق رابط صورة جاهز">
             </div>
+            <button onclick="addProduct()" id="btn-add-p" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/5">تثبيت وإدراج المنتج</button>
         </div>
 
-        <div id="panel-settings" class="admin-panel hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3">
-                <h4 class="font-black text-sm text-emerald-400 flex items-center gap-2"><i class="fab fa-youtube"></i> فيديو الإعلان الترويجي الأعلى</h4>
-                <input type="text" id="set-ad-url" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs outline-none focus:border-emerald-500/30" placeholder="ضع رابط فيديو يوتيوب هنا">
-                <button onclick="addAd()" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">حفظ وتحديث الفيديو</button>
-            </div>
-
-            <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3">
-                <h4 class="font-black text-sm text-emerald-400 flex items-center gap-2"><i class="fas fa-folder-plus"></i> إضافة قسم جديد</h4>
-                <input type="text" id="cat-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs outline-none" placeholder="اسم القسم">
-                <input type="text" id="cat-sub" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs outline-none" placeholder="وصف القسم الفرعي">
-
-                <div class="space-y-1">
-                    <label class="block text-[10px] text-slate-400">ارفع صورة من جهازك مباشرة:</label>
-                    <input type="file" id="cat-file" accept="image/*" class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 bg-black/30 p-2 rounded-xl border border-white/5">
-                    <input type="text" id="cat-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs mt-2 outline-none" placeholder="أو اترك الملف فارغاً وضع رابطاً هنا">
-                </div>
-
-                <button onclick="addCategory()" id="btn-add-cat" class="w-full bg-emerald-500 text-black font-black py-2.5 rounded-xl text-xs">إنشاء القسم</button>
-            </div>
-
-            <div class="bg-slate-900/20 p-6 rounded-3xl border border-white/5 space-y-3 md:col-span-2">
-                <h4 class="font-black text-sm text-emerald-400 flex items-center gap-2"><i class="fas fa-plus-circle"></i> إضافة منتج جديد</h4>
-                <input type="text" id="p-name" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs outline-none" placeholder="اسم منتج الخدمة">
-                <input type="number" id="p-price" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs outline-none" placeholder="السعر (YER)">
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="space-y-1">
-                        <label class="block text-[10px] text-slate-400">اختر صورة المنتج من الاستوديو:</label>
-                        <input type="file" id="p-file" accept="image/*" class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 bg-black/30 p-2 rounded-xl border border-white/5">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="block text-[10px] text-slate-400">أو رابط صورة خارجي جاهز:</label>
-                        <input type="text" id="p-img" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs outline-none" placeholder="اتركه فارغاً في حال اخترت ملفاً">
-                    </div>
-                </div>
-
-                <input type="text" id="p-cat" class="w-full p-3 bg-black/50 border border-white/5 rounded-xl text-xs outline-none" placeholder="اسم القسم التابع له (مطابق تماماً)">
-                <button onclick="addProduct()" id="btn-add-p" class="w-full bg-emerald-500 text-black font-black py-3 rounded-xl text-xs">تثبيت المنتج</button>
-            </div>
+        <div id="panel-manage-cats" class="admin-panel hidden space-y-4">
+            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2"><i class="fas fa-folder"></i> قائمة الأقسام الحالية</h3>
+            <div id="adm-categories-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </div>
+
+        <div id="panel-manage-products" class="admin-panel hidden space-y-4">
+            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2"><i class="fas fa-sliders-h"></i> قائمة المنتجات والأسعار الحالية</h3>
+            <div id="adm-products-list" class="grid grid-cols-1 gap-3"></div>
+        </div>
+
+        <div id="panel-broadcast" class="admin-panel hidden max-w-lg mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
+            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2"><i class="fas fa-paper-plane"></i> بث إشعار للعملاء</h3>
+            <select id="msg-receiver-type" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white outline-none">
+                <option value="ALL">إلى جميع المشتركين</option>
+                <option value="INDIVIDUAL">إلى مشترك عبر رقم الهاتف</option>
+            </select>
+            <div id="msg-phone-container" class="space-y-1 hidden">
+                <input type="tel" id="msg-phone" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white outline-none" placeholder="7xxxxxxxx">
+            </div>
+            <input type="text" id="msg-title" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white outline-none" placeholder="عنوان الإشعار">
+            <textarea id="msg-body" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white h-24 resize-none outline-none focus:border-emerald-500/40" placeholder="اكتب تفاصيل الرسالة هنا..."></textarea>
+            <button onclick="sendAdminMessage()" id="btn-send-msg" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all">إرسال الآن</button>
+        </div>
+
+        <div id="panel-ads" class="admin-panel hidden max-w-lg mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
+            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2"><i class="fab fa-youtube"></i> فيديو واجهة المتجر</h3>
+            <input type="text" id="set-ad-url" class="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-xs text-white outline-none" placeholder="الصق رابط يوتيوب هنا">
+            <button onclick="addAd()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all">حفظ وتحديث الفيديو</button>
+        </div>
+
+    </div>
+
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-[#070a13]/90 border-t border-white/5 p-2 grid grid-cols-4 gap-1.5 z-[3000] backdrop-blur-xl">
+        <button onclick="switchTab('orders')" id="mob-orders" class="flex flex-col items-center justify-center py-2 text-emerald-400 bg-white/5 rounded-xl transition-all">
+            <i class="fas fa-box text-sm"></i><span class="text-[9px] font-bold mt-0.5">الطلبات</span>
+        </button>
+        <button onclick="switchTab('users')" id="mob-users" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+            <i class="fas fa-wallet text-sm"></i><span class="text-[9px] font-bold mt-0.5">المحافظ</span>
+        </button>
+        <button onclick="switchTab('add-cat')" id="mob-add-cat" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+            <i class="fas fa-folder-plus text-sm"></i><span class="text-[9px] font-bold mt-0.5">+ قسم</span>
+        </button>
+        <button onclick="switchTab('add-product')" id="mob-add-product" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+            <i class="fas fa-cart-plus text-sm"></i><span class="text-[9px] font-bold mt-0.5">+ منتج</span>
+        </button>
+        <button onclick="switchTab('manage-cats')" id="mob-manage-cats" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+            <i class="fas fa-folder text-sm"></i><span class="text-[9px] font-bold mt-0.5">الأقسام</span>
+        </button>
+        <button onclick="switchTab('manage-products')" id="mob-manage-products" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+            <i class="fas fa-sliders-h text-sm"></i><span class="text-[9px] font-bold mt-0.5">المنتجات</span>
+        </button>
+        <button onclick="switchTab('broadcast')" id="mob-broadcast" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+            <i class="fas fa-paper-plane text-sm"></i><span class="text-[9px] font-bold mt-0.5">الإشعارات</span>
+        </button>
+        <button onclick="switchTab('ads')" id="mob-ads" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+            <i class="fab fa-youtube text-sm"></i><span class="text-[9px] font-bold mt-0.5">الفيديو</span>
+        </button>
     </div>
 
     <script>
         const API = window.location.origin;
         let masterKey = "";
         let previousOrdersCount = -1;
-        let msgHistory = []; // لمتابعة الإشعارات المرسلة محلياً
+        let globalCategories = [];
 
         const IMGBB_API_KEY = "1df639c05c08365ef57319e992b8d009";
+
+        // التحقق التلقائي عند فتح الصفحة من وجود جلسة دخول محفوظة (تسجيل الدخول لمرة واحدة)
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedKey = localStorage.getItem("hussain_admin_token");
+            if (savedKey) {
+                masterKey = savedKey;
+                autoLogin(savedKey);
+            }
+        });
 
         document.getElementById('msg-receiver-type').addEventListener('change', function() {
             document.getElementById('msg-phone-container').classList.toggle('hidden', this.value === 'ALL');
@@ -179,22 +199,75 @@
                 });
                 let json = await res.json();
                 if(json.success) { return json.data.url; }
-            } catch(e) { console.error("فشل الرفع السحابي:", e); }
+            } catch(e) { console.error(e); }
             return null;
         }
 
         async function loginAdmin() {
-            masterKey = document.getElementById('admin-key-input').value;
-            await loadDashboard();
-            setInterval(checkNewOrdersSilently, 10000);
+            const inputKey = document.getElementById('admin-key-input').value;
+            if(!inputKey) return;
+            masterKey = inputKey;
+            await loadDashboard(true);
+        }
+
+        async function autoLogin(key) {
+            let res = await fetch(`${API}/api/admin/dashboard`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: key })
+            });
+            let reply = await res.json();
+            if(reply.success) {
+                document.getElementById('admin-lock').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                globalCategories = reply.data.categories || [];
+                updateCategoryDropdown();
+                renderAdminData(reply.data);
+                setInterval(checkNewOrdersSilently, 10000);
+            } else {
+                localStorage.removeItem("hussain_admin_token");
+            }
+        }
+
+        function logoutAdmin() {
+            if(confirm("هل تريد تسجيل الخروج بالفعل؟")) {
+                localStorage.removeItem("hussain_admin_token");
+                masterKey = "";
+                document.getElementById('admin-key-input').value = "";
+                document.getElementById('admin-content').classList.add('hidden');
+                document.getElementById('admin-lock').classList.remove('hidden');
+                showAdminToast("🔒 تم تسجيل الخروج بنجاح");
+            }
+        }
+
+        async function changePasswordPrompt() {
+            const currentPass = prompt("أدخل كلمة السر الحالية المعتمدة:");
+            if (!currentPass) return;
+            const newPass = prompt("أدخل كلمة السر الجديدة المستهدفة:");
+            if (!newPass || newPass.trim() === "") return;
+
+            // استبدل هذا المسار بمسار API الحقيقي الخاص بك لتغيير كلمة المرور
+            let res = await fetch(`${API}/api/admin/change-password`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, currentPass, newPass })
+            });
+            let reply = await res.json();
+            if(reply.success) {
+                localStorage.setItem("hussain_admin_token", newPass);
+                masterKey = newPass;
+                showAdminToast("🔑 تم تغيير كلمة السر وتحديث الحفظ التلقائي بنجاح!");
+            } else {
+                alert("❌ فشل تغيير كلمة السر، يرجى التأكد من الكلمة الحالية");
+            }
         }
 
         async function manualDashboardRefresh() {
-            await loadDashboard();
-            showAdminToast("🔄 تم المزامنة وتحديث العدادات!");
+            await loadDashboard(false);
+            showAdminToast("🔄 تم تحديث كافة القوائم والبيانات الحية!");
         }
 
-        async function loadDashboard() {
+        async function loadDashboard(isFirstLogin = false) {
             let res = await fetch(`${API}/api/admin/dashboard`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -202,26 +275,28 @@
             });
             let reply = await res.json();
             if(reply.success) {
+                if(isFirstLogin) {
+                    localStorage.setItem("hussain_admin_token", masterKey);
+                }
                 document.getElementById('admin-lock').classList.add('hidden');
                 document.getElementById('admin-content').classList.remove('hidden');
                 if(previousOrdersCount === -1) previousOrdersCount = reply.data.orders.length;
                 
-                // حساب وتحديث لوحة الإحصائيات الذكية الجديدة
-                calculateStats(reply.data);
+                globalCategories = reply.data.categories || [];
+                updateCategoryDropdown();
                 renderAdminData(reply.data);
-            } else { alert("❌ الرمز السري غير صحيح"); }
+            } else { 
+                alert("❌ رمز المرور المدخل غير صحيح"); 
+            }
         }
 
-        // دالة حساب الإحصائيات (UI/UX Stats)
-        function calculateStats(data) {
-            document.getElementById('stat-orders').innerText = `${data.orders.length} طلب`;
-            document.getElementById('stat-users').innerText = `${data.users.length} عميل`;
-            document.getElementById('stat-products').innerText = `${(data.products || []).length} خدمة`;
-            
-            let totalSales = data.orders
-                .filter(o => o.status.includes('مكتمل'))
-                .reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-            document.getElementById('stat-sales').innerText = `${totalSales.toLocaleString()} YER`;
+        function updateCategoryDropdown() {
+            const selectEl = document.getElementById('p-cat-select');
+            if(globalCategories.length === 0) {
+                selectEl.innerHTML = `<option value="">⚠️ لا توجد أقسام مسجلة مسبقاً</option>`;
+                return;
+            }
+            selectEl.innerHTML = globalCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
         }
 
         async function checkNewOrdersSilently() {
@@ -236,124 +311,91 @@
                     previousOrdersCount = reply.data.orders.length;
                     playAdminSound('snd-order-alert');
                     showAdminToast("🔔 تنبيه: هناك طلبية جديدة قادمة!");
-                    calculateStats(reply.data);
                     renderAdminData(reply.data);
                 }
             } catch(e){}
         }
 
-        // 🚀 الميزة المضافة الجديدة: إرسال وبث الإشعارات وتوثيقها في السجل
-        async function sendAdminMessage() {
-            const type = document.getElementById('msg-receiver-type').value;
-            const phone = document.getElementById('msg-phone').value;
-            const title = document.getElementById('msg-title').value;
-            const body = document.getElementById('msg-body').value;
-            const btn = document.getElementById('btn-send-msg');
-
-            if(!title || !body) { alert("⚠️ يرجى ملء عنوان ومضمون الإشعار البرقي"); return; }
-            if(type === 'INDIVIDUAL' && !phone) { alert("⚠️ يرجى إدخال رقم هاتف العميل المستهدف"); return; }
-
-            btn.innerText = "جاري البث السيرفري الفوري...⚡";
-            btn.disabled = true;
-
-            try {
-                let res = await fetch(`${API}/api/admin/message/send`, { 
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ adminPass: masterKey, type, phone, title, body })
-                });
-                
-                // حفظ الرسالة في السجل المحلي للعرض الفوري في الواجهة المحسنة
-                msgHistory.unshift({ title, body, receiver: type === 'ALL' ? 'الجميع' : phone, time: new Date().toLocaleTimeString('ar-YE') });
-                renderMessageHistory();
-
-                playAdminSound('snd-success');
-                showAdminToast("📢 تم بث الإشعار بنجاح واستلامه سحابياً!");
-                
-                document.getElementById('msg-title').value = '';
-                document.getElementById('msg-body').value = '';
-                document.getElementById('msg-phone').value = '';
-            } catch (error) {
-                alert("❌ حدث خطأ أثناء إرسال البث الخارجي.");
-            } finally {
-                btn.innerText = "بث الإشعار فوراً 🚀";
-                btn.disabled = false;
-            }
-        }
-
-        function renderMessageHistory() {
-            const container = document.getElementById('adm-messages-history');
-            if(msgHistory.length === 0) return;
-            container.innerHTML = msgHistory.map(m => `
-                <div class="p-3 bg-white/5 rounded-xl border border-white/5 text-xs">
-                    <div class="flex justify-between font-black text-emerald-400">
-                        <span>🎯 إلي: ${m.receiver}</span>
-                        <span class="text-slate-500 text-[10px] font-normal">${m.time}</span>
-                    </div>
-                    <div class="font-bold text-slate-200 mt-1">${m.title}</div>
-                    <p class="text-slate-400 text-[11px] mt-0.5">${m.body}</p>
-                </div>
-            `).join('');
-        }
-
         function renderAdminData(data) {
             document.getElementById('adm-orders-list').innerHTML = data.orders.map(o => `
-                <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                    <div>
-                        <div class="font-black text-emerald-400">${o.id} <span class="text-xs text-slate-400">(${o.phone})</span></div>
+                <div class="p-4 bg-slate-900/30 rounded-xl border border-white/5 flex flex-col md:flex-row justify-between items-center gap-3">
+                    <div class="w-full md:w-auto">
+                        <div class="font-bold text-emerald-400 text-sm">${o.id} <span class="text-xs text-slate-400 font-normal">(${o.phone})</span></div>
                         <div class="text-xs text-slate-300 mt-1">${o.items.map(i=>`${i.name} (x${i.qty})`).join(' | ')}</div>
-                        <p class="text-[10px] text-slate-500 mt-1">${o.date} - <b class="text-emerald-500">${o.total} YER</b> [ <span class="text-amber-400">${o.status}</span> ]</p>
+                        <p class="text-[11px] text-slate-400 mt-1">${o.date} - <b class="text-emerald-400">${o.total} YER</b> <span class="bg-white/5 px-2 py-0.5 rounded text-[10px] text-slate-300 mr-2">[ ${o.status} ]</span></p>
                     </div>
-                    <div class="flex gap-1 w-full md:w-auto">
-                        <button onclick="updateStatus('${o.id}', 'مكتمل ✅')" class="flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-1.5 rounded-lg text-xs font-bold transition">مكتمل</button>
-                        <button onclick="updateStatus('${o.id}', 'مرفوض ❌')" class="flex-1 md:flex-none bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-1.5 rounded-lg text-xs font-bold transition">رفض</button>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="updateStatus('${o.id}', 'مكتمل ✅')" class="flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition">مكتمل</button>
+                        <button onclick="updateStatus('${o.id}', 'مرفوض ❌')" class="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-xl text-xs font-bold border border-red-500/10 transition">رفض</button>
                     </div>
                 </div>
             `).join('');
 
             document.getElementById('adm-users-list').innerHTML = data.users.map(u => `
-                <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between items-center hover:border-white/10 transition">
+                <div class="p-4 bg-slate-900/30 rounded-xl border border-white/5 flex justify-between items-center">
                     <div>
-                        <h4 class="font-black text-sm">${u.name || 'مستخدم بدون اسم'}</h4>
-                        <p class="text-xs text-slate-400">📞 ${u.phone} | 💰 <span class="text-emerald-400 font-bold">${Number(u.bal).toLocaleString()} YER</span></p>
+                        <h4 class="font-bold text-sm text-slate-200">${u.name || 'مستفيد بدون اسم'}</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">📞 ${u.phone} | الرصيد: <span class="text-emerald-400 font-bold">${u.bal} YER</span></p>
                     </div>
-                    <button onclick="promptBalance('${u.phone}', ${u.bal})" class="bg-emerald-500 hover:bg-emerald-400 text-black px-3 py-1.5 rounded-xl text-xs font-black transition">
-                        شحن المحفظة
-                    </button>
+                    <button onclick="promptBalance('${u.phone}', ${u.bal})" class="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold border border-emerald-500/10 transition-all">شحن</button>
                 </div>
             `).join('');
 
-            document.getElementById('adm-categories-list').innerHTML = (data.categories || []).map(c => `
-                <div class="p-3 bg-slate-900/40 rounded-xl border border-white/5 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <img src="${c.img}" class="w-10 h-10 object-cover rounded-xl bg-slate-800 border border-white/5" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
+            document.getElementById('adm-categories-list').innerHTML = globalCategories.map(c => `
+                <div class="p-3 bg-slate-900/30 rounded-xl border border-white/5 flex justify-between items-center">
+                    <div class="flex items-center gap-2.5">
+                        <img src="${c.img}" class="w-10 h-10 object-cover rounded-lg bg-slate-800" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
                         <div>
-                            <h4 class="text-xs font-black text-slate-200">${c.name}</h4>
+                            <h4 class="text-xs font-bold text-slate-200">${c.name}</h4>
                             <p class="text-[10px] text-slate-400">${c.sub || ''}</p>
                         </div>
                     </div>
-                    <div class="flex gap-1">
-                        <button onclick="editCategoryPrompt('${c.name}', '${c.sub}', '${c.img}')" class="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg text-xs transition"><i class="fas fa-edit"></i></button>
+                    <div class="flex gap-1.5">
+                        <button onclick="editCategoryPrompt('${c.name}', '${c.sub}', '${c.img}')" class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg text-[11px] font-bold transition"><i class="fas fa-edit"></i> تعديل</button>
                         <button onclick="deleteCategoryReq('${c.name}')" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs transition"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
             `).join('');
 
             document.getElementById('adm-products-list').innerHTML = (data.products || []).map(p => `
-                <div class="p-3 bg-slate-900/40 rounded-xl border border-white/5 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <img src="${p.img}" class="w-10 h-10 object-cover rounded-xl bg-slate-800 border border-white/5" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
+                <div class="p-4 bg-slate-900/20 rounded-xl border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${p.img}" class="w-11 h-11 object-cover rounded-lg bg-slate-800 border border-white/5" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
                         <div>
-                            <h4 class="text-xs font-black text-slate-200">${p.name}</h4>
-                            <p class="text-[10px] text-emerald-400">${Number(p.price).toLocaleString()} YER <span class="text-slate-500">(${p.cat})</span></p>
+                            <h4 class="text-xs font-bold text-slate-100">${p.name}</h4>
+                            <p class="text-[11px] text-emerald-400 font-bold mt-0.5">${p.price} YER <span class="text-slate-500 font-normal">(${p.cat})</span></p>
                         </div>
                     </div>
-                    <div class="flex gap-1">
-                        <button onclick="editProductPrompt('${p.name}', ${p.price}, '${p.img}', '${p.cat}')" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-md text-xs font-bold transition">تعديل</button>
-                        <button onclick="deleteProductReq('${p.name}')" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-md text-xs transition"><i class="fas fa-trash-alt"></i></button>
+                    <div class="grid grid-cols-2 sm:flex flex-wrap gap-1.5 w-full lg:w-auto">
+                        <button onclick="changeProductPrice('${p.name}', ${p.price}, '${p.img}', '${p.cat}')" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-3 py-2 rounded-lg text-[11px] font-bold border border-amber-500/10 transition-all">💰 تعديل السعر</button>
+                        <button onclick="changeProductImage('${p.name}', ${p.price}, '${p.img}', '${p.cat}')" class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-3 py-2 rounded-lg text-[11px] font-bold border border-blue-500/10 transition-all">🖼️ تعديل الصورة</button>
+                        <button onclick="editProductPrompt('${p.name}', ${p.price}, '${p.img}', '${p.cat}')" class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-3 py-2 rounded-lg text-[11px] font-bold border border-purple-500/10 transition-all">⚙️ تعديل كلي</button>
+                        <button onclick="deleteProductReq('${p.name}')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg text-xs transition border border-red-500/10"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function changeProductPrice(name, oldPrice, img, cat) {
+            const newPrice = prompt(`تحديث سعر السلعة [ ${name} ] الجديد:`, oldPrice);
+            if(!newPrice || isNaN(newPrice)) return;
+            sendProductUpdate(name, Number(newPrice), img, cat);
+        }
+
+        async function changeProductImage(name, price, oldImg, cat) {
+            const newImg = prompt("أدخل رابط السحابة المباشر الجديد للصورة:", oldImg);
+            if(newImg === null || newImg.trim() === "") return;
+            sendProductUpdate(name, price, newImg.trim(), cat);
+        }
+
+        async function sendProductUpdate(name, price, img, cat) {
+            await fetch(`${API}/api/admin/product/edit`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, name, price, img, cat })
+            });
+            showAdminToast("🛍️ تم تحديث التعديل في السيرفر بنجاح!");
+            loadDashboard();
         }
 
         async function updateStatus(id, status) {
@@ -363,12 +405,12 @@
                 body: JSON.stringify({ adminPass: masterKey, id, status })
             });
             playAdminSound('snd-success');
-            showAdminToast(`📦 تم تحديث الطلب إلى: ${status}`);
+            showAdminToast(`📦 تم تحديث حالة الفاتورة بنجاح`);
             loadDashboard();
         }
 
         async function promptBalance(phone, currentBal) {
-            const amount = prompt(`الرصيد الحالي: ${currentBal} YER\nأدخل الرصيد الجديد المستهدف كلياً:`);
+            const amount = prompt(`الرصيد الحالي لهذا العميل: ${currentBal} YER\nأدخل الرصيد الجديد الإجمالي المستهدف للحساب:`);
             if(!amount || isNaN(amount)) return;
             await fetch(`${API}/api/admin/user/update-balance`, {
                 method: 'POST',
@@ -376,7 +418,7 @@
                 body: JSON.stringify({ adminPass: masterKey, phone, newBalance: Number(amount) })
             });
             playAdminSound('snd-success');
-            showAdminToast("💰 تم تحديث رصيد المحفظة بنجاح!");
+            showAdminToast("💰 تم تحديث رصيد المحفظة!");
             loadDashboard();
         }
 
@@ -389,7 +431,7 @@
                 body: JSON.stringify({ adminPass: masterKey, videoUrl })
             });
             playAdminSound('snd-success');
-            showAdminToast("🎬 تم تحديث فيديو الإعلان العلوي!");
+            showAdminToast("🎬 تم تحديث فيديو الواجهة بنجاح");
             document.getElementById('set-ad-url').value = '';
         }
 
@@ -398,10 +440,43 @@
             const sub = document.getElementById('cat-sub').value;
             const fileInput = document.getElementById('cat-file');
             const btn = document.getElementById('btn-add-cat');
-
             let img = document.getElementById('cat-img').value;
 
-            if(!name) { alert("⚠️ اسم القسم مطلوب"); return; }
+            if(!name) { alert("يرجى كتابة اسم القسم أولاً"); return; }
+
+            if (fileInput.files.length > 0) {
+                btn.innerText = "جاري رفع ومعالجة الصورة...⏳";
+                btn.disabled = true;
+                const cloudUrl = await uploadImageToCloud(fileInput.files[0]);
+                if(cloudUrl) { img = cloudUrl; }
+            }
+
+            if(!img) { alert("الرجاء توفير ملف صورة أو رابط صحيح"); btn.innerText="حفظ وإنشاء القسم"; btn.disabled=false; return;}
+
+            await fetch(`${API}/api/admin/category/add`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, name, sub, img })
+            });
+            showAdminToast("📁 تم إدراج القسم وتحديث القائمة بنجاح");
+            document.getElementById('cat-name').value = '';
+            document.getElementById('cat-sub').value = '';
+            document.getElementById('cat-img').value = '';
+            fileInput.value = '';
+            btn.innerText = "حفظ وإنشاء القسم فوراً";
+            btn.disabled = false;
+            loadDashboard();
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const cat = document.getElementById('p-cat-select').value;
+            const fileInput = document.getElementById('p-file');
+            const btn = document.getElementById('btn-add-p');
+            let img = document.getElementById('p-img').value;
+
+            if(!name || !price || !cat) { alert("يرجى إدخال كافة البيانات واختيار قسم السلعة"); return; }
 
             if (fileInput.files.length > 0) {
                 btn.innerText = "جاري رفع ومعالجة الصورة سحابياً...⏳";
@@ -410,69 +485,33 @@
                 if(cloudUrl) { img = cloudUrl; }
             }
 
-            if(!img) { alert("⚠️ الرجاء اختيار ملف صورة أو كتابة رابط صحيح"); btn.innerText="إنشاء القسم"; btn.disabled=false; return;}
-
-            await fetch(`${API}/api/admin/category/add`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, name, sub, img })
-            });
-            showAdminToast("📁 تم إضافة القسم الجديد وتوليد رابطه السحابي!");
-            document.getElementById('cat-name').value = '';
-            document.getElementById('cat-sub').value = '';
-            document.getElementById('cat-img').value = '';
-            fileInput.value = '';
-            btn.innerText = "إنشاء القسم";
-            btn.disabled = false;
-            loadDashboard();
-        }
-
-        async function addProduct() {
-            const name = document.getElementById('p-name').value;
-            const price = document.getElementById('p-price').value;
-            const cat = document.getElementById('p-cat').value;
-            const fileInput = document.getElementById('p-file');
-            const btn = document.getElementById('btn-add-p');
-
-            let img = document.getElementById('p-img').value;
-
-            if(!name || !price || !cat) { alert("⚠️ يرجى تعبئة كافة الحقول الأساسية للمنتج"); return; }
-
-            if (fileInput.files.length > 0) {
-                btn.innerText = "جاري رفع وتوليد رابط للمنتج...⏳";
-                btn.disabled = true;
-                const cloudUrl = await uploadImageToCloud(fileInput.files[0]);
-                if(cloudUrl) { img = cloudUrl; }
-            }
-
-            if(!img) { alert("⚠️ الرجاء اختيار ملف صورة أو كتابة رابط صحيح"); btn.innerText="تثبيت المنتج"; btn.disabled=false; return;}
+            if(!img) { alert("الرجاء اختيار ملف صورة للمنتج"); btn.innerText="تثبيت وإدراج المنتج"; btn.disabled=false; return;}
 
             await fetch(`${API}/api/admin/product/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name, price, img, cat })
             });
-            showAdminToast("🛍️ تم إضافة المنتج بالرابط المباشر بنجاح!");
+            showAdminToast("🛍️ تم تثبيت المنتج وضبطه مع القسم المحدد");
             document.getElementById('p-name').value = '';
             document.getElementById('p-price').value = '';
             document.getElementById('p-img').value = '';
-            document.getElementById('p-cat').value = '';
             fileInput.value = '';
-            btn.innerText = "تثبيت المنتج";
+            btn.innerText = "تثبيت وإدراج المنتج";
             btn.disabled = false;
             loadDashboard();
         }
 
         async function editCategoryPrompt(oldName, oldSub, oldImg) {
-            const sub = prompt("تعديل الوصف:", oldSub);
-            const img = prompt("تعديل رابط الصورة:", oldImg);
+            const sub = prompt("تعديل الوصف الفرعي:", oldSub);
+            const img = prompt("تعديل رابط الصورة المباشر:", oldImg);
             if(sub === null || img === null) return;
             await fetch(`${API}/api/admin/category/edit`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ adminPass: masterKey, name: oldName, sub, img })
             });
-            showAdminToast("📁 تم تحديث القسم!");
+            showAdminToast("📁 تم حفظ تعديل القسم");
             loadDashboard();
         }
 
@@ -487,21 +526,15 @@
         }
 
         async function editProductPrompt(oldName, oldPrice, oldImg, oldCat) {
-            const price = prompt("تعديل السعر:", oldPrice);
+            const price = prompt("تعديل السعر المعتمد:", oldPrice);
             const img = prompt("تعديل رابط الصورة:", oldImg);
-            const cat = prompt("تعديل القسم الحاضن للخدمة:", oldCat);
+            const cat = prompt("تعديل اسم القسم التابع له:", oldCat);
             if(!price || isNaN(price) || img === null || !cat) return;
-            await fetch(`${API}/api/admin/product/edit`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, name: oldName, price: Number(price), img, cat })
-            });
-            showAdminToast("🛍️ تم تحديث بيانات المنتج وسعره!");
-            loadDashboard();
+            sendProductUpdate(oldName, Number(price), img, cat);
         }
 
         async function deleteProductReq(name) {
-            if(!confirm(`هل تود إزالة منتج الخدمة [ ${name} ] من مخزن المتجر؟`)) return;
+            if(!confirm(`هل أنت متأكد من حذف سلعة [ ${name} ] من السيرفر؟`)) return;
             await fetch(`${API}/api/admin/product/delete`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -510,19 +543,57 @@
             loadDashboard();
         }
 
+        async function sendAdminMessage() {
+            const type = document.getElementById('msg-receiver-type').value;
+            const phone = document.getElementById('msg-phone').value;
+            const title = document.getElementById('msg-title').value;
+            const body = document.getElementById('msg-body').value;
+            if(!title || !body) return alert("الرجاء كتابة نص الإشعار");
+            
+            await fetch(`${API}/api/admin/message/send`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ adminPass: masterKey, type, phone, title, body })
+            });
+            showAdminToast("📢 تم بث الإشعار بنجاح للأجهزة الحاضنة");
+            document.getElementById('msg-title').value = '';
+            document.getElementById('msg-body').value = '';
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.replace('bg-emerald-500', 'bg-white/5'));
-            document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.replace('text-black', 'text-slate-400'));
+            
+            // تحديث أزرار الشاشات الكبيرة
+            document.querySelectorAll('[id^="tab-"]').forEach(b => {
+                b.classList.replace('bg-emerald-500', 'bg-white/5');
+                b.classList.replace('text-slate-950', 'text-slate-400');
+            });
+            
+            // تحديث أزرار الجوال السفلية
+            document.querySelectorAll('[id^="mob-"]').forEach(b => {
+                b.classList.replace('bg-white/5', 'bg-transparent');
+                b.classList.replace('text-emerald-400', 'text-slate-400');
+            });
+
             document.getElementById(`panel-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabId}`).classList.replace('bg-white/5', 'bg-emerald-500');
-            document.getElementById(`tab-${tabId}`).classList.replace('text-slate-400', 'text-black');
+            
+            const mainTab = document.getElementById(`tab-${tabId}`);
+            if(mainTab) {
+                mainTab.classList.replace('bg-white/5', 'bg-emerald-500');
+                mainTab.classList.replace('text-slate-400', 'text-slate-950');
+            }
+
+            const mobTab = document.getElementById(`mob-${tabId}`);
+            if(mobTab) {
+                mobTab.classList.replace('bg-transparent', 'bg-white/5');
+                mobTab.classList.replace('text-slate-400', 'text-emerald-400');
+            }
         }
 
         function showAdminToast(m) {
             const t = document.getElementById('adm-toast');
             t.innerText = m; t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), 5000);
+            setTimeout(() => t.classList.add('hidden'), 4000);
         }
         function playAdminSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(e=>{}); } }
     </script>

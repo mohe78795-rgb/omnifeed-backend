@@ -1,38 +1,87 @@
 body {
     font-family: 'Cairo', sans-serif;
-    background-color: #08090a;
+    background-color: #08090a; /* أسود كربوني عميق */
     color: #ffffff;
     overflow-x: hidden;
     position: relative;
     -webkit-tap-highlight-color: transparent;
 }
 
+/* هيدر مستقبلي مصمت ومسطح */
 .cyber-header {
     background: #0d0f11;
-    border-bottom: 1px solid #171a1f;
+    border-bottom: 2px solid #1d2127;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
+/* شريط التحكم السفلي العريض والموزع بالتساوي للستة أزرار */
 .cyber-nav {
     background: #0d0f11;
-    border-top: 1px solid #171a1f;
+    border-top: 2px solid #1d2127;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7);
 }
 
+/* أزرار القائمة السفلية الستة بنمط مالي فاخر */
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    gap: 4px;
+    color: #64748b; /* رمادي متناسق */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     height: 100%;
+    position: relative;
 }
 
+.nav-item span {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.nav-item i {
+    font-size: 18px;
+}
+
+/* الحالة النشطة للزر السفلي - التوهج الذهبي */
+.nav-item.active {
+    color: #ffcc00;
+    text-shadow: 0 0 12px rgba(255, 204, 0, 0.4);
+}
+
+/* حاويات الأقسام والبطاقات */
+.neon-card {
+    background: #0d0f11;
+    border: 1px solid #1d2127;
+    border-radius: 1.25rem;
+    transition: all 0.2s ease;
+}
+.neon-card:hover {
+    border-color: rgba(255, 204, 0, 0.3);
+}
+
+/* أزرار تبديل شبكة العرض المستقبلي */
+.modern-switch-btn {
+    background: #0d0f11;
+    border: 1px solid #1d2127;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+.modern-switch-btn.active {
+    background: #ffcc00;
+    color: #000000;
+    font-weight: 900;
+    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
+}
+
+/* حقول إدخال ذكية مشفرة وعميقة */
 .royal-input {
     width: 100%;
     padding: 1rem 1.25rem;
     background: #0d0f11;
     border: 1px solid #1d2127;
-    border-radius: 1.25rem;
-    font-size: 12px;
+    border-radius: 1rem;
+    font-size: 13px;
     color: #ffffff;
     outline: none;
     transition: all 0.2s ease;
@@ -41,8 +90,10 @@ body {
 .royal-input:focus {
     border-color: #ffcc00;
     background: #121418;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.05);
 }
 
+/* أزرار الدفع والعمليات الكبرى */
 .btn-payment {
     display: flex;
     align-items: center;
@@ -51,16 +102,14 @@ body {
     width: 100%;
     padding: 1.1rem;
     border-radius: 1.25rem;
-    font-size: 13px;
+    font-weight: 900;
+    font-size: 14px;
+    background: #ffcc00;
+    color: #000000;
+    box-shadow: 0 6px 20px rgba(255, 204, 0, 0.15);
     transition: all 0.2s ease;
-    cursor: pointer;
 }
 .btn-payment:active {
     transform: scale(0.98);
-}
-
-::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
 }
 

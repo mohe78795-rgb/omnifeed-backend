@@ -1,14 +1,18 @@
-const API = window.location.origin;
+const API = window.location.origin; 
+const WHATSAPP_NUMBER = "+967737528057";
 
 let state = {
+    categories: [],
     prods: [],
     cart: [],
-    user: JSON.parse(localStorage.getItem('wasl_user_v1')) || null,
+    layoutMode: 0, // 0: dual, 1: matrix, 2: list
+    user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
     games: [],
     selectedGame: null,
     selectedDenom: null
 };
 
+// ================= 1. البداية والتشغيل =================
 window.onload = () => {
     setTimeout(() => {
         if (state.user) unlockApp();
@@ -24,188 +28,30 @@ async function unlockApp() {
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('app-layout').classList.remove('hidden');
     ui();
+    await initProducts();
     await fetchAds();
     await fetchGames();
     await fetchMessages();
-    await fetchOrders();
 }
 
-function showToast(txt) {
-    const t = document.getElementById('toast');
-    t.innerText = txt; t.classList.remove('hidden');
-    playSound('snd-notification');
-    setTimeout(() => t.classList.add('hidden'), 3500);
-}
-
-function playSound(id) {
-    const s = document.getElementById(id);
-    if(s) { s.currentTime = 0; s.play().catch(e=>{}); }
-}
-
-function toggleAuthMode() {
-    const container = document.getElementById('signup-name-container');
-    const title = document.getElementById('auth-title');
-    container.classList.toggle('hidden');
-    title.innerText = container.classList.contains('hidden') ? "تسجيل الدخول" : "إنشاء حساب";
-}
-
-async function handleAuthSubmit() {
-    const isSignup = !document.getElementById('signup-name-container').classList.contains('hidden');
-    const name = document.getElementById('auth-name').value;
-    const phone = document.getElementById('auth-phone').value;
-    const pass = document.getElementById('auth-pass').value;
-
-    if(!phone || !pass || (isSignup && !name)) return showToast("الرجاء ملء كل الحقول المطلوبة");
-
-    const path = isSignup ? '/api/auth/signup' : '/api/auth/login';
-    const body = isSignup ? { name, phone, pass } : { phone, pass };
-
+// ================= 2. جلب البيانات من السيرفر =================
+async function initProducts() {
     try {
-        let res = await fetch(`${API}${path}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        let data = await res.json();
-        if(res.ok && data.success) {
-            state.user = data.user;
-            localStorage.setItem('wasl_user_v1', JSON.stringify(data.user));
-            unlockApp();
-        } else { showToast(data.message || "حدث خطأ في العملية"); }
-    } catch(e) { showToast("فشل الاتصال بالسيرفر السحابي"); }
-}
-
-function changeView(viewId, btn) {
-    document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
-    document.getElementById(`view-${viewId}`).classList.remove('hidden');
-    
-    // في حال الانتقال لواجهة غير المنتجات، تضمن عودة شاشة المنتجات لوضعها الطبيعي
-    if(viewId !== 'products' && viewId !== 'home') {
-        document.getElementById('view-products').classList.add('hidden');
-    }
-
-    document.querySelectorAll('.nav-item').forEach(b => { b.classList.remove('text-[#ffcc00]'); b.classList.add('text-gray-500'); });
-    if(btn) { btn.classList.remove('text-gray-500'); btn.classList.add('text-[#ffcc00]'); }
-    playSound('snd-click');
-}
-
-// 🧭 دالة التوجيه الذكي من صفحة الخدمات إلى الشاشة الرئيسية لعرض المتجر
-function redirectToStore(vendorKey, vendorName) {
-    const homeBtn = document.querySelector("nav button[onclick*='home']");
-    document.querySelectorAll('.nav-item').forEach(b => { 
-        b.classList.remove('text-[#ffcc00]'); 
-        b.classList.add('text-gray-500'); 
-    });
-    if(homeBtn) { 
-        homeBtn.classList.remove('text-gray-500'); 
-        homeBtn.classList.add('text-[#ffcc00]'); 
-    }
-    openVendorStore(vendorKey, vendorName);
-}
-
-// فتح متجر معين وسحب منتجات البائع المحددة
-async function openVendorStore(vendorKey, vendorName) {
-    document.getElementById('cat-title-display').innerText = vendorName;
-    const list = document.getElementById('products-list');
-    list.innerHTML = `<div class="text-center py-12 text-xs text-gray-500 animate-pulse">جاري سحب عروض المتجر عبر واصل...</div>`;
-    
-    // إخفاء الواجهات الأخرى والتركيز على واجهة المنتجات
-    document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
-    document.getElementById('view-products').classList.remove('hidden');
-
-    try {
-        let res = await fetch(`${API}/api/products/vendor/${vendorKey}`);
-        state.prods = await res.json();
-        
-        if(state.prods.length > 0) {
-            list.innerHTML = state.prods.map(p => `
-                <div onclick="openProductSheet('${p._id}')" class="p-4 bg-[#0d0f11] rounded-3xl border border-white/5 flex gap-4 items-center cursor-pointer active:scale-95 transition">
-                    <img src="${p.img || 'https://via.placeholder.com/150'}" class="w-16 h-16 object-cover rounded-2xl">
-                    <div class="flex-1">
-                        <h3 class="font-black text-xs text-white">${p.name}</h3>
-                        <p class="text-[10px] text-gray-500 mt-0.5">المتجر: ${vendorName}</p>
-                        <p class="text-xs text-[#ffcc00] font-bold mt-1">${Number(p.price).toLocaleString()} YER</p>
-                    </div>
-                    <i class="fas fa-plus text-xs text-[#ffcc00] bg-[#ffcc00]/5 p-3 rounded-xl border border-[#ffcc00]/10"></i>
-                </div>
-            `).join('');
-        } else {
-            list.innerHTML = `<div class="text-center py-12 text-xs font-bold text-gray-600">لا توجد أي منتجات في هذا المتجر حالياً</div>`;
-        }
-    } catch (e) { list.innerHTML = `<div class="text-center py-12 text-xs text-red-500">فشل تحميل المتجر</div>`; }
-    
-    playSound('snd-click');
-}
-
-function goBackToHome() {
-    document.getElementById('view-products').classList.add('hidden');
-    document.getElementById('view-home').classList.remove('hidden');
-    playSound('snd-click');
-}
-
-function openProductSheet(id) {
-    const p = state.prods.find(x => x._id === id);
-    if(!p) return;
-    document.getElementById('sh-img').src = p.img || 'https://via.placeholder.com/150';
-    document.getElementById('sh-name').innerText = p.name;
-    document.getElementById('sh-price').innerText = Number(p.price).toLocaleString() + " YER";
-    document.getElementById('sh-add-btn').onclick = () => { addToCart(p); closeSheet(); };
-    document.getElementById('sheet-overlay').classList.remove('hidden');
-    setTimeout(() => document.getElementById('product-sheet').style.bottom = "0", 10);
-}
-
-function closeSheet() {
-    document.getElementById('product-sheet').style.bottom = "-100%";
-    setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 400);
-}
-
-function addToCart(p) {
-    const exist = state.cart.find(x => x._id === p._id);
-    if(exist) exist.qty += 1;
-    else state.cart.push({ ...p, qty: 1 });
-    showToast(`تمت إضافة ${p.name} لحقيبة واصل`);
-    ui();
-}
-
-function updateQty(id, change) {
-    const item = state.cart.find(x => x._id === id);
-    if(!item) return;
-    item.qty += change;
-    if(item.qty <= 0) state.cart = state.cart.filter(x => x._id !== id);
-    ui();
-}
-
-async function submitFinalOrder() {
-    if(state.cart.length === 0) return showToast("الحقيبة فارغة تماماً");
-    const itemsTotal = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
-    
-    try {
-        let res = await fetch(`${API}/api/orders/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: state.user.phone, order: { items: state.cart, total: itemsTotal } })
-        });
-        let data = await res.json();
-        if(res.ok && data.success) {
-            state.cart = [];
-            state.user.bal = data.currentBal;
-            localStorage.setItem('wasl_user_v1', JSON.stringify(state.user));
-            playSound('snd-cashier');
-            showToast("تم خصم القيمة وجاري تحريك خدمة واصل للتوصيل 🚚");
-            ui();
-            await fetchOrders();
-            changeView('orders');
-        } else { showToast(data.message || "فشلت العملية"); }
-    } catch(e) { showToast("حدث خطأ أثناء إرسال الطلب"); }
+        let rCat = await fetch(`${API}/api/categories`);
+        state.categories = await rCat.json();
+        let rProd = await fetch(`${API}/api/products`);
+        state.prods = await rProd.json();
+        renderCategories();
+    } catch(e) { showToast("خطأ أثناء تحميل البيانات المحدثة"); }
 }
 
 async function fetchAds() {
     try {
         let res = await fetch(`${API}/api/ads`);
         let ads = await res.json();
-        if(ads.length > 0) {
-            document.getElementById('ad-container').classList.remove('hidden');
-            document.getElementById('ad-frame').src = ads[0].videoUrl;
+        if(ads && ads.length > 0) {
+            document.getElementById('ad-wrapper').classList.remove('hidden');
+            document.getElementById('ad-iframe').src = ads[0].videoUrl;
         }
     } catch(e){}
 }
@@ -214,155 +60,390 @@ async function fetchGames() {
     try {
         let res = await fetch(`${API}/api/games`);
         state.games = await res.json();
-        document.getElementById('games-grid').innerHTML = state.games.map(g => `
-            <div onclick="selectGame('${g._id}')" class="p-4 bg-[#0d0f11] border border-white/5 rounded-2xl text-center cursor-pointer">
-                <img src="${g.img}" class="w-10 h-10 mx-auto rounded-xl object-cover mb-2">
-                <h4 class="text-[10px] font-black">${g.title}</h4>
-            </div>`).join('');
+        renderGames();
     } catch(e){}
+}
+
+async function fetchMessages() {
+    try {
+        let res = await fetch(`${API}/api/messages/${state.user.phone}`);
+        let msgs = await res.json();
+        renderMessages(msgs);
+    } catch(e){}
+}
+
+// ================= 3. الحسابات والتوثيق =================
+async function handleAuth() {
+    const isSignup = !document.getElementById('signup-name-container').classList.contains('hidden');
+    const phone = document.getElementById('auth-phone').value.trim();
+    const pass = document.getElementById('auth-pass').value.trim();
+    const name = document.getElementById('auth-name').value.trim();
+
+    if(!phone || !pass || (isSignup && !name)) return showToast("الرجاء ملء الحقول المطلوبة واضحة");
+
+    const endpoint = isSignup ? '/api/auth/signup' : '/api/auth/login';
+    const body = isSignup ? { name, phone, pass } : { phone, pass };
+
+    try {
+        let res = await fetch(`${API}${endpoint}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        let data = await res.json();
+        if(res.ok && data.success) {
+            state.user = data.user;
+            localStorage.setItem('abu_user_v30', JSON.stringify(data.user));
+            playSound('snd-cashier');
+            unlockApp();
+        } else {
+            showToast(data.message || "فشلت عملية الدخول");
+        }
+    } catch(e) { showToast("خطأ غير متوقع بالخادم"); }
+}
+
+// ================= 4. بناء وعرض واجهات العميل =================
+function ui() {
+    if(!state.user) return;
+    document.getElementById('user-display-name').innerText = state.user.name;
+    document.getElementById('user-display-phone').innerText = state.user.phone;
+    document.getElementById('user-display-bal').innerText = Number(state.user.bal).toLocaleString() + " YER";
+    
+    document.getElementById('acc-name').innerText = state.user.name;
+    document.getElementById('acc-phone').innerText = state.user.phone;
+    document.getElementById('acc-date').innerText = state.user.joinDate || "مستمر";
+    document.getElementById('acc-bal').innerText = Number(state.user.bal).toLocaleString() + " YER";
+}
+
+function renderCategories() {
+    const box = document.getElementById('categories-scroll');
+    box.innerHTML = `<button onclick="filterCategory('ALL')" class="bg-[#ffcc00] text-black font-black px-4 py-2 rounded-xl text-xs whitespace-nowrap">الكل</button>`;
+    state.categories.forEach(c => {
+        box.innerHTML += `
+            <button onclick="filterCategory('${c.name}')" class="bg-[#0d0f11] border border-[#1d2127] text-slate-300 font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap hover:border-[#ffcc00]/40 transition">
+                ${c.name}
+            </button>
+        `;
+    });
+    renderProducts();
+}
+
+let activeFilter = 'ALL';
+function filterCategory(catName) {
+    activeFilter = catName;
+    renderProducts();
+}
+
+function changeLayout(mode) {
+    state.layoutMode = mode;
+    document.querySelectorAll('.modern-switch-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`layout-btn-${mode}`).classList.add('active');
+    renderProducts();
+}
+
+function renderProducts() {
+    const box = document.getElementById('products-grid');
+    const q = document.getElementById('shop-search').value.toLowerCase();
+    
+    let list = state.prods;
+    if(activeFilter !== 'ALL') list = list.filter(x => x.cat === activeFilter);
+    if(q) list = list.filter(x => x.name.toLowerCase().includes(q));
+
+    box.className = "grid gap-3 transition-all duration-300 ";
+    if(state.layoutMode === 0) box.classList.add('grid-cols-2');
+    else if(state.layoutMode === 1) box.classList.add('grid-cols-3');
+    else box.classList.add('grid-cols-1');
+
+    box.innerHTML = '';
+    if(list.length === 0) {
+        box.innerHTML = `<p class="col-span-full text-center text-xs text-slate-500 py-8">لا توجد سلع متوفرة حالياً</p>`;
+        return;
+    }
+
+    list.forEach(p => {
+        if(state.layoutMode === 2) {
+            box.innerHTML += `
+                <div onclick="openProductSheet('${p._id}')" class="bg-[#0d0f11] border border-[#1d2127] p-3 rounded-xl flex items-center gap-3 cursor-pointer">
+                    <img src="${p.img || 'https://images.unsplash.com/photo-1542838132-92c53300491e'}" class="w-12 h-12 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h4 class="text-xs font-black text-white">${p.name}</h4>
+                        <span class="text-[11px] text-[#ffcc00] font-black">${Number(p.price).toLocaleString()} YER</span>
+                    </div>
+                    <i class="fas fa-cart-plus text-slate-500 text-sm"></i>
+                </div>
+            `;
+        } else {
+            box.innerHTML += `
+                <div onclick="openProductSheet('${p._id}')" class="bg-[#0d0f11] border border-[#1d2127] p-3 rounded-2xl space-y-2 cursor-pointer flex flex-col justify-between">
+                    <img src="${p.img || 'https://images.unsplash.com/photo-1542838132-92c53300491e'}" class="w-full aspect-square object-cover rounded-xl">
+                    <div>
+                        <h4 class="text-xs font-black text-white line-clamp-1">${p.name}</h4>
+                        <div class="flex items-center justify-between pt-1">
+                            <span class="text-[11px] text-[#ffcc00] font-black">${Number(p.price).toLocaleString()} YER</span>
+                            <div class="w-6 h-6 bg-[#ffcc00]/10 text-[#ffcc00] rounded-lg flex items-center justify-center text-[10px]"><i class="fas fa-plus"></i></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+}
+
+// ================= 5. نظام شحن الألعاب =================
+function renderGames() {
+    const box = document.getElementById('games-list-container');
+    box.innerHTML = '';
+    state.games.forEach(g => {
+        box.innerHTML += `
+            <div onclick="selectGame('${g._id}')" class="bg-[#0d0f11] border border-[#1d2127] p-3 rounded-2xl text-center space-y-2 cursor-pointer hover:border-[#ffcc00]/40 transition">
+                <img src="${g.img}" class="w-12 h-12 rounded-full mx-auto object-cover border border-[#1d2127]">
+                <h4 class="text-xs font-black text-white">${g.title}</h4>
+            </div>
+        `;
+    });
 }
 
 function selectGame(id) {
     const g = state.games.find(x => x._id === id);
     state.selectedGame = g;
-    document.getElementById('denom-title').innerText = `باقات وفئات: ${g.title}`;
-    document.getElementById('denoms-list').innerHTML = g.denoms.map((d, index) => `
-        <button onclick="selectDenom(${index}, this)" class="p-3 bg-white/5 border border-white/5 rounded-xl text-xs font-bold transition">${d.name} (${d.price} YER)</button>
-    `).join('');
-    document.getElementById('denom-box').classList.remove('hidden');
-}
-
-function selectDenom(idx, btn) {
-    state.selectedDenom = state.selectedGame.denoms[idx];
-    document.querySelectorAll('#denoms-list button').forEach(b => b.classList.remove('border-[#ffcc00]', 'bg-[#ffcc00]/5'));
-    btn.classList.add('border-[#ffcc00]', 'bg-[#ffcc00]/5');
-}
-
-async function processApiRecharge() {
-    const target = document.getElementById('recharge-target').value;
-    if(!state.selectedDenom || !target) return showToast("يرجى اختيار الفئة وإدخال رقم الحساب");
+    state.selectedDenom = null;
     
-    try {
-        let res = await fetch(`${API}/api/recharge/pay`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: state.user.phone, price: state.selectedDenom.price, details: `${state.selectedGame.title} - ${state.selectedDenom.name} للرقم ${target}` })
-        });
-        let data = await res.json();
-        if(res.ok && data.success) {
-            state.user.bal = data.currentBal;
-            localStorage.setItem('wasl_user_v1', JSON.stringify(state.user));
-            showToast("تم الشحن والتسديد الفوري تلقائياً عبر الـ API ✅");
-            document.getElementById('denom-box').classList.add('hidden');
-            ui();
-            await fetchOrders();
-        } else { showToast(data.message || "رصيدك غير كافٍ"); }
-    } catch(e){ showToast("فشلت عملية الربط والاتصال"); }
-}
-
-async function fetchOrders() {
-    if(!state.user) return;
-    try {
-        let res = await fetch(`${API}/api/orders/${state.user.phone}`);
-        let orders = await res.json();
-        document.getElementById('orders-list').innerHTML = orders.reverse().map(o => `
-            <div class="p-4 bg-[#0d0f11] border border-white/5 rounded-2xl space-y-2">
-                <div class="flex justify-between items-center text-xs">
-                    <span class="font-black text-[#ffcc00]">${o.id}</span>
-                    <span class="text-gray-500 text-[10px]">${o.date}</span>
-                </div>
-                <div class="text-xs text-gray-300">${o.items.map(i => `${i.name} (x${i.qty || 1})`).join('، ')}</div>
-                <div class="flex justify-between items-center pt-2 border-t border-white/5 text-xs">
-                    <span class="text-[10px] px-3 py-1 bg-white/5 rounded-lg font-black text-amber-400">${o.status}</span>
-                    <span class="font-bold text-white">${Number(o.total).toLocaleString()} YER</span>
-                </div>
-            </div>`).join('');
-    } catch(e){}
-}
-
-async function fetchMessages() {
-    if(!state.user) return;
-    try {
-        let res = await fetch(`${API}/api/messages/${state.user.phone}`);
-        let msgs = await res.json();
-        document.getElementById('chat-box').innerHTML = msgs.map(m => `
-            <div class="flex ${m.isAdmin ? 'justify-start' : 'justify-end'}">
-                <div class="p-3 max-w-[80%] rounded-2xl text-xs font-bold ${m.isAdmin ? 'bg-amber-500/10 text-amber-400 rounded-tr-none' : 'bg-[#ffcc00] text-black rounded-tl-none'}">
-                    <p>${m.text}</p>
-                    <span class="text-[8px] opacity-50 block mt-1 text-left">${m.date.split(',')[1] || ''}</span>
-                </div>
-            </div>`).join('');
-        const c = document.getElementById('chat-box'); c.scrollTop = c.scrollHeight;
-    } catch(e){}
-}
-
-async function sendChatMessage() {
-    const input = document.getElementById('chat-input');
-    if(!input.value.trim() || !state.user) return;
+    document.getElementById('target-game-title').innerText = `باقات الشحن لـ ${g.title}`;
+    document.getElementById('player-validation-name').classList.add('hidden');
+    document.getElementById('game-player-id').value = '';
     
-    try {
-        let res = await fetch(`${API}/api/messages/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: state.user.phone, text: input.value, isAdmin: false })
-        });
-        if(res.ok) { input.value = ''; await fetchMessages(); }
-    } catch(e){}
-}
-
-function logout() {
-    localStorage.removeItem('wasl_user_v1');
-    location.reload();
-}
-
-function ui() {
-    if(!state.user) return;
-    document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
-    document.getElementById('acc-name').innerText = state.user.name;
-    document.getElementById('acc-phone').innerText = state.user.phone;
-    document.getElementById('profile-name').innerText = state.user.name;
-    document.getElementById('profile-phone').innerText = state.user.phone;
-
-    const cartList = document.getElementById('cart-list');
-    const itemsTotal = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
-    const deliveryFee = state.cart.length > 0 ? 1000 : 0; 
-    const finalTotal = itemsTotal + deliveryFee;
-    
-    document.getElementById('cart-total').innerText = finalTotal.toLocaleString() + " YER";
-    
-    if(state.cart.length > 0) {
-        cartList.innerHTML = `
-            <div class="p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl text-[10px] text-amber-400 flex justify-between items-center mb-1">
-                <span>🚚 خدمة كابتن التوصيل الآلي: <b>واصل</b></span>
-                <span>+ 1,000 YER</span>
+    const dBox = document.getElementById('game-denoms-container');
+    dBox.innerHTML = '';
+    g.denoms.forEach((d, idx) => {
+        dBox.innerHTML += `
+            <div onclick="selectDenom(${idx}, this)" class="denom-row bg-black/40 border border-[#1d2127] p-3 rounded-xl flex justify-between items-center cursor-pointer text-xs transition">
+                <span class="font-bold text-white">${d.name}</span>
+                <span class="font-black text-[#ffcc00]">${Number(d.price).toLocaleString()} YER</span>
             </div>
-        ` + state.cart.map(i => `
-            <div class="p-4 bg-[#0d0f11] rounded-2xl flex justify-between items-center border border-white/5">
-                <div>
-                    <h4 class="font-bold text-xs text-white">${i.name}</h4>
-                    <p class="text-[11px] text-amber-500 mt-1">${(i.price * i.qty).toLocaleString()} YER</p>
-                </div>
-                <div class="flex items-center gap-3 bg-black/40 px-3 py-1 rounded-xl border border-white/5">
-                    <button onclick="updateQty('${i._id}', -1)" class="px-1 text-gray-500 font-bold">-</button>
-                    <span class="text-xs font-black">${i.qty}</span>
-                    <button onclick="updateQty('${i._id}', 1)" class="px-1 text-[#ffcc00] font-bold">+</button>
-                </div>
-            </div>`).join('');
-    } else { cartList.innerHTML = `<div class="text-center py-12 text-xs text-gray-600 font-bold">حقيبة واصل فارغة تماماً</div>`; }
+        `;
+    });
+    document.getElementById('game-direct-panel').classList.remove('hidden');
 }
 
-setInterval(async () => {
-    if(!state.user) return;
+function selectDenom(idx, el) {
+    state.selectedDenom = state.selectedGame.denoms[idx];
+    document.querySelectorAll('.denom-row').forEach(r => r.classList.remove('border-[#ffcc00]', 'bg-[#ffcc00]/5'));
+    el.classList.add('border-[#ffcc00]', 'bg-[#ffcc00]/5');
+}
+
+async function validatePlayer() {
+    const pid = document.getElementById('game-player-id').value.trim();
+    if(!state.selectedGame || !pid) return showToast("أدخل معرّف ID صالح أولاً");
     try {
-        let res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
+        let res = await fetch(`${API}/api/games/validate?gameId=${state.selectedGame._id}&playerId=${pid}`);
+        let data = await res.json();
+        const lbl = document.getElementById('player-validation-name');
+        if(res.ok && data.success) {
+            lbl.innerText = `👤 العميل: ${data.name}`;
+            lbl.classList.remove('hidden');
+        } else {
+            lbl.innerText = "❌ تعذر العثور على الـ ID أو اللعبة غير مدعومة حالياً";
+            lbl.classList.remove('hidden');
+        }
+    } catch(e){}
+}
+
+async function submitGameOrder() {
+    const pid = document.getElementById('game-player-id').value.trim();
+    if(!state.selectedGame || !state.selectedDenom || !pid) return showToast("الرجاء استكمال بيانات الشحن والمعرّف");
+    
+    if(Number(state.user.bal) < Number(state.selectedDenom.price)) return showToast("رصيد محفظتك غير كافٍ لإتمام عملية الشحن");
+
+    try {
+        let res = await fetch(`${API}/api/orders/game`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                phone: state.user.phone,
+                gameId: state.selectedGame._id,
+                denomName: state.selectedDenom.name,
+                price: state.selectedDenom.price,
+                playerId: pid
+            })
+        });
         let data = await res.json();
         if(res.ok && data.success) {
-            state.user = data.user;
-            localStorage.setItem('wasl_user_v1', JSON.stringify(data.user));
-            document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
+            playSound('snd-cashier');
+            showToast("✅ تم الشحن بنجاح! خصم المبلغ من رصيدك");
+            await sync();
+            document.getElementById('game-direct-panel').classList.add('hidden');
+        } else {
+            showToast(data.message || "فشلت عملية الشحن");
         }
-        await fetchMessages();
-        await fetchOrders();
-    } catch (e) {}
-}, 10000);
+    } catch(e){}
+}
 
+// ================= 6. سلة السلع والعمليات المباشرة =================
+function addToCart(p) {
+    state.cart.push(p);
+    playSound('snd-click');
+    showToast(`🛒 تمت إضافة ${p.name} إلى السلة`);
+    renderCart();
+}
+
+function removeFromCart(idx) {
+    state.cart.splice(idx, 1);
+    renderCart();
+}
+
+function clearCart() {
+    state.cart = [];
+    renderCart();
+}
+
+function renderCart() {
+    const box = document.getElementById('cart-items-list');
+    const cCount = document.getElementById('cart-count');
+    box.innerHTML = '';
+    
+    if(state.cart.length === 0) {
+        box.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">سلتك فارغة، أضف بعض السلع</p>`;
+        cCount.classList.add('hidden');
+        document.getElementById('cart-total-price').innerText = "0 YER";
+        document.getElementById('cart-net-price').innerText = "0 YER";
+        return;
+    }
+
+    cCount.innerText = state.cart.length;
+    cCount.classList.remove('hidden');
+
+    let total = 0;
+    state.cart.forEach((p, idx) => {
+        total += Number(p.price);
+        box.innerHTML += `
+            <div class="bg-[#0d0f11] border border-[#1d2127] p-3 rounded-xl flex justify-between items-center text-xs">
+                <div>
+                    <h4 class="font-black text-white">${p.name}</h4>
+                    <span class="text-[#ffcc00] font-black">${Number(p.price).toLocaleString()} YER</span>
+                </div>
+                <button onclick="removeFromCart(${idx})" class="text-red-400 p-2"><i class="fas fa-minus-circle"></i></button>
+            </div>
+        `;
+    });
+
+    document.getElementById('cart-total-price').innerText = total.toLocaleString() + " YER";
+    document.getElementById('cart-net-price').innerText = total.toLocaleString() + " YER";
+}
+
+async function checkoutOrder() {
+    if(state.cart.length === 0) return showToast("السلة فارغة حالياً");
+    let total = state.cart.reduce((a, b) => a + Number(b.price), 0);
+    if(Number(state.user.bal) < total) return showToast("عذراً، رصيد محفظتك غير كافٍ لإتمام عملية الشراء");
+
+    const textList = state.cart.map(x => `- ${x.name} (${x.price} YER)`).join('\n');
+    const msg = `طلب جديد من: ${state.user.name}\nالهاتف: ${state.user.phone}\n\nالسلع:\n${textList}\n\nالإجمالي: ${total} YER`;
+
+    try {
+        let res = await fetch(`${API}/api/orders/shop`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                phone: state.user.phone,
+                items: state.cart.map(x => ({ name: x.name, price: x.price })),
+                total
+            })
+        });
+        let data = await res.json();
+        if(res.ok && data.success) {
+            playSound('snd-cashier');
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+            clearCart();
+            showToast("✅ تم تسجيل طلبك وخصمه من محفظتك المباشرة بنجاح");
+            await sync();
+        } else {
+            showToast(data.message || "تعذر معالجة الطلب حالياً");
+        }
+    } catch(e){}
+}
+
+// ================= 7. صندوق الرسائل والإشعارات والشات =================
+function renderMessages(msgs) {
+    const box = document.getElementById('messages-container');
+    const dot = document.getElementById('msg-dot');
+    box.innerHTML = '';
+    if(!msgs || msgs.length === 0) {
+        box.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">ليس لديك أي إشعارات إدارية جديدة</p>`;
+        dot.classList.add('hidden');
+        return;
+    }
+    dot.classList.remove('hidden');
+    msgs.reverse().forEach(m => {
+        box.innerHTML += `
+            <div class="bg-[#0d0f11] border border-[#1d2127] p-4 rounded-xl space-y-1">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-black text-xs text-[#ffcc00]">${m.title}</h4>
+                    <span class="text-[9px] text-slate-500">${m.date || ''}</span>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">${m.body}</p>
+            </div>
+        `;
+    });
+}
+
+// ================= 8. المساعدات وأدوات الـ UI الفرعية =================
+function changeView(viewId, btnEl) {
+    // إخفاء جميع الشاشات أولاً
+    document.querySelectorAll('.view-panel').forEach(v => v.classList.add('hidden'));
+    
+    // إزالة اللون الذهبي النشط والتوهج من كافة أزرار القائمة السفلية
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        item.style.textShadow = 'none';
+    });
+
+    // إظهار الشاشة المحددة التي طلبها العميل
+    const targetView = document.getElementById(`view-${viewId}`);
+    if (targetView) targetView.classList.remove('hidden');
+
+    // تفعيل التوهج الذهبي الفخم على الزر الذي تم النقر عليه حالياً
+    if (btnEl) {
+        btnEl.classList.add('active');
+    }
+
+    // تشغيل تأثير صوت النقرة الفاخر لتجربة مستخدم متكاملة
+    playSound('snd-click');
+}
+
+function showToast(m) {
+    const t = document.getElementById('toast');
+    t.innerText = m; t.classList.remove('hidden');
+    setTimeout(() => t.classList.add('hidden'), 4000);
+}
+
+function closeSheet() { document.getElementById('product-sheet').style.bottom = "-100%"; setTimeout(() => document.getElementById('sheet-overlay').classList.add('hidden'), 500); }
+function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play().catch(e=>{}); } }
+
+function toggleAuthMode() {
+    const container = document.getElementById('signup-name-container');
+    const title = document.getElementById('auth-title');
+    container.classList.toggle('hidden');
+    title.innerText = container.classList.contains('hidden') ? "تسجيل الدخول" : "إنشاء حساب";
+}
+
+function openProductSheet(id) {
+    const p = state.prods.find(x => x._id === id);
+    document.getElementById('sh-img').src = p.img;
+    document.getElementById('sh-name').innerText = p.name;
+    document.getElementById('sh-price').innerText = Number(p.price).toLocaleString() + " YER";
+    document.getElementById('sh-add-btn').onclick = () => { addToCart(p); closeSheet(); };
+    document.getElementById('sheet-overlay').classList.remove('hidden');
+    setTimeout(() => document.getElementById('product-sheet').style.bottom = "0", 10);
+}
+
+async function sync() {
+    if(!state.user) return;
+    try {
+        const res = await fetch(`${API}/api/auth/user/${state.user.phone}`);
+        const data = await res.json();
+        if(res.ok && data.success) { 
+            state.user = data.user;
+            localStorage.setItem('abu_user_v30', JSON.stringify(data.user));
+            ui();
+        }
+    } catch(e){}
+}

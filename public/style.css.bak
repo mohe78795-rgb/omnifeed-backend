@@ -1,130 +1,42 @@
-/* =========================================
-   ملف التصميم المتكامل - تموينات أبو حسين
-   ========================================= */
-
+/* --- إعدادات التصميم الأساسية --- */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+body { font-family: 'Cairo', sans-serif; background-color: #08090a; color: #ffffff; margin: 0; padding: 0; }
 
-body {
-    font-family: 'Cairo', sans-serif;
-    background-color: #08090a;
-    color: #ffffff;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-}
-
-/* الهيدر المستقبلي */
-.cyber-header {
-    background: rgba(13, 15, 17, 0.95);
-    border-bottom: 2px solid #171a1f;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-}
-
-/* شريط التنقل السفلي */
+/* --- الشريط السفلي (الذي كان يسبب المشكلة) --- */
 .cyber-nav {
-    background: #0d0f11;
-    border-top: 2px solid #171a1f;
-    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7);
     display: grid !important;
-    grid-template-columns: repeat(6, 1fr) !important;
+    grid-template-columns: repeat(6, 1fr) !important; /* توزيع الـ 6 أزرار */
+    height: 80px !important;
+    background: #0d0f11 !important;
+    border-top: 2px solid #171a1f !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
 }
 
-/* تنسيق أزرار التنقل (التي طلبتها) */
 .nav-item {
     display: flex !important;
-    flex-direction: column !important;
+    flex-direction: column !important; /* الأيقونة فوق النص */
     align-items: center !important;
     justify-content: center !important;
     gap: 4px !important;
-    color: #4b5563;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 100%;
-    position: relative;
-    cursor: pointer;
-}
-
-.nav-item i {
-    font-size: 18px !important;
-}
-
-.nav-item span {
-    font-size: 10px !important;
-    font-weight: 700;
-}
-
-/* الزر النشط مع الخط الذهبي */
-.nav-item.active {
-    color: #ffcc00 !important;
-}
-
-.nav-item.active::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    width: 60%;
-    height: 3px;
-    background: #ffcc00;
-    border-radius: 0 0 4px 4px;
-    box-shadow: 0 2px 10px rgba(255, 204, 0, 0.5);
-}
-
-.nav-item:active {
-    transform: scale(0.9);
-}
-
-/* المدخلات (Royal Inputs) */
-.royal-input {
-    width: 100%;
-    background: #121418;
-    border: 1px solid #1d2127;
-    padding: 16px;
-    border-radius: 12px;
-    color: white;
-    font-weight: bold;
+    color: #4b5563 !important;
+    text-decoration: none;
+    transition: 0.3s;
+    background: transparent;
+    border: none;
     outline: none;
-    transition: 0.3s;
 }
 
-.royal-input:focus {
-    border-color: #ffcc00;
+.nav-item i { font-size: 20px !important; }
+.nav-item span { font-size: 10px !important; font-weight: bold; }
+
+/* تأثير الزر النشط */
+.nav-item.active { color: #ffcc00 !important; }
+.nav-item.active::before {
+    content: ''; position: absolute; top: 0; width: 40px; height: 3px;
+    background: #ffcc00; border-radius: 0 0 4px 4px;
 }
 
-/* البطاقات وتنسيقات المحتوى */
-.cards-container {
-    display: grid;
-    gap: 16px;
-    padding-bottom: 20px;
-}
-
-.mode-dual {
-    grid-template-columns: 1fr 1fr;
-}
-
-/* أزرار الدفع */
-.btn-payment {
-    width: 100%;
-    padding: 16px;
-    border-radius: 12px;
-    font-weight: 900;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: 0.3s;
-}
-
-.btn-wallet { background: #ffcc00; color: black; }
-.btn-whatsapp { background: #25d366; color: white; }
-.btn-cod { background: #1a202c; color: white; border: 1px solid #2d3748; }
-
-/* تأثيرات الظهور */
-.view-content {
-    animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}

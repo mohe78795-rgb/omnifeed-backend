@@ -5,13 +5,14 @@ let state = {
     categories: [],
     prods: [],
     cart: [],
-    layoutMode: 0, 
+    layoutMode: 0, // 0: dual, 1: matrix, 2: list
     user: JSON.parse(localStorage.getItem('abu_user_v30')) || null,
     games: [],
     selectedGame: null,
     selectedDenom: null
 };
 
+// ================= 1. البداية والتشغيل =================
 window.onload = () => {
     setTimeout(() => {
         if (state.user) unlockApp();
@@ -33,6 +34,7 @@ async function unlockApp() {
     await fetchMessages();
 }
 
+// ================= 2. جلب البيانات من السيرفر =================
 async function initProducts() {
     try {
         let rCat = await fetch(`${API}/api/categories`);
@@ -66,12 +68,12 @@ async function fetchGames() {
             state.games = data.game_list;
             const list = document.getElementById('games-list');
             list.innerHTML = state.games.map(g => `
-                <div onclick="selectGame('${g.game_code}')" class="p-5 bg-[#121418] rounded-3xl border border-[#1d2127] flex justify-between items-center cursor-pointer active:scale-[0.98]">
+                <div onclick="selectGame('${g.game_code}')" class="p-5 bg-white/5 rounded-3xl border border-white/5 flex justify-between items-center cursor-pointer active:scale-[0.98]">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-[#ffcc00]/10 border border-[#ffcc00]/20 rounded-2xl flex items-center justify-center text-[#ffcc00] text-lg">
+                        <div class="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-500 text-lg">
                             <i class="fas fa-gamepad"></i>
                         </div>
-                        <div><h3 class="font-black text-sm text-white">${g.game_name}</h3><p class="text-[9px] text-[#ffcc00] font-bold">شحن مباشر تلقائي ⚡</p></div>
+                        <div><h3 class="font-black text-sm">${g.game_name}</h3><p class="text-[9px] text-emerald-500 font-bold">شحن مباشر تلقائي ⚡</p></div>
                     </div>
                     <i class="fas fa-chevron-left text-xs text-slate-500"></i>
                 </div>
@@ -89,29 +91,30 @@ async function fetchMessages() {
         if(data && data.length > 0) {
             document.getElementById('msg-dot').classList.remove('hidden');
             list.innerHTML = data.map(m => `
-                <div class="p-5 bg-[#121418] rounded-3xl border border-[#1d2127]">
+                <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="text-[9px] text-[#ffcc00] font-bold bg-[#ffcc00]/10 px-2 py-1 rounded-lg">${m.date}</span>
-                        <i class="fas fa-envelope-open text-[#ffcc00] opacity-20"></i>
+                        <span class="text-[9px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-1 rounded-lg">${m.date}</span>
+                        <i class="fas fa-envelope-open text-emerald-500 opacity-20"></i>
                     </div>
-                    <h3 class="text-sm font-black mb-1 text-white">${m.title}</h3>
+                    <h3 class="text-sm font-black mb-1">${m.title}</h3>
                     <p class="text-[11px] text-slate-400 leading-relaxed">${m.body}</p>
                 </div>
             `).join('');
         } else {
             document.getElementById('msg-dot').classList.add('hidden');
-            list.innerHTML = `<div class="opacity-30 text-center py-20 text-xs font-bold text-white">لا توجد رسائل جديدة</div>`;
+            list.innerHTML = `<div class="opacity-30 text-center py-20 text-xs font-bold">لا توجد رسائل جديدة</div>`;
         }
     } catch(e) { console.log("Msg Error"); }
 }
 
+// ================= 3. عرض المنتجات والتحكم بالشبكة =================
 function renderCategories() {
     const list = document.getElementById('categories-list');
     if(!list) return;
     list.innerHTML = state.categories.map(c => `
         <div onclick="openCategory('${c.name}')" class="card-glass animate-fadeIn">
             <img src="${c.img}" class="w-full h-32 object-cover rounded-2xl mb-3">
-            <h3 class="font-black text-sm text-white">${c.name}</h3>
+            <h3 class="font-black text-sm text-slate-100">${c.name}</h3>
             <p class="text-[9px] text-slate-500 mt-1">${c.sub || 'خدمات متميزة'}</p>
         </div>
     `).join('');
@@ -120,15 +123,19 @@ function renderCategories() {
 function setLayout(mode) {
     const container = document.getElementById('categories-list');
     if(!container) return;
+    
     container.classList.remove('mode-matrix', 'mode-dual', 'mode-list');
     document.querySelectorAll('[id^="btn-layout-"]').forEach(b => {
-        b.classList.remove('active', 'bg-[#ffcc00]', 'text-black');
+        b.classList.remove('bg-emerald-500', 'text-black');
         b.classList.add('text-slate-400');
     });
+
     const activeBtn = document.getElementById(`btn-layout-${mode}`);
     if(activeBtn) {
-        activeBtn.classList.add('active', 'bg-[#ffcc00]', 'text-black');
+        activeBtn.classList.remove('text-slate-400');
+        activeBtn.classList.add('bg-emerald-500', 'text-black');
     }
+    
     if(mode === 0) container.classList.add('mode-dual');
     else if(mode === 1) container.classList.add('mode-matrix');
     else if(mode === 2) container.classList.add('mode-list');
@@ -142,23 +149,24 @@ function openCategory(catName) {
     const filtered = state.prods.filter(p => p.cat === catName);
     if(filtered.length > 0) {
         list.innerHTML = filtered.map(p => `
-            <div onclick="openProductSheet('${p._id}')" class="p-4 bg-[#121418] rounded-3xl border border-[#1d2127] flex gap-4 items-center cursor-pointer active:scale-[0.99] transition">
+            <div onclick="openProductSheet('${p._id}')" class="p-4 bg-white/5 rounded-3xl border border-white/5 flex gap-4 items-center cursor-pointer active:scale-[0.99] transition">
                 <img src="${p.img}" class="w-20 h-20 object-cover rounded-2xl">
                 <div class="flex-1">
-                    <h3 class="font-black text-sm text-white">${p.name}</h3>
-                    <p class="text-xs text-[#ffcc00] font-bold mt-1">${Number(p.price).toLocaleString()} YER</p>
+                    <h3 class="font-black text-sm">${p.name}</h3>
+                    <p class="text-xs text-emerald-400 font-bold mt-1">${Number(p.price).toLocaleString()} YER</p>
                 </div>
-                <i class="fas fa-plus text-xs text-[#ffcc00] bg-[#ffcc00]/10 p-3 rounded-xl"></i>
+                <i class="fas fa-plus text-xs text-emerald-500 bg-emerald-500/10 p-3 rounded-xl"></i>
             </div>
         `).join('');
     } else {
-        list.innerHTML = `<div class="opacity-30 text-center py-12 text-xs font-bold text-white">لا توجد منتجات</div>`;
+        list.innerHTML = `<div class="opacity-30 text-center py-12 text-xs font-bold">لا توجد منتجات</div>`;
     }
     document.getElementById('view-home').classList.add('hidden');
     document.getElementById('view-products').classList.remove('hidden');
     playSound('snd-click');
 }
 
+// ================= 4. نظام الموقع والدفع المتعدد =================
 function getUserLocation() {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) { toast("⚠️ الموقع غير مدعوم"); reject(); }
@@ -174,6 +182,7 @@ async function processOrder(method) {
     if (state.cart.length === 0) return toast("🛒 السلة فارغة");
     const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
     if (method === 'wallet' && state.user.bal < total) return toast("❌ رصيدك غير كافٍ");
+
     toast("⏳ جاري تحديد موقعك...");
     try {
         const location = await getUserLocation();
@@ -208,14 +217,15 @@ async function submitOrderToDB(loc, total, paymentType) {
     } catch(e) { toast("❌ عطل في الشبكة"); }
 }
 
+// ================= 5. نظام شحن الألعاب =================
 function selectGame(code) {
     const g = state.games.find(x => x.game_code === code);
     state.selectedGame = g;
     document.getElementById('selected-game-title').innerText = g.game_name;
     document.getElementById('game-denoms-list').innerHTML = g.denominations.map(d => `
-        <div onclick="pickDenom(this, '${d.id}')" class="denom-card p-4 bg-[#0d0f11] border border-[#1d2127] rounded-2xl text-center cursor-pointer transition">
-            <p class="text-xs font-black text-white">${d.name}</p>
-            <p class="text-[10px] text-[#ffcc00] mt-1 font-bold">${d.price.toLocaleString()} YER</p>
+        <div onclick="pickDenom(this, '${d.id}')" class="denom-card p-4 bg-black/40 border border-white/5 rounded-2xl text-center cursor-pointer transition">
+            <p class="text-xs font-black">${d.name}</p>
+            <p class="text-[10px] text-emerald-400 mt-1 font-bold">${d.price.toLocaleString()} YER</p>
         </div>
     `).join('');
     document.getElementById('game-topup-panel').classList.remove('hidden');
@@ -223,8 +233,8 @@ function selectGame(code) {
 }
 
 function pickDenom(el, id) {
-    document.querySelectorAll('.denom-card').forEach(c => c.classList.remove('border-[#ffcc00]', 'bg-[#ffcc00]/5'));
-    el.classList.add('border-[#ffcc00]', 'bg-[#ffcc00]/5');
+    document.querySelectorAll('.denom-card').forEach(c => c.classList.remove('border-emerald-500', 'bg-emerald-500/5'));
+    el.classList.add('border-emerald-500', 'bg-emerald-500/5');
     state.selectedDenom = state.selectedGame.denominations.find(x => x.id === id);
     playSound('snd-click');
 }
@@ -265,6 +275,7 @@ async function processGameTopup() {
     } else { toast("❌ " + data.message); }
 }
 
+// ================= 6. الفواتير والعمليات =================
 async function loadOrders() {
     const list = document.getElementById('orders-list');
     if(!list) return;
@@ -272,20 +283,21 @@ async function loadOrders() {
         let res = await fetch(`${API}/api/orders/${state.user.phone}`);
         let orders = await res.json();
         list.innerHTML = orders.length > 0 ? orders.map(o => `
-            <div class="p-5 bg-[#121418] rounded-3xl border border-[#1d2127] space-y-3">
+            <div class="p-5 bg-white/5 rounded-3xl border border-white/5 space-y-3">
                 <div class="flex justify-between">
-                    <span class="text-xs font-black text-[#ffcc00]">${o.id || 'فاتورة'}</span>
-                    <span class="text-[10px] px-3 py-1 bg-[#0d0f11] rounded-lg border border-[#1d2127] text-slate-400">${o.status}</span>
+                    <span class="text-xs font-black text-emerald-400">${o.id || 'فاتورة'}</span>
+                    <span class="text-[10px] px-3 py-1 bg-white/5 rounded-lg border border-white/5 text-slate-400">${o.status}</span>
                 </div>
                 <div class="text-xs text-slate-400">${o.items.map(i => `• ${i.name} (x${i.qty})`).join('<br>')}</div>
-                <div class="flex justify-between border-t border-[#1d2127] pt-2">
+                <div class="flex justify-between border-t border-white/5 pt-2">
                     <span class="text-[9px] text-slate-500">${o.date}</span>
-                    <span class="text-sm font-black text-[#ffcc00]">${o.total.toLocaleString()} YER</span>
+                    <span class="text-sm font-black text-emerald-400">${o.total.toLocaleString()} YER</span>
                 </div>
             </div>`).join('') : `<div class="text-center py-12 text-xs text-slate-500">لا توجد عمليات</div>`;
     } catch (e) { list.innerHTML = "خطأ في جلب البيانات"; }
 }
 
+// ================= 7. الوظائف العامة والـ UI =================
 function ui() {
     if(!state.user) return;
     document.getElementById('u-balance-top').innerText = Number(state.user.bal).toLocaleString() + " YER";
@@ -294,17 +306,19 @@ function ui() {
     document.getElementById('u-avatar').innerText = state.user.name.charAt(0);
     document.getElementById('acc-avatar-large').innerText = state.user.name.charAt(0);
     document.getElementById('acc-date').innerText = state.user.joinDate || "مستمر";
+
     const cartList = document.getElementById('cart-list');
     const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
     document.getElementById('cart-total').innerText = total.toLocaleString() + " YER";
+    
     if(state.cart.length > 0) {
         cartList.innerHTML = state.cart.map(i => `
-            <div class="p-4 bg-[#121418] rounded-2xl flex justify-between items-center border border-[#1d2127]">
-                <div><h4 class="font-bold text-sm text-white">${i.name}</h4><p class="text-xs text-[#ffcc00] mt-1">${(i.price * i.qty).toLocaleString()} YER</p></div>
-                <div class="flex items-center gap-3 bg-[#0d0f11] px-3 py-1.5 rounded-xl border border-[#1d2127]">
-                    <button onclick="updateQty('${i._id}', -1)" class="px-2 text-slate-400">-</button>
-                    <span class="text-xs font-black text-white">${i.qty}</span>
-                    <button onclick="updateQty('${i._id}', 1)" class="px-2 text-[#ffcc00]">+</button>
+            <div class="p-4 bg-white/5 rounded-2xl flex justify-between items-center border border-white/5">
+                <div><h4 class="font-bold text-sm">${i.name}</h4><p class="text-xs text-emerald-400 mt-1">${(i.price * i.qty).toLocaleString()} YER</p></div>
+                <div class="flex items-center gap-3 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+                    <button onclick="updateQty('${i._id}', -1)" class="px-2">-</button>
+                    <span class="text-xs font-black">${i.qty}</span>
+                    <button onclick="updateQty('${i._id}', 1)" class="px-2 text-emerald-400">+</button>
                 </div>
             </div>`).join('');
     } else { cartList.innerHTML = `<div class="text-center py-12 text-xs text-slate-500 font-bold">حقيبة التسوق فارغة</div>`; }
@@ -315,8 +329,10 @@ async function handleAuth() {
     const name = document.getElementById('auth-name').value;
     const phone = document.getElementById('auth-phone').value;
     const pass = document.getElementById('auth-pass').value;
+
     if(!phone || !pass || (isSignup && !name)) return toast("⚠️ الرجاء ملء كافة الحقول");
     let url = isSignup ? `${API}/api/auth/signup` : `${API}/api/auth/login`;
+    
     toast("⏳ جاري التحقق...");
     try {
         let res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, phone, pass}) });
@@ -335,12 +351,14 @@ async function changeView(viewId, btn) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(`view-${viewId}`).classList.remove('hidden');
     if(btn) btn.classList.add('active');
+    
     if(viewId === 'orders') loadOrders();
     if(viewId === 'notifications') fetchMessages();
     if(viewId === 'home') fetchAds();
     ui();
 }
 
+// وظائف مساعدة أخرى
 function addToCart(p) { let i = state.cart.find(x => x._id === p._id); if(i) i.qty++; else state.cart.push({...p, qty:1}); ui(); toast("🛒 أضيف للسلة"); }
 function updateQty(id, delta) { let i = state.cart.find(x => x._id === id); if(i) { i.qty += delta; if(i.qty <= 0) state.cart = state.cart.filter(x => x._id !== id); ui(); } }
 function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 3500); }
@@ -372,3 +390,61 @@ async function sync() {
 }
 setInterval(() => { if(state.user) sync(); }, 20000);
 
+// ================= 8. نظام إشعارات Firebase =================
+
+// --- إعدادات Firebase من لوحة تحكم Firebase الخاصة بك ---
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// تهيئة Firebase
+if (firebase.apps.length === 0) {
+    firebase.initializeApp(firebaseConfig);
+}
+const messaging = firebase.messaging();
+
+// طلب الإذن والحصول على التوكين
+async function initNotifications() {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const token = await messaging.getToken({ vapidKey: 'YOUR_PUBLIC_VAPID_KEY' });
+            if (token && state.user) {
+                // إرسال التوكين للسيرفر لربطه بحساب المستخدم
+                fetch(`${API}/api/auth/update-fcm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: state.user.phone, fcmToken: token })
+                });
+            }
+        }
+    } catch (error) {
+        console.error("FCM Error:", error);
+    }
+}
+
+// استقبال الإشعار والتطبيق مفتوح (Foreground)
+messaging.onMessage((payload) => {
+    console.log('Message received. ', payload);
+    // تفعيل النقطة الحمراء فوراً في الواجهة
+    const msgDot = document.getElementById('msg-dot');
+    if (msgDot) msgDot.classList.remove('hidden');
+    
+    // تشغيل صوت التنبيه
+    playSound('snd-notification');
+    
+    // عرض رسالة سريعة للمستخدم
+    toast(`🔔 ${payload.notification.title}: ${payload.notification.body}`);
+});
+
+// استدعاء الوظيفة عند فتح التطبيق بنجاح عبر تغليف الدالة الأصلية
+const originalUnlockApp = unlockApp;
+unlockApp = async function() {
+    await originalUnlockApp();
+    initNotifications(); // تفعيل الإشعارات بعد فك القفل بنجاح
+};

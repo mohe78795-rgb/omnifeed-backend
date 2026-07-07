@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const admin = require('firebase-admin');
+const { credential } = require('firebase-admin'); // استيراد مباشر لضمان الجاهزية
 const fs = require('fs');
 require('dotenv').config();
 
@@ -15,8 +16,9 @@ try {
     if (fs.existsSync(serviceAccountPath)) {
         const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
         
+        // استخدام credential المستورد مباشرة للتهيئة
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
+            credential: credential.cert(serviceAccount)
         });
         console.log("✅ Firebase Admin Initialized Successfully");
     } else {
@@ -113,3 +115,4 @@ app.post('/api/games/topup', async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`🚀 منظومة تمويناتي تعمل على ${PORT}`));
+

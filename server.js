@@ -1,4 +1,4 @@
-nst express = require('express');
+const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
@@ -14,6 +14,7 @@ try {
     const serviceAccountPath = "/etc/secrets/service-account.json";
     if (fs.existsSync(serviceAccountPath)) {
         const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+        
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });

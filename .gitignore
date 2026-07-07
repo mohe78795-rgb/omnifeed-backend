@@ -11,3 +11,4 @@ yarn-error.log*
 # orders.json
 # users.json
 # db.json
+serviceAccountKey.json

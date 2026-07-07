@@ -7,31 +7,24 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 // --- 2. إعداد Firebase Admin ---
 const fs = require('fs');
 
 try {
-    let serviceAccount;
-    // المسار الذي يضعه Render فيه الملف السري
-    const renderPath = "/etc/secrets/t.json"; 
-    // المسار المحلي إذا كنت تشغل التطبيق على جهازك
-    const localPath = "./serviceAccountKey.json";
-
-    if (fs.existsSync(renderPath)) {
-        // إذا كنا على سيرفر Render
-        serviceAccount = JSON.parse(fs.readFileSync(renderPath, "utf8"));
+    // المسار الصحيح للملف بناءً على الاسم الذي زودتني به
+    const serviceAccountPath = "/etc/secrets/service-account.json"; 
+    
+    if (fs.existsSync(serviceAccountPath)) {
+        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        console.log("✅ Firebase Admin Initialized");
     } else {
-        // إذا كنا نشغل التطبيق محلياً على جهازك
-        serviceAccount = require("./serviceAccountKey.json");
+        console.log("⚠️ الملف غير موجود في المسار:", serviceAccountPath);
     }
-
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-    console.log("✅ Firebase Admin Initialized");
 } catch (e) {
-    console.log("⚠️ Firebase Admin missing or invalid:", e.message);
+    console.log("⚠️ Firebase Admin error:", e.message);
 }
 app.use(cors());
 app.use(express.json());

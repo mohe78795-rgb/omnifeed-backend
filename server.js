@@ -9,17 +9,30 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- 2. إعداد Firebase Admin ---
-// ملاحظة: يجب وضع ملف مفتاح الخدمة باسم serviceAccountKey.json في المجلد الرئيسي
+const fs = require('fs');
+
 try {
-    const serviceAccount = require("./serviceAccountKey.json");
+    let serviceAccount;
+    // المسار الذي يضعه Render فيه الملف السري
+    const renderPath = "/etc/secrets/t.json"; 
+    // المسار المحلي إذا كنت تشغل التطبيق على جهازك
+    const localPath = "./serviceAccountKey.json";
+
+    if (fs.existsSync(renderPath)) {
+        // إذا كنا على سيرفر Render
+        serviceAccount = JSON.parse(fs.readFileSync(renderPath, "utf8"));
+    } else {
+        // إذا كنا نشغل التطبيق محلياً على جهازك
+        serviceAccount = require("./serviceAccountKey.json");
+    }
+
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
     });
     console.log("✅ Firebase Admin Initialized");
 } catch (e) {
-    console.log("⚠️ Firebase Admin missing or invalid: الإشعارات لن تعمل بدون مفتاح");
+    console.log("⚠️ Firebase Admin missing or invalid:", e.message);
 }
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));

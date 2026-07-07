@@ -6,10 +6,7 @@ const admin = require('firebase-admin'); // 1. إضافة مكتبة فيربي�
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-// --- 2. إعداد Firebase Admin ---
-const fs = require('fs');
-
+const PORT = process.env.PORT || 3000 
 // --- 2. إعداد Firebase Admin ---
 const fs = require('fs');
 

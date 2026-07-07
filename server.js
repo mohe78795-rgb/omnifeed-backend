@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 3000;
 // --- 2. إعداد Firebase Admin ---
 const fs = require('fs');
 
-try {
 // --- 2. إعداد Firebase Admin ---
 const fs = require('fs');
 

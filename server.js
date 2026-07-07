@@ -12,20 +12,18 @@ const fs = require('fs');
 
 try {
     const serviceAccountPath = "/etc/secrets/service-account.json";
-
     if (fs.existsSync(serviceAccountPath)) {
-        const data = fs.readFileSync(serviceAccountPath, "utf8");
-        const serviceAccount = JSON.parse(data);
-
-        // التعديل هنا: استخدام admin.credential.cert مباشرة مع التأكد من وجود admin
+        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+        
+        // استخدام الطريقة المباشرة لتهيئة الـ credential
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
         console.log("✅ Firebase Admin Initialized");
-    } else {
-        console.log("⚠️ File not found at", serviceAccountPath);
     }
 } catch (e) {
+    console.error("❌ Error:", e.message);
+}
     // إذا استمر الخطأ، سنقوم بطباعة الكائن admin لنتأكد من تحميله
     console.error("❌ Firebase Admin Init Error:", e.message);
     console.log("DEBUG: Admin object keys:", Object.keys(admin)); 

@@ -11,14 +11,13 @@ const PORT = process.env.PORT || 3000
 const fs = require('fs');
 
 try {
-    const serviceAccountPath = "/etc/secrets/service-account.json"; 
-    
+    const serviceAccountPath = "/etc/secrets/service-account.json";
+
     if (fs.existsSync(serviceAccountPath)) {
         const data = fs.readFileSync(serviceAccountPath, "utf8");
         const serviceAccount = JSON.parse(data);
-        
-        console.log("DEBUG: Keys in file are:", Object.keys(serviceAccount)); // لنرى ماذا يقرأ السيرفر
 
+        // التعديل هنا: استخدام admin.credential.cert مباشرة مع التأكد من وجود admin
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
@@ -27,9 +26,10 @@ try {
         console.log("⚠️ File not found at", serviceAccountPath);
     }
 } catch (e) {
-    console.error("❌ ERROR DETAILS:", e);
+    // إذا استمر الخطأ، سنقوم بطباعة الكائن admin لنتأكد من تحميله
+    console.error("❌ Firebase Admin Init Error:", e.message);
+    console.log("DEBUG: Admin object keys:", Object.keys(admin)); 
 }
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));

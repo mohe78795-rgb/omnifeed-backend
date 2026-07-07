@@ -9,23 +9,22 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- 2. إعداد Firebase Admin (الحل المباشر) ---
+// --- إعداد Firebase Admin (الإصدار المستقر 11.11.0) ---
 try {
-    // نستخدم مسار الملف الذي يوفره Render لـ Secret Files
     const serviceAccountPath = "/etc/secrets/service-account.json";
-    
     if (fs.existsSync(serviceAccountPath)) {
         const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
         
+        // هذه الطريقة هي المعيار في الإصدار 11
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
         console.log("✅ Firebase Admin Initialized Successfully");
     } else {
-        console.error("❌ ERROR: File not found at /etc/secrets/service-account.json");
+        console.warn("⚠️ Warning: service-account.json not found in /etc/secrets/");
     }
 } catch (e) {
-    console.error("❌ Firebase Init Error:", e.message);
+    console.error("❌ Firebase Initialization Error:", e.message);
 }
 
 app.use(cors());
@@ -34,29 +33,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // الاتصال بـ MongoDB
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("✅ متصل بسحابة أبو حسين (MongoDB)"))
+    .then(() => console.log("✅ متصل بقاعدة البيانات"))
     .catch(err => console.error("❌ خطأ MongoDB:", err));
 
-// تعريف الموديلات
-const User = mongoose.model('User', new mongoose.Schema({ name: String, phone: { type: String, unique: true }, pass: String, bal: { type: Number, default: 0 }, fcmToken: String }));
+// الموديلات الأساسية
+const User = mongoose.model('User', new mongoose.Schema({ phone: String, bal: Number, fcmToken: String }));
 const Message = mongoose.model('Message', new mongoose.Schema({ receiver: String, title: String, body: String }));
-const Order = mongoose.model('Order', new mongoose.Schema({ phone: String, items: Array, total: Number }));
-const Ad = mongoose.model('Ad', new mongoose.Schema({ videoUrl: String, active: { type: Boolean, default: true } }));
 
-// دالة الإشعارات
+// دالة إرسال الإشعارات (الإصدار 11)
 async function sendPushNotification(phone, title, body) {
     try {
-        const query = phone === 'ALL' ? {} : { phone };
-        const users = await User.find({ ...query, fcmToken: { $ne: null } });
+        const users = await User.find({ phone: phone === 'ALL' ? { $exists: true } : phone, fcmToken: { $ne: null } });
         const tokens = users.map(u => u.fcmToken);
         if (tokens.length > 0) {
-            await admin.messaging().sendMulticast({ notification: { title, body }, tokens });
+            await admin.messaging().sendMulticast({
+                notification: { title, body },
+                tokens: tokens,
+            });
             console.log(`🚀 Sent notification to ${tokens.length} devices`);
         }
     } catch (e) { console.error("❌ Notification Error:", e.message); }
 }
 
-// المسارات الأساسية
+// مسارات API
 app.post('/api/auth/update-fcm', async (req, res) => {
     const { phone, fcmToken } = req.body;
     await User.findOneAndUpdate({ phone }, { fcmToken });
@@ -71,14 +70,18 @@ app.post('/api/messages/send', async (req, res) => {
     res.json({ success: true });
 });
 
-// باقي المسارات
-app.get('/api/categories', async (req, res) => res.json([]));
-app.get('/api/products', async (req, res) => res.json([]));
-app.get('/api/ads', async (req, res) => res.json(await Ad.find({ active: true })));
-app.post('/api/auth/signup', async (req, res) => { const user = new User(req.body); await user.save(); res.json({ success: true }); });
-app.post('/api/auth/login', async (req, res) => { const user = await User.findOne(req.body); res.json({ success: !!user, user }); });
-app.post('/api/orders/add', async (req, res) => { await new Order(req.body).save(); res.json({ success: true }); });
-app.get('/api/orders/:phone', async (req, res) => res.json(await Order.find({ phone: req.params.phone })));
+app.post('/api/games/topup', async (req, res) => {
+    const { phone, price, game_code, user_id } = req.body;
+    try {
+        const user = await User.findOne({ phone });
+        if (!user || user.bal < price) return res.json({ success: false });
+        user.bal -= Number(price);
+        await user.save();
+        await new Message({ receiver: phone, title: "نجاح الشحن ⚡", body: `تم شحن ${game_code} للـ ID: ${user_id}` }).save();
+        sendPushNotification(phone, "نجاح الشحن ⚡", `تم شحن ${game_code} للـ ID: ${user_id}`);
+        res.json({ success: true, currentBal: user.bal });
+    } catch (e) { res.json({ success: false }); }
+});
 
-app.listen(PORT, () => console.log(`🚀 منظومة تمويناتي تعمل على ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`));
 

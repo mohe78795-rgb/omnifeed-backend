@@ -11,21 +11,29 @@ const PORT = process.env.PORT || 3000;
 const fs = require('fs');
 
 try {
-    // المسار الصحيح للملف بناءً على الاسم الذي زودتني به
+// --- 2. إعداد Firebase Admin ---
+const fs = require('fs');
+
+try {
     const serviceAccountPath = "/etc/secrets/service-account.json"; 
     
     if (fs.existsSync(serviceAccountPath)) {
-        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+        const data = fs.readFileSync(serviceAccountPath, "utf8");
+        const serviceAccount = JSON.parse(data);
+        
+        console.log("DEBUG: Keys in file are:", Object.keys(serviceAccount)); // لنرى ماذا يقرأ السيرفر
+
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
         console.log("✅ Firebase Admin Initialized");
     } else {
-        console.log("⚠️ الملف غير موجود في المسار:", serviceAccountPath);
+        console.log("⚠️ File not found at", serviceAccountPath);
     }
 } catch (e) {
-    console.log("⚠️ Firebase Admin error:", e.message);
+    console.error("❌ ERROR DETAILS:", e);
 }
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));

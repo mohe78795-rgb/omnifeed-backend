@@ -1,62 +1,44 @@
-const express = require('express');
+Const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const admin = require('firebase-admin'); // 1. إضافة مكتبة فيربيز
+const admin = require('firebase-admin');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000 
-// --- 2. إعداد Firebase Admin ---
-const fs = require('fs');
+const PORT = process.env.PORT || 3000;
 
+// --- 2. إعداد Firebase Admin ---
 try {
     const serviceAccountPath = "/etc/secrets/service-account.json";
     if (fs.existsSync(serviceAccountPath)) {
         const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
         
-        // استخدام الطريقة المباشرة لتهيئة الـ credential
+        // التهيئة الصحيحة
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
-        console.log("✅ Firebase Admin Initialized");
+        console.log("✅ Firebase Admin Initialized Successfully");
+    } else {
+        console.log("⚠️ Service account file not found at:", serviceAccountPath);
     }
 } catch (e) {
-    console.error("❌ Error:", e.message);
-}
-    // إذا استمر الخطأ، سنقوم بطباعة الكائن admin لنتأكد من تحميله
     console.error("❌ Firebase Admin Init Error:", e.message);
-    console.log("DEBUG: Admin object keys:", Object.keys(admin)); 
 }
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ... (بقية الكود الخاص بـ Mongoose والموديلات والمسارات)
 const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(MONGO_URI)
     .then(() => console.log("✅ متصل بسحابة أبو حسين (MongoDB)"))
     .catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
 
-// --- 3. تحديث User Schema لإضافة fcmToken ---
-const User = mongoose.model('User', new mongoose.Schema({
-    name: { type: String, required: true },
-    phone: { type: String, required: true, unique: true },
-    pass: { type: String, required: true },
-    bal: { type: Number, default: 0 },
-    fcmToken: { type: String, default: null }, // الحقل الجديد
-    joinDate: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}));
-
-// (بقيه الموديلات Category, Product, Order, Message, Ad كما هي بدون تغيير)
-const Category = mongoose.model('Category', new mongoose.Schema({ name: String, sub: String, img: String }));
-const Product = mongoose.model('Product', new mongoose.Schema({ name: String, price: Number, img: String, cat: String }));
-const Order = mongoose.model('Order', new mongoose.Schema({ id: { type: String, default: () => "INV-" + Math.floor(100000 + Math.random() * 900000) }, phone: String, items: Array, total: Number, status: { type: String, default: 'قيد المراجعة ⏳' }, date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) } }));
-const Message = mongoose.model('Message', new mongoose.Schema({ sender: { type: String, default: "ADMIN" }, receiver: { type: String, required: true }, title: { type: String, required: true }, body: { type: String, required: true }, date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) } }));
-const Ad = mongoose.model('Ad', new mongoose.Schema({ videoUrl: { type: String, required: true }, active: { type: Boolean, default: true }, date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) } }));
-
-const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
-
-// دالة مساعدة لإرسال الإشعارات
+// ... (انسخ الموديلات والمسارات كما هي من ملفك السابق)
+// تأكد أن دالة sendPushNotification تقع بعد تهيئة الـ admin
 async function sendPushNotification(phone, title, body) {
     try {
         const query = phone === 'ALL' ? {} : { phone };
@@ -64,18 +46,16 @@ async function sendPushNotification(phone, title, body) {
         const tokens = users.map(u => u.fcmToken);
 
         if (tokens.length > 0) {
-            const message = {
+            await admin.messaging().sendMulticast({
                 notification: { title, body },
                 tokens: tokens,
-            };
-            await admin.messaging().sendMulticast(message);
+            });
             console.log(`🚀 Sent notification to ${tokens.length} devices`);
         }
     } catch (error) {
         console.error("❌ Error sending notification:", error);
     }
 }
-
 // --- 4. Endpoint جديد لتخزين fcmToken من التطبيق ---
 app.post('/api/auth/update-fcm', async (req, res) => {
     const { phone, fcmToken } = req.body;

@@ -9,162 +9,55 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         *{font-family:'Cairo',sans-serif; -webkit-tap-highlight-color: transparent;}
-        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none::-scrollbar { display: none; }
         .panel-card { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); }
-
-        /* تصميم بطاقة الأذونات المنبثقة */
-        #permission-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(10px);
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .permission-card {
-            background: #0f172a;
-            border: 1px solid #10b981;
-            border-radius: 30px;
-            max-width: 340px;
-            width: 100%;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        /* معاينة الصورة */
-        .img-preview {
-            width: 100%; height: 160px; border-radius: 20px;
-            background-size: cover; background-position: center;
-            display: none; margin-top: 15px; border: 2px solid #10b981;
-        }
-
+        #permission-modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); align-items: center; justify-content: center; padding: 20px; }
+        .permission-card { background: #0f172a; border: 1px solid #10b981; border-radius: 30px; max-width: 340px; width: 100%; padding: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .img-preview { width: 100%; height: 160px; border-radius: 20px; background-size: cover; background-position: center; display: none; margin-top: 15px; border: 2px solid #10b981; }
         input[type="file"] { display: none; }
     </style>
 </head>
 <body class="bg-[#030712] text-slate-100 min-h-screen pb-32">
 
-    <!-- بطاقة طلب الأذونات (الجسر) -->
+    <!-- نافذة الأذونات -->
     <div id="permission-modal">
         <div class="permission-card">
-            <div class="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl border border-emerald-500/20">
-                <i class="fas fa-images"></i>
-            </div>
             <h3 class="text-xl font-black text-white mb-2">إذن الوصول للصور</h3>
-            <p class="text-slate-400 text-sm leading-relaxed mb-8">
-                يحتاج النظام للوصول إلى معرض الصور الخاص بك لتتمكن من رفع وتحديث صور المنتجات في المتجر.
-            </p>
+            <p class="text-slate-400 text-sm mb-8">يحتاج النظام للوصول لمعرض الصور لرفع صور المنتجات.</p>
             <div class="flex flex-col gap-3">
-                <button onclick="invokeNativeGallery()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl transition-all shadow-lg shadow-emerald-500/20">
-                    سماح بالوصول
-                </button>
-                <button onclick="closePermissionModal()" class="w-full text-slate-500 text-xs font-bold py-2">
-                    إلغاء
-                </button>
+                <button onclick="invokeNativeGallery()" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-2xl">سماح بالوصول</button>
+                <button onclick="closePermissionModal()" class="w-full text-slate-500 font-bold py-2">إلغاء</button>
             </div>
         </div>
     </div>
 
-    <!-- التنبيهات العلوي -->
-    <div id="adm-toast" class="fixed top-6 left-6 right-6 z-[5000] bg-emerald-500 text-slate-950 font-black p-4 rounded-xl text-sm text-center shadow-2xl hidden md:max-w-md md:mx-auto"></div>
-
-    <!-- شاشة الدخول -->
-    <div id="admin-lock" class="fixed inset-0 z-[4000] bg-[#030712] flex items-center justify-center p-6">
-        <div class="max-w-md w-full bg-slate-900/40 p-8 rounded-3xl border border-white/5 space-y-6 text-center backdrop-blur-lg">
-            <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-emerald-500/20">
-                <i class="fas fa-lock"></i>
+    <!-- المحتوى -->
+    <div id="admin-content" class="max-w-6xl mx-auto px-4 pt-8 space-y-6">
+        <!-- قسم إضافة منتج كمثال -->
+        <div id="panel-add-product" class="admin-panel max-w-xl mx-auto panel-card p-6 rounded-2xl space-y-4">
+            <h3 class="font-bold text-emerald-400">إضافة منتج جديد</h3>
+            <div onclick="requestGalleryPermission('p-file')" class="p-5 bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer">
+                <i class="fas fa-camera text-emerald-400"></i> اختيار صورة
             </div>
-            <h2 class="text-xl font-black text-slate-100">إدارة أبو حسين</h2>
-            <input type="password" id="admin-key-input" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-center font-black text-emerald-400 text-xl outline-none" placeholder="أدخل الرمز السري">
-            <button onclick="loginAdmin()" class="w-full bg-emerald-500 text-slate-950 font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95">دخول آمن</button>
+            <input type="file" id="p-file" accept="image/*" onchange="handlePreview(this, 'p-preview-box')">
+            <div id="p-preview-box" class="img-preview"></div>
         </div>
-    </div>
-
-    <!-- المحتوى الرئيسي للوحة التحكم -->
-    <div id="admin-content" class="hidden max-w-6xl mx-auto px-4 pt-8 space-y-6">
-
-        <header class="flex justify-between items-center border-b border-white/5 pb-5">
-            <h1 class="text-xl font-black flex items-center gap-2">
-                <span class="w-2 h-6 bg-emerald-500 rounded-full"></span> لوحة التحكم بالسيرفر
-            </h1>
-            <button onclick="logoutAdmin()" class="bg-red-500/10 text-red-400 px-4 py-2 rounded-xl text-xs font-bold border border-red-500/10">خروج</button>
-        </header>
-
-        <!-- التبويبات -->
-        <div class="hidden md:flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            <button onclick="switchTab('orders')" id="tab-orders" class="bg-emerald-500 text-slate-950 px-6 py-3 rounded-xl text-xs font-bold transition-all">📦 الطلبات</button>
-            <button onclick="switchTab('add-cat')" id="tab-add-cat" class="bg-white/5 text-slate-400 px-6 py-3 rounded-xl text-xs font-bold transition-all">📁 إضافة قسم</button>
-            <button onclick="switchTab('add-product')" id="tab-add-product" class="bg-white/5 text-slate-400 px-6 py-3 rounded-xl text-xs font-bold transition-all">🛍️ إضافة منتج</button>
-        </div>
-
-        <!-- قسم الطلبات -->
-        <div id="panel-orders" class="admin-panel space-y-4">
-            <div id="adm-orders-list" class="space-y-3">
-                <p class="text-center text-slate-500 py-10">جاري تحميل الطلبات...</p>
-            </div>
-        </div>
-
-        <!-- قسم إضافة قسم جديد -->
-        <div id="panel-add-cat" class="admin-panel hidden max-w-xl mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
-            <h3 class="font-bold text-emerald-400 flex items-center gap-2"><i class="fas fa-folder-plus"></i> إنشاء قسم رئيسي</h3>
-            <input type="text" id="cat-name" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none" placeholder="اسم القسم الجديد">
-
-            <div class="space-y-2">
-                <div onclick="requestGalleryPermission('cat-file')" class="flex items-center justify-center gap-3 w-full p-5 bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer hover:bg-slate-700 transition-all">
-                    <i class="fas fa-camera text-emerald-400 text-xl"></i>
-                    <span class="text-sm font-bold">صورة القسم من المعرض</span>
-                </div>
-                <input type="file" id="cat-file" accept="image/*" onchange="handlePreview(this, 'cat-preview-box')">
-                <div id="cat-preview-box" class="img-preview"></div>
-            </div>
-
-            <button onclick="addCategory()" id="btn-add-cat" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl transition-all shadow-lg">حفظ القسم الآن</button>
-        </div>
-
-        <!-- قسم إضافة منتج -->
-        <div id="panel-add-product" class="admin-panel hidden max-w-xl mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
-            <h3 class="font-bold text-emerald-400 flex items-center gap-2"><i class="fas fa-cart-plus"></i> إضافة منتج جديد</h3>
-            <input type="text" id="p-name" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none" placeholder="اسم المنتج">
-            <input type="number" id="p-price" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none" placeholder="السعر بالريال">
-            <select id="p-cat-select" class="w-full p-4 bg-slate-800 border border-white/10 rounded-xl text-white font-bold outline-none"></select>
-
-            <div class="space-y-2">
-                <div onclick="requestGalleryPermission('p-file')" class="flex items-center justify-center gap-3 w-full p-5 bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer hover:bg-slate-700 transition-all">
-                    <i class="fas fa-image text-emerald-400 text-xl"></i>
-                    <span class="text-sm font-bold">صورة المنتج من المعرض</span>
-                </div>
-                <input type="file" id="p-file" accept="image/*" onchange="handlePreview(this, 'p-preview-box')">
-                <div id="p-preview-box" class="img-preview"></div>
-            </div>
-
-            <button onclick="addProduct()" id="btn-add-p" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl transition-all shadow-lg">إضافة للمتجر</button>
-        </div>
-
-    </div>
-
-    <!-- القائمة السفلية للجوال -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-[#070a13]/95 border-t border-white/5 p-3 grid grid-cols-3 gap-2 z-[3000] backdrop-blur-xl">
-        <button onclick="switchTab('orders')" id="mob-orders" class="flex flex-col items-center justify-center py-2 text-emerald-400 bg-white/5 rounded-2xl transition-all">
-            <i class="fas fa-box text-lg"></i><span class="text-[10px] font-bold mt-1">الطلبات</span>
-        </button>
-        <button onclick="switchTab('add-cat')" id="mob-add-cat" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-2xl transition-all">
-            <i class="fas fa-folder-plus text-lg"></i><span class="text-[10px] font-bold mt-1">أقسام</span>
-        </button>
-        <button onclick="switchTab('add-product')" id="mob-add-product" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-2xl transition-all">
-            <i class="fas fa-cart-plus text-lg"></i><span class="text-[10px] font-bold mt-1">منتج</span>
-        </button>
     </div>
 
     <script>
-        const API = "https://0zk30qr9iu.onrender.com";
-        const IMGBB_API_KEY = "1df639c05c08365ef57319e992b8d009";
-
-        let masterKey = "";
         let currentTargetInput = "";
-        let globalCategories = [];
+
+        // دالة استقبال الصورة من الأندرويد
+        window.handleSelectedImage = function(imagePath) {
+            console.log("تم استلام مسار الصورة: " + imagePath);
+            const previewBox = document.getElementById(currentTargetInput.replace('file', 'preview-box'));
+            if (previewBox) {
+                previewBox.style.backgroundImage = `url('${imagePath}')`;
+                previewBox.style.display = 'block';
+                // تفعيل المدخل برمجياً إذا لزم الأمر
+                showToast("✅ تم اختيار الصورة بنجاح");
+            }
+        };
 
         function requestGalleryPermission(inputId) {
             currentTargetInput = inputId;
@@ -175,7 +68,6 @@
             document.getElementById('permission-modal').style.display = 'none';
         }
 
-        // تم تصحيح اسم الجسر هنا ليطابق تعريف AndroidBridge في الجافا
         function invokeNativeGallery() {
             closePermissionModal();
             if (window.AndroidBridge && typeof window.AndroidBridge.openGallery === "function") {
@@ -189,145 +81,15 @@
             const previewBox = document.getElementById(previewId);
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     previewBox.style.backgroundImage = `url(${e.target.result})`;
                     previewBox.style.display = 'block';
-                }
+                };
                 reader.readAsDataURL(input.files[0]);
             }
         }
-
-        async function uploadToCloud(file) {
-            if (!file) return null;
-            let formData = new FormData();
-            formData.append("image", file);
-            try {
-                let res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                    method: "POST",
-                    body: formData
-                });
-                let data = await res.json();
-                return data.success ? data.data.url : null;
-            } catch(e) { return null; }
-        }
-
-        async function loginAdmin() {
-            const key = document.getElementById('admin-key-input').value;
-            if(!key) return;
-            masterKey = key;
-            await loadDashboard(true);
-        }
-
-        async function loadDashboard(isFirst = false) {
-            try {
-                const res = await fetch(`${API}/api/admin/dashboard`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ adminPass: masterKey })
-                });
-                const reply = await res.json();
-                if(reply.success) {
-                    if(isFirst) localStorage.setItem("admin_token", masterKey);
-                    document.getElementById('admin-lock').classList.add('hidden');
-                    document.getElementById('admin-content').classList.remove('hidden');
-                    globalCategories = reply.data.categories || [];
-                    renderOrders(reply.data.orders);
-                    updateCatDropdown();
-                } else {
-                    alert("الرمز السري غير صحيح");
-                }
-            } catch(e) { alert("فشل الاتصال بالسيرفر"); }
-        }
-
-        function renderOrders(orders) {
-            const list = document.getElementById('adm-orders-list');
-            if(!orders.length) { list.innerHTML = "<p class='text-center py-20 text-slate-600'>لا توجد طلبات حالية</p>"; return; }
-            list.innerHTML = orders.reverse().map(o => `
-                <div class="p-4 bg-slate-900/40 border border-white/5 rounded-2xl flex flex-col gap-2">
-                    <div class="flex justify-between">
-                        <span class="text-emerald-400 font-black text-xs">#${o.id.slice(-6)}</span>
-                        <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-slate-400">${o.date}</span>
-                    </div>
-                    <div class="font-bold text-sm">${o.phone}</div>
-                    <div class="text-xs text-slate-400">${o.items.map(i=>`${i.name} (${i.qty})`).join(' | ')}</div>
-                    <div class="flex justify-between items-center mt-2 border-t border-white/5 pt-3">
-                        <span class="font-black text-emerald-400">${o.total} YER</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateCatDropdown() {
-            const sel = document.getElementById('p-cat-select');
-            sel.innerHTML = globalCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-        }
-
-        async function addCategory() {
-            const name = document.getElementById('cat-name').value;
-            const file = document.getElementById('cat-file').files[0];
-            const btn = document.getElementById('btn-add-cat');
-            if(!name || !file) return alert("أكمل البيانات");
-
-            btn.disabled = true; btn.innerText = "جاري الرفع...⏳";
-            const imgUrl = await uploadToCloud(file);
-            if(!imgUrl) { alert("فشل الرفع"); btn.disabled=false; return; }
-
-            await fetch(`${API}/api/admin/category/add`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, name, img: imgUrl, sub: "" })
-            });
-
-            showToast("✅ تم إضافة القسم بنجاح");
-            location.reload();
-        }
-
-        async function addProduct() {
-            const name = document.getElementById('p-name').value;
-            const price = document.getElementById('p-price').value;
-            const cat = document.getElementById('p-cat-select').value;
-            const file = document.getElementById('p-file').files[0];
-            const btn = document.getElementById('btn-add-p');
-            if(!name || !price || !file) return alert("أكمل البيانات");
-
-            btn.disabled = true; btn.innerText = "جاري المعالجة...⏳";
-            const imgUrl = await uploadToCloud(file);
-            if(!imgUrl) { alert("فشل الرفع"); btn.disabled=false; return; }
-
-            await fetch(`${API}/api/admin/product/add`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, name, price, img: imgUrl, cat })
-            });
-
-            showToast("🛍️ تم إضافة المنتج");
-            loadDashboard();
-            btn.disabled = false; btn.innerText = "إضافة للمتجر";
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
-            document.querySelectorAll('[id^="mob-"]').forEach(b => {
-                b.classList.replace('text-emerald-400', 'text-slate-400');
-                b.classList.remove('bg-white/5');
-            });
-            const mob = document.getElementById(`mob-${tabId}`);
-            if(mob) { mob.classList.replace('text-slate-400', 'text-emerald-400'); mob.classList.add('bg-white/5'); }
-        }
-
-        function showToast(m) {
-            const t = document.getElementById('adm-toast');
-            t.innerText = m; t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), 3000);
-        }
-
-        function logoutAdmin() { localStorage.removeItem("admin_token"); location.reload(); }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const saved = localStorage.getItem("admin_token");
-            if(saved) { masterKey = saved; loadDashboard(); }
-        });
+        
+        function showToast(msg) { alert(msg); }
     </script>
 </body>
 </html>

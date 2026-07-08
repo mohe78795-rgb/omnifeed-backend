@@ -11,7 +11,7 @@
         *{font-family:'Cairo',sans-serif; -webkit-tap-highlight-color: transparent;}
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .panel-card { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); }
-        
+
         /* تصميم بطاقة الأذونات المنبثقة */
         #permission-modal {
             display: none;
@@ -85,7 +85,7 @@
 
     <!-- المحتوى الرئيسي للوحة التحكم -->
     <div id="admin-content" class="hidden max-w-6xl mx-auto px-4 pt-8 space-y-6">
-        
+
         <header class="flex justify-between items-center border-b border-white/5 pb-5">
             <h1 class="text-xl font-black flex items-center gap-2">
                 <span class="w-2 h-6 bg-emerald-500 rounded-full"></span> لوحة التحكم بالسيرفر
@@ -111,7 +111,7 @@
         <div id="panel-add-cat" class="admin-panel hidden max-w-xl mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
             <h3 class="font-bold text-emerald-400 flex items-center gap-2"><i class="fas fa-folder-plus"></i> إنشاء قسم رئيسي</h3>
             <input type="text" id="cat-name" class="w-full p-4 bg-black/40 border border-white/10 rounded-xl text-white outline-none" placeholder="اسم القسم الجديد">
-            
+
             <div class="space-y-2">
                 <div onclick="requestGalleryPermission('cat-file')" class="flex items-center justify-center gap-3 w-full p-5 bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer hover:bg-slate-700 transition-all">
                     <i class="fas fa-camera text-emerald-400 text-xl"></i>
@@ -120,7 +120,7 @@
                 <input type="file" id="cat-file" accept="image/*" onchange="handlePreview(this, 'cat-preview-box')">
                 <div id="cat-preview-box" class="img-preview"></div>
             </div>
-            
+
             <button onclick="addCategory()" id="btn-add-cat" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl transition-all shadow-lg">حفظ القسم الآن</button>
         </div>
 
@@ -139,7 +139,7 @@
                 <input type="file" id="p-file" accept="image/*" onchange="handlePreview(this, 'p-preview-box')">
                 <div id="p-preview-box" class="img-preview"></div>
             </div>
-            
+
             <button onclick="addProduct()" id="btn-add-p" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl transition-all shadow-lg">إضافة للمتجر</button>
         </div>
 
@@ -159,15 +159,12 @@
     </div>
 
     <script>
-        // الإعدادات الأساسية
         const API = "https://0zk30qr9iu.onrender.com";
         const IMGBB_API_KEY = "1df639c05c08365ef57319e992b8d009";
-        
+
         let masterKey = "";
         let currentTargetInput = "";
         let globalCategories = [];
-
-        // --- وظائف الجسر والأذونات ---
 
         function requestGalleryPermission(inputId) {
             currentTargetInput = inputId;
@@ -178,18 +175,16 @@
             document.getElementById('permission-modal').style.display = 'none';
         }
 
+        // تم تصحيح اسم الجسر هنا ليطابق تعريف AndroidBridge في الجافا
         function invokeNativeGallery() {
             closePermissionModal();
-            // التحقق من وجود الجسر المعرف في ملف WebInterface.java
-            if (window.Android && typeof window.Android.openGallery === "function") {
-                window.Android.openGallery(); 
+            if (window.AndroidBridge && typeof window.AndroidBridge.openGallery === "function") {
+                window.AndroidBridge.openGallery();
             } else {
-                // الوضع الاحتياطي للمتصفحات العادية
                 document.getElementById(currentTargetInput).click();
             }
         }
 
-        // معاينة الصورة بعد اختيارها
         function handlePreview(input, previewId) {
             const previewBox = document.getElementById(previewId);
             if (input.files && input.files[0]) {
@@ -201,8 +196,6 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
-
-        // --- وظائف السيرفر ---
 
         async function uploadToCloud(file) {
             if (!file) return null;
@@ -259,9 +252,6 @@
                     <div class="text-xs text-slate-400">${o.items.map(i=>`${i.name} (${i.qty})`).join(' | ')}</div>
                     <div class="flex justify-between items-center mt-2 border-t border-white/5 pt-3">
                         <span class="font-black text-emerald-400">${o.total} YER</span>
-                        <div class="flex gap-2">
-                            <button onclick="updateStatus('${o.id}', 'مكتمل ✅')" class="bg-emerald-500 text-slate-950 px-4 py-1.5 rounded-lg text-xs font-bold">إتمام</button>
-                        </div>
                     </div>
                 </div>
             `).join('');
@@ -341,3 +331,4 @@
     </script>
 </body>
 </html>
+

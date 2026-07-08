@@ -1,5 +1,3 @@
---- START OF FILE admin.html ---
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -14,16 +12,17 @@
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
         .panel-card { background: #121418; border: 1px solid #1d2127; backdrop-filter: blur(8px); }
+        .admin-panel { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-[#08090a] text-slate-100 min-h-screen pb-32 selection:bg-[#ffcc00] selection:text-black">
     
-    <audio id="snd-order-alert" src="https://assets.mixkit.co/active_storage/sfx/911/911-preview.mp3" preload="auto"></audio>
+    <!-- صوت التنبيه عند تحديث البيانات -->
     <audio id="snd-success" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
 
+    <!-- التنبيهات المنبثقة -->
     <div id="adm-toast" class="fixed top-6 left-6 right-6 z-[5000] bg-[#ffcc00] text-slate-950 font-black p-4 rounded-xl text-sm text-center shadow-2xl hidden transition-all duration-300 md:max-w-md md:mx-auto"></div>
-
-    <!-- تم إزالة قسم القفل (admin-lock) من هنا -->
 
     <div id="admin-content" class="max-w-6xl mx-auto px-4 pt-8 space-y-6">
         
@@ -32,151 +31,271 @@
                 <h1 class="text-2xl font-black text-slate-100 flex items-center gap-2">
                     <span class="w-2 h-6 bg-[#ffcc00] rounded-full inline-block"></span> إدارة تموينات أبو حسين
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">لوحة التحكم السريعة وتحديث الأسعار الفوري</p>
+                <p class="text-xs text-slate-400 mt-1">لوحة التحكم المرتبطة بقاعدة البيانات</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                 <button onclick="manualDashboardRefresh()" class="flex-1 md:flex-none bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-200 border border-white/5 transition flex items-center justify-center gap-2">
                     <i class="fas fa-sync-alt text-[#ffcc00]"></i> <span>تحديث البيانات</span>
                 </button>
-                <!-- تم إزالة أزرار تغيير كلمة السر والخروج -->
             </div>
         </header>
 
+        <!-- التبويبات للكمبيوتر -->
         <div class="hidden md:flex gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-[#1d2127]">
             <button onclick="switchTab('orders')" id="tab-orders" class="bg-[#ffcc00] text-slate-950 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5">
                 <i class="fas fa-box"></i> <span>الطلبات</span>
             </button>
             <button onclick="switchTab('users')" id="tab-users" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5">
-                <i class="fas fa-users"></i> <span>الحسابات والمحافظ</span>
+                <i class="fas fa-users"></i> <span>المحافظ</span>
             </button>
             <button onclick="switchTab('add-cat')" id="tab-add-cat" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5">
-                <i class="fas fa-folder-plus"></i> <span>إضافة قسم جديد</span>
+                <i class="fas fa-folder-plus"></i> <span>إضافة قسم</span>
             </button>
             <button onclick="switchTab('add-product')" id="tab-add-product" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5">
-                <i class="fas fa-cart-plus"></i> <span>إضافة منتج جديد</span>
-            </button>
-            <button onclick="switchTab('manage-cats')" id="tab-manage-cats" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5">
-                <i class="fas fa-th-list"></i> <span>تعديل وحذف الأقسام</span>
-            </button>
-            <button onclick="switchTab('manage-products')" id="tab-manage-products" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5">
-                <i class="fas fa-tasks"></i> <span>إدارة وتعديل المنتجات</span>
+                <i class="fas fa-cart-plus"></i> <span>إضافة منتج</span>
             </button>
             <button onclick="switchTab('broadcast')" id="tab-broadcast" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5">
-                <i class="fas fa-bullhorn"></i> <span>إرسال إشعار</span>
+                <i class="fas fa-bullhorn"></i> <span>الإشعارات</span>
             </button>
             <button onclick="switchTab('ads')" id="tab-ads" class="bg-white/5 text-slate-400 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5">
                 <i class="fab fa-youtube"></i> <span>فيديو الواجهة</span>
             </button>
         </div>
 
+        <!-- سجل الطلبات -->
         <div id="panel-orders" class="admin-panel space-y-4">
-            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-inbox"></i> سجل الطلبات الواردة</h3>
-            <div id="adm-orders-list" class="space-y-3"></div>
+            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-inbox"></i> الطلبات الواردة</h3>
+            <div id="adm-orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-center py-10 text-slate-500">جاري تحميل الطلبات...</div>
         </div>
 
+        <!-- المحافظ والمستخدمين -->
         <div id="panel-users" class="admin-panel hidden space-y-4">
-            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-users"></i> كشوفات حسابات العملاء</h3>
-            <div id="adm-users-list" class="space-y-3"></div>
+            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-wallet"></i> إدارة أرصدة العملاء</h3>
+            <div id="adm-users-list" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
         </div>
 
+        <!-- إضافة قسم -->
         <div id="panel-add-cat" class="admin-panel hidden max-w-xl mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
-            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-folder-plus"></i> إنشاء قسم رئيسي جديد</h3>
-            <input type="text" id="cat-name" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="اسم القسم (مثال: معلبات)">
-            <input type="text" id="cat-sub" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="وصف القسم الفرعي">
-            <div class="p-3 bg-black/20 rounded-xl border border-[#1d2127] space-y-2">
-                <label class="block text-[11px] text-slate-400">صورة القسم:</label>
-                <input type="file" id="cat-file" accept="image/*" class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#ffcc00]/10 file:text-[#ffcc00] bg-black/30 p-2 rounded-lg">
-                <input type="text" id="cat-img" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-xs text-white outline-none focus:border-[#ffcc00]/40" placeholder="أو الصق رابط صورة جاهز هنا">
-            </div>
-            <button onclick="addCategory()" id="btn-add-cat" class="w-full bg-[#ffcc00] hover:bg-[#e6b800] text-slate-950 font-bold py-3 rounded-xl text-sm transition-all shadow-lg shadow-[#ffcc00]/5 flex items-center justify-center gap-2">
-                <i class="fas fa-plus-circle"></i> <span>حفظ وإنشاء القسم فوراً</span>
-            </button>
+            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-folder-plus"></i> إنشاء قسم جديد</h3>
+            <input type="text" id="cat-name" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="اسم القسم">
+            <input type="text" id="cat-sub" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="وصف القسم">
+            <input type="text" id="cat-img" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="رابط صورة القسم">
+            <button onclick="addCategory()" class="w-full bg-[#ffcc00] text-black font-bold py-3 rounded-xl">حفظ القسم</button>
         </div>
 
+        <!-- إضافة منتج -->
         <div id="panel-add-product" class="admin-panel hidden max-w-xl mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
-            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-cart-plus"></i> إدخال منتج جديد بالمتجر</h3>
-            <input type="text" id="p-name" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="اسم المنتج أو السلعة">
-            <input type="number" id="p-price" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="السعر (YER)">
-            
-            <div class="space-y-1.5">
-                <label class="block text-xs font-bold text-amber-400">⚠️ تحديد القسم التابع له (إجباري):</label>
-                <select id="p-cat-select" class="w-full p-3 bg-[#0d0f11] border border-[#1d2127] rounded-xl text-sm outline-none text-white font-bold focus:border-amber-500/40"></select>
-            </div>
-
-            <div class="p-3 bg-black/20 rounded-xl border border-[#1d2127] space-y-2">
-                <label class="block text-[11px] text-slate-400">صورة المنتج:</label>
-                <input type="file" id="p-file" accept="image/*" class="w-full text-xs text-slate-400 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#ffcc00]/10 file:text-[#ffcc00] bg-black/30 p-2 rounded-lg">
-                <input type="text" id="p-img" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-xs text-white outline-none focus:border-[#ffcc00]/40" placeholder="أو الصق رابط صورة جاهز">
-            </div>
-            <button onclick="addProduct()" id="btn-add-p" class="w-full bg-[#ffcc00] hover:bg-[#e6b800] text-slate-950 font-bold py-3 rounded-xl text-sm transition-all shadow-lg shadow-[#ffcc00]/5 flex items-center justify-center gap-2">
-                <i class="fas fa-check-circle"></i> <span>تثبيت وإدراج المنتج</span>
-            </button>
+            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-cart-plus"></i> إضافة منتج جديد</h3>
+            <input type="text" id="p-name" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="اسم المنتج">
+            <input type="number" id="p-price" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="السعر">
+            <select id="p-cat-select" class="w-full p-3 bg-[#0d0f11] border border-[#1d2127] rounded-xl text-sm text-white"></select>
+            <input type="text" id="p-img" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="رابط صورة المنتج">
+            <button onclick="addProduct()" class="w-full bg-[#ffcc00] text-black font-bold py-3 rounded-xl">تثبيت المنتج</button>
         </div>
 
-        <div id="panel-manage-cats" class="admin-panel hidden space-y-4">
-            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-folder"></i> قائمة الأقسام الحالية</h3>
-            <div id="adm-categories-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-        </div>
-
-        <div id="panel-manage-products" class="admin-panel hidden space-y-4">
-            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-sliders-h"></i> قائمة المنتجات والأسعار الحالية</h3>
-            <div id="adm-products-list" class="grid grid-cols-1 gap-3"></div>
-        </div>
-
+        <!-- بث الإشعارات -->
         <div id="panel-broadcast" class="admin-panel hidden max-w-lg mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
-            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-paper-plane"></i> بث إشعار للعملاء</h3>
-            <select id="msg-receiver-type" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40">
-                <option value="ALL">إلى جميع المشتركين</option>
-                <option value="INDIVIDUAL">إلى مشترك عبر رقم الهاتف</option>
+            <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fas fa-paper-plane"></i> إرسال إشعار</h3>
+            <select id="msg-receiver-type" onchange="document.getElementById('msg-phone-container').classList.toggle('hidden', this.value === 'ALL')" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none">
+                <option value="ALL">للجميع</option>
+                <option value="INDIVIDUAL">لعميل محدد</option>
             </select>
-            <div id="msg-phone-container" class="space-y-1 hidden">
-                <input type="tel" id="msg-phone" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="7xxxxxxxx">
+            <div id="msg-phone-container" class="hidden">
+                <input type="tel" id="msg-phone" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none" placeholder="7xxxxxxxx">
             </div>
-            <input type="text" id="msg-title" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none focus:border-[#ffcc00]/40" placeholder="عنوان الإشعار">
-            <textarea id="msg-body" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white h-24 resize-none outline-none focus:border-[#ffcc00]/40" placeholder="اكتب تفاصيل الرسالة هنا..."></textarea>
-            <button onclick="sendAdminMessage()" id="btn-send-msg" class="w-full bg-[#ffcc00] hover:bg-[#e6b800] text-slate-950 font-bold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                <i class="fas fa-share-square"></i> <span>إرسال الآن</span>
-            </button>
+            <input type="text" id="msg-title" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white outline-none" placeholder="العنوان">
+            <textarea id="msg-body" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-sm text-white h-24 resize-none outline-none" placeholder="نص الرسالة..."></textarea>
+            <button onclick="sendAdminMessage()" class="w-full bg-[#ffcc00] text-black font-bold py-3 rounded-xl">إرسال الآن</button>
         </div>
 
+        <!-- فيديو الواجهة -->
         <div id="panel-ads" class="admin-panel hidden max-w-lg mx-auto panel-card p-6 rounded-2xl space-y-4 shadow-xl">
             <h3 class="font-bold text-base text-[#ffcc00] flex items-center gap-2"><i class="fab fa-youtube"></i> فيديو واجهة المتجر</h3>
-            <input type="text" id="set-ad-url" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-xs text-white outline-none focus:border-[#ffcc00]/40" placeholder="الصق رابط يوتيوب هنا">
-            <button onclick="addAd()" class="w-full bg-[#ffcc00] hover:bg-[#e6b800] text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                <i class="fas fa-save"></i> <span>حفظ وتحديث الفيديو</span>
-            </button>
+            <input type="text" id="set-ad-url" class="w-full p-3 bg-black/40 border border-[#1d2127] rounded-xl text-xs text-white outline-none" placeholder="رابط يوتيوب">
+            <button onclick="addAd()" class="w-full bg-[#ffcc00] text-black font-bold py-2.5 rounded-xl">حفظ الفيديو</button>
         </div>
 
     </div>
 
+    <!-- القائمة السفلية للجوال -->
     <div class="md:hidden fixed bottom-0 left-0 right-0 bg-[#0d0f11] border-t border-[#1d2127] p-2 grid grid-cols-4 gap-1.5 z-[3000] backdrop-blur-xl">
-        <button onclick="switchTab('orders')" id="mob-orders" class="flex flex-col items-center justify-center py-2 text-[#ffcc00] bg-white/5 rounded-xl transition-all">
+        <button onclick="switchTab('orders')" id="mob-orders" class="flex flex-col items-center justify-center py-2 text-[#ffcc00] bg-white/5 rounded-xl">
             <i class="fas fa-box text-sm"></i><span class="text-[9px] font-bold mt-0.5">الطلبات</span>
         </button>
-        <button onclick="switchTab('users')" id="mob-users" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+        <button onclick="switchTab('users')" id="mob-users" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl">
             <i class="fas fa-wallet text-sm"></i><span class="text-[9px] font-bold mt-0.5">المحافظ</span>
         </button>
-        <button onclick="switchTab('add-cat')" id="mob-add-cat" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+        <button onclick="switchTab('add-cat')" id="mob-add-cat" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl">
             <i class="fas fa-folder-plus text-sm"></i><span class="text-[9px] font-bold mt-0.5">+ قسم</span>
         </button>
-        <button onclick="switchTab('add-product')" id="mob-add-product" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
+        <button onclick="switchTab('add-product')" id="mob-add-product" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl">
             <i class="fas fa-cart-plus text-sm"></i><span class="text-[9px] font-bold mt-0.5">+ منتج</span>
-        </button>
-        <button onclick="switchTab('manage-cats')" id="mob-manage-cats" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
-            <i class="fas fa-th-large text-sm"></i><span class="text-[9px] font-bold mt-0.5">الأقسام</span>
-        </button>
-        <button onclick="switchTab('manage-products')" id="mob-manage-products" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
-            <i class="fas fa-sliders-h text-sm"></i><span class="text-[9px] font-bold mt-0.5">المنتجات</span>
-        </button>
-        <button onclick="switchTab('broadcast')" id="mob-broadcast" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
-            <i class="fas fa-paper-plane text-sm"></i><span class="text-[9px] font-bold mt-0.5">الإشعارات</span>
-        </button>
-        <button onclick="switchTab('ads')" id="mob-ads" class="flex flex-col items-center justify-center py-2 text-slate-400 rounded-xl transition-all">
-            <i class="fab fa-youtube text-sm"></i><span class="text-[9px] font-bold mt-0.5">الفيديو</span>
         </button>
     </div>
 
     <script>
+        const ADMIN_KEY = "123456"; // الرمز الافتراضي في السيرفر
+
+        window.onload = () => {
+            manualDashboardRefresh();
+            setInterval(manualDashboardRefresh, 30000); // تحديث تلقائي كل 30 ثانية
+        };
+
+        function showToast(msg) {
+            const t = document.getElementById('adm-toast');
+            t.innerText = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3000);
+        }
+
+        async function manualDashboardRefresh() {
+            try {
+                const res = await fetch('/api/admin/dashboard', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminPass: ADMIN_KEY })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    renderOrders(result.data.orders);
+                    renderUsers(result.data.users);
+                    updateCatSelect(result.data.categories);
+                    document.getElementById('snd-success').play();
+                }
+            } catch (e) {
+                showToast("خطأ في الاتصال بالسيرفر");
+            }
+        }
+
+        function renderOrders(orders) {
+            const list = document.getElementById('adm-orders-list');
+            if (orders.length === 0) { list.innerHTML = "لا توجد طلبات حالياً"; return; }
+            list.innerHTML = orders.map(o => `
+                <div class="panel-card p-4 rounded-2xl border-r-4 ${o.status.includes('⏳') ? 'border-amber-500' : 'border-green-500'} text-right">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] text-slate-500">${o.date}</span>
+                        <span class="bg-white/5 px-2 py-0.5 rounded text-[10px] text-[#ffcc00] font-bold">${o.status}</span>
+                    </div>
+                    <h4 class="font-bold text-sm">العميل: ${o.phone}</h4>
+                    <div class="my-2 text-xs text-slate-400">
+                        ${o.items.map(i => `• ${i.name} (x${i.qty})`).join('<br>')}
+                    </div>
+                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                        <p class="font-black text-[#ffcc00] text-sm">${o.total} YER</p>
+                        <select onchange="updateStatus('${o.id}', this.value)" class="bg-black/40 text-[10px] border border-white/10 rounded-lg p-1 outline-none">
+                            <option value="">تغيير الحالة</option>
+                            <option value="تم التجهيز ✅">تم التجهيز ✅</option>
+                            <option value="ملغي ❌">إلغاء الطلب ❌</option>
+                        </select>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateStatus(id, status) {
+            if (!status) return;
+            const res = await fetch('/api/admin/order/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: ADMIN_KEY, id, status })
+            });
+            if ((await res.json()).success) {
+                showToast("تم تحديث حالة الطلب");
+                manualDashboardRefresh();
+            }
+        }
+
+        function renderUsers(users) {
+            const list = document.getElementById('adm-users-list');
+            list.innerHTML = users.map(u => `
+                <div class="panel-card p-4 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-xs">${u.name}</h4>
+                        <p class="text-[10px] text-slate-500">${u.phone}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-amber-500 font-black text-xs">${u.bal}</span>
+                        <button onclick="promptBalance('${u.phone}', ${u.bal})" class="bg-[#ffcc00] text-black w-6 h-6 rounded flex items-center justify-center text-xs">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function promptBalance(phone, current) {
+            const newBal = prompt(`إدخال الرصيد الجديد للرقم ${phone}:`, current);
+            if (newBal === null) return;
+            const res = await fetch('/api/admin/user/update-balance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: ADMIN_KEY, phone, newBalance: newBal })
+            });
+            if ((await res.json()).success) {
+                showToast("تم تحديث الرصيد بنجاح");
+                manualDashboardRefresh();
+            }
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('cat-name').value;
+            const sub = document.getElementById('cat-sub').value;
+            const img = document.getElementById('cat-img').value;
+            const res = await fetch('/api/admin/category/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: ADMIN_KEY, name, sub, img })
+            });
+            if ((await res.json()).success) {
+                showToast("تم إضافة القسم");
+                manualDashboardRefresh();
+            }
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const cat = document.getElementById('p-cat-select').value;
+            const img = document.getElementById('p-img').value;
+            const res = await fetch('/api/admin/product/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: ADMIN_KEY, name, price, img, cat })
+            });
+            if ((await res.json()).success) {
+                showToast("تم إدراج المنتج");
+                manualDashboardRefresh();
+            }
+        }
+
+        function updateCatSelect(cats) {
+            const s = document.getElementById('p-cat-select');
+            s.innerHTML = cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        }
+
+        async function sendAdminMessage() {
+            const type = document.getElementById('msg-receiver-type').value;
+            const phone = document.getElementById('msg-phone').value;
+            const title = document.getElementById('msg-title').value;
+            const body = document.getElementById('msg-body').value;
+            const res = await fetch('/api/messages/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: ADMIN_KEY, receiver: type === 'ALL' ? 'ALL' : phone, title, body })
+            });
+            if ((await res.json()).success) showToast("تم إرسال الإشعار");
+        }
+
+        async function addAd() {
+            const url = document.getElementById('set-ad-url').value;
+            const res = await fetch('/api/admin/ad/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: ADMIN_KEY, videoUrl: url })
+            });
+            if ((await res.json()).success) showToast("تم تحديث الفيديو");
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
             document.querySelectorAll('[id^="tab-"]').forEach(b => {
@@ -188,18 +307,10 @@
                 b.classList.add('bg-transparent', 'text-slate-400');
             });
             document.getElementById(`panel-${tabId}`).classList.remove('hidden');
-            const mainTab = document.getElementById(`tab-${tabId}`);
-            if(mainTab) {
-                mainTab.classList.remove('bg-white/5', 'text-slate-400');
-                mainTab.classList.add('bg-[#ffcc00]', 'text-slate-950');
-            }
-            const mobTab = document.getElementById(`mob-${tabId}`);
-            if(mobTab) {
-                mobTab.classList.remove('bg-transparent', 'text-slate-400');
-                mobTab.classList.add('bg-white/5', 'text-[#ffcc00]');
-            }
+            document.getElementById(`tab-${tabId}`).classList.add('bg-[#ffcc00]', 'text-slate-950');
+            const mob = document.getElementById(`mob-${tabId}`);
+            if(mob) mob.classList.add('bg-white/5', 'text-[#ffcc00]');
         }
-        // ملاحظة: تأكد من إزالة دوال loginAdmin و logoutAdmin من ملف الـ JavaScript المرتبط إذا كانت تسبب أخطاء.
     </script>
 </body>
 </html>

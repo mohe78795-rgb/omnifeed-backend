@@ -1,304 +1,402 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');                                         
+require('dotenv').config();
 const axios = require('axios');
 const FormData = require('form-data');
 const crypto = require('crypto');
 
 const app = express();
-
-// إعدادات الوسائط (Middleware)
-app.use(cors());
-app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
 // ==========================================
-// 🗄️ إعداد موديلات قاعدة البيانات (MongoDB Schemas)
+// 🛠️ إعدادات الوسائط (Middleware)
+// ==========================================
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ==========================================
+// 🗄️ الاتصال بقاعدة البيانات (MongoDB)
+// ==========================================
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohe78795_db_user:737465252@cluster0.qr9q8iv.mongodb.net/abu_hussein_db?retryWrites=true&w=majority";
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ متصل بسحابة أبو حسين (MongoDB)"))
+    .catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
+
+// ==========================================
+// 🗃️ تعريف موديلات قاعدة البيانات (Schemas & Models)
 // ==========================================
 
 // 1. موديل حسابات المستخدمين والمحفظة
-const userSchema = new mongoose.Schema({
+const User = mongoose.model('User', new mongoose.Schema({
     name: { type: String, required: true },
     phone: { type: String, required: true, unique: true },
     pass: { type: String, required: true },
     bal: { type: Number, default: 0 },
-    joinDate: { type: String, default: () => new Date().toLocaleDateString('ar-YE') }
-});
-const User = mongoose.model('User', userSchema);
+    joinDate: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
 
-// 2. موديل الأقسام العادية
-const categorySchema = new mongoose.Schema({
-    name: String,
+// 2. موديل الأقسام
+const Category = mongoose.model('Category', new mongoose.Schema({
+    name: { type: String, required: true, unique: true },
+    sub: String,
+    img: String
+}));
+
+// 3. موديل المنتجات
+const Product = mongoose.model('Product', new mongoose.Schema({
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
     img: String,
-    sub: String
-});
-const Category = mongoose.model('Category', categorySchema);
+    cat: { type: String, required: true }
+}));
 
-// 3. موديل المنتجات العادية للسلة
-const productSchema = new mongoose.Schema({
-    name: String,
-    price: Number,
-    img: String,
-    cat: String
-});
-const Product = mongoose.model('Product', productSchema);
-
-// 4. موديل الطلبات والفواتير العامة وفواتير السداد الفوري
-const orderSchema = new mongoose.Schema({
+// 4. موديل طلبات السلة العادية
+const Order = mongoose.model('Order', new mongoose.Schema({
+    id: { type: String, default: () => "INV-" + Math.floor(100000 + Math.random() * 900000) },
     phone: String,
-    id: String,
-    status: { type: String, default: "قيد الانتظار" },
     items: Array,
     total: Number,
-    date: { type: String, default: () => new Date().toLocaleDateString('ar-YE') },
-    paymentMethod: String,
-    referenceId: String // كود تتبع العملية الخاص بميجا سنتر
-});
-const Order = mongoose.model('Order', orderSchema);
+    status: { type: String, default: 'قيد المراجعة ⏳' },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
 
-// 5. موديل الإعلانات
-const adSchema = new mongoose.Schema({
-    videoUrl: String
-});
-const Ad = mongoose.model('Ad', adSchema);
+// 5. موديل صندوق الرسائل والاشعارات الداخلي
+const Message = mongoose.model('Message', new mongoose.Schema({
+    sender: { type: String, default: "ADMIN" },
+    receiver: { type: String, required: true },
+    title: { type: String, required: true },
+    body: { type: String, required: true },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
 
-// 6. موديل صندوق الرسائل والدردشة الداخلي
-const messageSchema = new mongoose.Schema({
+// 6. موديل الإعلانات (فيديوهات يوتيوب)
+const Ad = mongoose.model('Ad', new mongoose.Schema({
+    videoUrl: { type: String, required: true },
+    active: { type: Boolean, default: true },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
+
+// 7. موديل عمليات السداد والشحن الفوري المربوط بميجا سنتر
+const Transaction = mongoose.model('Transaction', new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     phone: String,
-    title: String,
-    body: String,
-    date: { type: String, default: () => new Date().toLocaleDateString('ar-YE') }
-});
-const Message = mongoose.model('Message', messageSchema);
-
+    type: { type: String, default: 'game' },
+    targetId: { type: String, required: true },
+    serviceId: { type: String, required: true },
+    serviceName: { type: String, required: true },
+    price: { type: Number, required: true },
+    referenceId: { type: String, required: true, unique: true },
+    megaOrderId: { type: String, default: null },
+    status: { type: String, default: 'قيد التنفيذ ⏳' },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
 
 // ==========================================
 // 🔑 إعدادات ربط منظومة ميجا سنتر الحقيقية
 // ==========================================
-const MEGA_USERNAME = "u_4082361957";
-const MEGA_TOKEN = "trrC6caLfhvod3HPxTE5ND9Ld6wvdsa5jm1Nlq2GrNdD7";
-const MEGA_API_URL = "https://megacenter-api.com/api/v1"; // تأكد من مطابقة الرابط مع مستندات ميجا سنتر الرسمية
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
+const MEGA_USERNAME = 'u_4082361957';
+const MEGA_API_KEY = 'trrC6caLfhvod3HPxTE5ND9Ld6wvdsa5jm1Nlq2GrNdD7';
+const MEGA_URL = 'https://megatec-center.com/api/rest.php';
 
-// دالة توليد الـ Basic Auth Header المطلوبة في توثيق ميجا سنتر
 function getMegaAuthHeader() {
-    const credentials = Buffer.from(`${MEGA_USERNAME}:${MEGA_TOKEN}`).toString('base64');
-    return `Basic ${credentials}`;
+    const token = Buffer.from(`${MEGA_USERNAME}:${MEGA_API_KEY}`).toString('base64');
+    return { 'Authorization': `Basic ${token}` };
 }
 
+function makeEmbedUrl(url) {
+    if (!url) return "";
+    let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    let match = url.match(regExp);
+    if (match && match[2].length == 11) {
+        return "https://www.youtube.com/embed/" + match[2];
+    }
+    return url;
+}
 
 // ==========================================
-// 🛣️ مسارات التطبيق (API Routes)
+// 🌐 1️⃣ مسارات العميل الرئيسي (المتجر والمستخدمين)
 // ==========================================
 
-// --- [ قسم الحماية والتوثيق والمزامنة ] ---
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await Category.find({});
+        res.json(categories);
+    } catch (e) { res.status(500).json([]); }
+});
+
+app.get('/api/products', async (req, res) => {
+    try {
+        const products = await Product.find({});
+        res.json(products);
+    } catch (e) { res.status(500).json([]); }
+});
+
+app.get('/api/ads', async (req, res) => {
+    try {
+        const ads = await Ad.find({ active: true }).sort({ _id: -1 });
+        res.json(ads);
+    } catch (e) { res.status(500).json([]); }
+});
+
+app.get('/api/messages/:phone', async (req, res) => {
+    try {
+        const messages = await Message.find({
+            $or: [ { receiver: req.params.phone }, { receiver: 'ALL' } ]
+        }).sort({ _id: -1 });
+        res.json(messages);
+    } catch (e) { res.status(500).json([]); }
+});
 
 app.post('/api/auth/signup', async (req, res) => {
     const { name, phone, pass } = req.body;
     try {
-        let existing = await User.findOne({ phone });
-        if (existing) return res.status(400).json({ success: false, message: "رقم الهاتف مسجل مسبقاً" });
-        
-        let newUser = new User({ name, phone, pass, bal: 0 });
+        const exist = await User.findOne({ phone });
+        if (exist) return res.json({ success: false, message: "رقم الهاتف مسجل مسبقاً!" });
+
+        const newUser = new User({ name, phone, pass, bal: 0 });
         await newUser.save();
         res.json({ success: true, user: newUser });
-    } catch(e) { res.status(500).json({ success: false, message: "خطأ في التسجيل" }); }
+    } catch (e) { res.status(500).json({ success: false, message: "خطأ في السيرفر" }); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
     const { phone, pass } = req.body;
     try {
-        let user = await User.findOne({ phone, pass });
-        if (!user) return res.status(400).json({ success: false, message: "بيانات الدخول خاطئة" });
+        const user = await User.findOne({ phone, pass });
+        if (!user) return res.json({ success: false, message: "رقم الهاتف أو كلمة المرور غير صحيحة" });
         res.json({ success: true, user });
-    } catch(e) { res.status(500).json({ success: false, message: "خطأ في الخادم" }); }
+    } catch (e) { res.status(500).json({ success: false, message: "خطأ في السيرفر" }); }
 });
 
 app.get('/api/auth/user/:phone', async (req, res) => {
     try {
-        let user = await User.findOne({ phone: req.params.phone });
+        const user = await User.findOne({ phone: req.params.phone });
         if (user) res.json({ success: true, user });
         else res.status(404).json({ success: false });
-    } catch(e) { res.status(500).json({ success: false }); }
+    } catch (e) { res.status(500).json({ success: false }); }
 });
-
-
-// --- [ قسم المنتجات والأقسام والإعلانات ] ---
-
-app.get('/api/categories', async (req, res) => {
-    let cats = await Category.find({});
-    res.json(cats);
-});
-
-app.get('/api/products', async (req, res) => {
-    let prods = await Product.find({});
-    res.json(prods);
-});
-
-app.get('/api/ads', async (req, res) => {
-    let ads = await Ad.find({});
-    res.json(ads);
-});
-
-app.get('/api/messages/:phone', async (req, res) => {
-    let msgs = await Message.find({ phone: req.params.phone });
-    res.json(msgs);
-});
-
-
-// --- [ قسم فواتير السلة العادية ] ---
 
 app.post('/api/orders/add', async (req, res) => {
     const { phone, order } = req.body;
     try {
-        let user = await User.findOne({ phone });
-        if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
-
-        if (order.paymentMethod === "دفع محفظة") {
-            if (user.bal < order.total) return res.status(400).json({ message: "رصيدك غير كافٍ" });
-            user.bal -= order.total;
-            await user.save();
+        const user = await User.findOne({ phone });
+        if (!user || user.bal < order.total) {
+            return res.status(400).json({ success: false, message: "الرصيد غير كافٍ" });
         }
+        user.bal -= order.total;
+        await user.save();
 
-        let newOrder = new Order({
+        const newOrder = new Order({
             phone,
-            id: "ORDER-" + Math.floor(100000 + Math.random() * 900000),
-            status: "مكتمل",
             items: order.items,
-            total: order.total,
-            paymentMethod: order.paymentMethod
+            total: order.total
         });
         await newOrder.save();
+
         res.json({ success: true, currentBal: user.bal });
-    } catch(e) { res.status(500).json({ message: "خطأ في معالجة الفاتورة" }); }
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/orders/:phone', async (req, res) => {
-    let orders = await Order.find({ phone: req.params.phone }).sort({ _id: -1 });
-    res.json(orders);
+    try {
+        const orders = await Order.find({ phone: req.params.phone }).sort({ _id: -1 });
+        res.json(orders);
+    } catch (e) { res.status(500).json([]); }
 });
 
-
 // ==========================================
-// ⚡ الربط الحقيقي والمؤتمت مع ميجا سنتر ⚡
+// 🕹️ 2️⃣ مسارات قسم "السداد" المربوطة بميجا سنتر حقيقي
 // ==========================================
 
-// 1. مسار جلب باقات وخدمات السداد الحية والمحدثة مباشرة من سيرفر ميجا سنتر
 app.get('/api/games', async (req, res) => {
-    try {
-        const form = new FormData();
-        form.append('trans', 'servicelist');
+    const form = new FormData();
+    form.append('request', 'servicelist');
 
-        const response = await axios.post(`${MEGA_API_URL}`, form, {
+    try {
+        const response = await axios.post(MEGA_URL, form, {
             headers: {
-                ...form.getHeaders(),
-                'Authorization': getMegaAuthHeader()
+                ...getMegaAuthHeader(),
+                ...form.getHeaders()
             }
         });
 
-        // إذا أرجعت المنظومة قائمة الخدمات بنجاح
-        if (response.data && response.data.game_list) {
-            return res.json({ success: true, game_list: response.data.game_list });
-        } else {
-            return res.status(400).json({ success: false, message: "فشل استرداد الخدمات من المزود" });
+        if (response.data && response.data.status === true) {
+            return res.json({
+                success: true,
+                game_list: response.data.ServiceList
+            });
         }
-    } catch (error) {
-        console.error("MegaCenter Sync List Error:", error.message);
-        return res.status(500).json({ success: false, message: "خادم ميجا سنتر تحت الصيانة الحالية" });
+        res.json({ success: false, message: "فشل المزود في جلب الخدمات" });
+    } catch (e) {
+        res.status(500).json({ success: false, message: "خطأ اتصال مع سيرفر الشحن" });
     }
 });
 
-// 2. مسار معالجة طلب السداد الفوري الآمن (خصم الرصيد المحلي والشراء الفوري)
 app.post('/api/games/topup', async (req, res) => {
-    const { phone, price, serviceId, serviceName, user_id } = req.body;
+    const { phone, price, serviceId, serviceName, user_id, type } = req.body;
 
     if (!phone || !price || !serviceId || !user_id) {
         return res.status(400).json({ success: false, message: "المعطيات المرسلة غير مكتملة" });
     }
 
     try {
-        // التحقق من حساب العميل ورصيده محلياً لحمايتك ماليًا
         const user = await User.findOne({ phone });
-        if (!user) return res.status(404).json({ success: false, message: "حساب العميل غير متوفر" });
-        if (Number(user.bal) < Number(price)) return res.status(400).json({ success: false, message: "عذراً، رصيد محفظتك غير كافٍ" });
+        if (!user || user.bal < Number(price)) {
+            return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لإتمام السداد" });
+        }
 
-        // توليد Reference ID فريد للعملية لمنع التكرار والتعليق
-        const referenceId = crypto.randomBytes(6).toString('hex').toUpperCase();
-
-        // تجهيز البيانات كـ Form Data بناءً على شروط مستندات ميجا سنتر
-        const form = new FormData();
-        form.append('trans', 'neworder');
-        form.append('serviceid', String(serviceId));
-        form.append('userid', String(user_id));
-        form.append('referenceid', referenceId);
-
-        // خصم الرصيد مؤقتاً لحماية حسابك من النقرات المتكررة للزر
         user.bal -= Number(price);
         await user.save();
 
-        // إرسال طلب الشراء الحقيقي الفوري إلى سيرفر ميجا سنتر المعتمد
-        const response = await axios.post(`${MEGA_API_URL}`, form, {
+        const referenceId = 'TMN-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+
+        const newTxn = new Transaction({
+            userId: user._id,
+            phone,
+            type: type || 'game',
+            targetId: user_id,
+            serviceId,
+            serviceName,
+            price: Number(price),
+            referenceId
+        });
+        await newTxn.save();
+
+        const form = new FormData();
+        form.append('request', 'neworder');
+        form.append('service', String(serviceId));
+        form.append('reference', referenceId);
+        form.append('player_id', String(user_id));
+
+        const response = await axios.post(MEGA_URL, form, {
             headers: {
-                ...form.getHeaders(),
-                'Authorization': getMegaAuthHeader()
+                ...getMegaAuthHeader(),
+                ...form.getHeaders()
             }
         });
 
-        const megaData = response.data;
+        if (response.data && response.data.status === true) {
+            newTxn.status = 'ناجحة ✅';
+            newTxn.megaOrderId = response.data.orderid;
+            await newTxn.save();
 
-        // في حال نجاح الطلب من سيرفرهم (True)
-        if (megaData && (megaData.success === true || megaData.status === "true")) {
-            
-            // تسجيل الفاتورة في قاعدة بياناتك كعملية ناجحة ومكتملة فورياً
-            const trackingId = "MEGA-" + Math.floor(100000 + Math.random() * 900000);
-            const newOrder = new Order({
-                phone,
-                id: trackingId,
-                status: "مكتمل فوري ✅",
-                items: [{ name: serviceName, qty: 1 }],
-                total: price,
-                paymentMethod: "دفع محفظة",
-                referenceId: referenceId
-            });
-            await newOrder.save();
+            await new Message({
+                receiver: phone,
+                title: "نجاح السداد الفوري ⚡",
+                body: `تم تنفيذ طلب ${serviceName} للمعرّف/الرقم ${user_id} بنجاح. خُصم من حسابك ${price} YER.`
+            }).save();
 
-            return res.json({
-                success: true,
-                orderId: trackingId,
-                currentBal: user.bal
-            });
-
+            return res.json({ success: true, currentBal: user.bal, orderId: response.data.orderid });
         } else {
-            // في حال فشل الطلب أو رفضه من ميجا سنتر (مثال: الـ ID غير صحيح أو باقة متوقفة)
-            // نرجع الرصيد المخصوم تلقائياً إلى محفظة الزبون
+            newTxn.status = 'فاشلة ❌';
+            await newTxn.save();
+
             user.bal += Number(price);
             await user.save();
 
-            return res.status(400).json({
-                success: false,
-                message: megaData.error_message || "رفضت المنظومة الشحن، يرجى التحقق من الرقم أو الـ ID"
-            });
+            return res.json({ success: false, message: response.data.message || "رفض المزود تنفيذ العملية" });
         }
 
-    } catch (error) {
-        console.error("MegaCenter API Server Topup Error:", error.message);
-        // ملاحظة أمنية: في حال حدوث خطأ شبكة مفاجئ (Catch Error)، لا يتم استرجاع الرصيد آلياً 
-        // لحمايتك من خسارة الرصيد في حال نفذت ميجا سنتر الطلب ولم يصلك الرد، وتراجع يدوياً.
-        return res.status(500).json({ 
-            success: false, 
-            message: "العملية معلقة بالشبكة، يرجى مراجعة الإدارة للتأكد من حالة الشحن" 
-        });
+    } catch (e) {
+        return res.json({ success: false, message: "العملية قيد المعالجة في السيرفر، يرجى مراجعة سجل العمليات" });
     }
 });
 
+// ==========================================
+// 💼 3️⃣ مسارات لوحة التحكم للأدمن (admin.html)
+// ==========================================
+
+app.post('/api/admin/dashboard', async (req, res) => {
+    const { adminPass } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        const orders = await Order.find({}).sort({ _id: -1 });
+        const users = await User.find({}).sort({ _id: -1 });
+        const categories = await Category.find({});
+        const products = await Product.find({});
+        const ads = await Ad.find({ active: true }).sort({ _id: -1 });
+        const txns = await Transaction.find({}).sort({ _id: -1 });
+        res.json({ success: true, data: { orders, users, categories, products, ads, txns } });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/user/update-balance', async (req, res) => {
+    const { adminPass, phone, newBalance } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        const user = await User.findOneAndUpdate({ phone }, { bal: Number(newBalance) }, { new: true });
+        if(user) {
+            await new Message({
+                receiver: phone,
+                title: "تحديث المحفظة الرقمية 💰",
+                body: `تم تعديل وتعبئة رصيد حسابك بنجاح. رصيدك الحالي الجديد هو: ${newBalance} YER`
+            }).save();
+        }
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/order/update-status', async (req, res) => {
+    const { adminPass, id, status } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await Order.findOneAndUpdate({ id }, { status });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/messages/send', async (req, res) => {
+    const { adminPass, receiver, title, body } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await new Message({ receiver, title, body }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/ad/add', async (req, res) => {
+    const { adminPass, videoUrl } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        const embedLink = makeEmbedUrl(videoUrl);
+        await Ad.updateMany({}, { active: false });
+        await new Ad({ videoUrl: embedLink, active: true }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/category/add', async (req, res) => {
+    const { adminPass, name, sub, img } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await new Category({ name, sub, img }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/admin/product/add', async (req, res) => {
+    const { adminPass, name, price, img, cat } = req.body;
+    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    try {
+        await new Product({ name, price: Number(price), img, cat }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
+});
+
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
 
 // ==========================================
-// 🚀 بدء تشغيل السيرفر والربط بقاعدة البيانات
+// 🚀 بدء تشغيل السيرفر
 // ==========================================
-const MONGO_URI = process.env.MONGO_URI || "ضع_رابط_قاعدة_بياناتك_هنا";
-const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`✅ متصل بسحابة أبو حسين (MongoDB)`);
+    console.log(`🚀 منظومة تمويناتي تعمل بنجاح ومربوطة بميجا سنتر على المنفذ ${PORT}`);
+});
 
-mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log("📊 Connected successfully to MongoDB");
-        app.listen(PORT, () => console.log(`⚡ Server layout active on port ${PORT}`));
-    })
-    .catch(err => console.error("❌ MongoDB connection error:", err));

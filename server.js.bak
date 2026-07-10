@@ -123,20 +123,32 @@ function makeEmbedUrl(url) {
 // ==========================================
 
 app.get('/api/categories', async (req, res) => {
-    try { res.json(await Category.find({})); } catch (e) { res.status(500).json([]); }
+    try {
+        const categories = await Category.find({});
+        res.json(categories);
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/products', async (req, res) => {
-    try { res.json(await Product.find({})); } catch (e) { res.status(500).json([]); }
+    try {
+        const products = await Product.find({});
+        res.json(products);
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/ads', async (req, res) => {
-    try { res.json(await Ad.find({ active: true }).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
+    try {
+        const ads = await Ad.find({ active: true }).sort({ _id: -1 });
+        res.json(ads);
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/messages/:phone', async (req, res) => {
     try {
-        res.json(await Message.find({ $or: [ { receiver: req.params.phone }, { receiver: 'ALL' } ] }).sort({ _id: -1 }));
+        const messages = await Message.find({
+            $or: [ { receiver: req.params.phone }, { receiver: 'ALL' } ]
+        }).sort({ _id: -1 });
+        res.json(messages);
     } catch (e) { res.status(500).json([]); }
 });
 
@@ -145,6 +157,7 @@ app.post('/api/auth/signup', async (req, res) => {
     try {
         const exist = await User.findOne({ phone });
         if (exist) return res.json({ success: false, message: "رقم الهاتف مسجل مسبقاً!" });
+
         const newUser = new User({ name, phone, pass, bal: 0 });
         await newUser.save();
         res.json({ success: true, user: newUser });
@@ -172,16 +185,28 @@ app.post('/api/orders/add', async (req, res) => {
     const { phone, order } = req.body;
     try {
         const user = await User.findOne({ phone });
-        if (!user || user.bal < order.total) return res.status(400).json({ success: false, message: "الرصيد غير كافٍ" });
+        if (!user || user.bal < order.total) {
+            return res.status(400).json({ success: false, message: "الرصيد غير كافٍ" });
+        }
         user.bal -= order.total;
         await user.save();
-        await new Order({ phone, items: order.items, total: order.total }).save();
+
+        const newOrder = new Order({
+            phone,
+            items: order.items,
+            total: order.total
+        });
+        await newOrder.save();
+
         res.json({ success: true, currentBal: user.bal });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/orders/:phone', async (req, res) => {
-    try { res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
+    try {
+        const orders = await Order.find({ phone: req.params.phone }).sort({ _id: -1 });
+        res.json(orders);
+    } catch (e) { res.status(500).json([]); }
 });
 
 // ==========================================
@@ -191,28 +216,55 @@ app.get('/api/orders/:phone', async (req, res) => {
 app.get('/api/games', async (req, res) => {
     const form = new FormData();
     form.append('request', 'servicelist');
+
     try {
-        const response = await axios.post(MEGA_URL, form, { headers: { ...getMegaAuthHeader(), ...form.getHeaders() } });
+        const response = await axios.post(MEGA_URL, form, {
+            headers: {
+                ...getMegaAuthHeader(),
+                ...form.getHeaders()
+            }
+        });
+
         if (response.data && response.data.status === true) {
-            return res.json({ success: true, game_list: response.data.ServiceList });
+            return res.json({
+                success: true,
+                game_list: response.data.ServiceList
+            });
         }
         res.json({ success: false, message: "فشل المزود في جلب الخدمات" });
-    } catch (e) { res.status(500).json({ success: false, message: "خطأ اتصال مع سيرفر الشحن" }); }
+    } catch (e) {
+        res.status(500).json({ success: false, message: "خطأ اتصال مع سيرفر الشحن" });
+    }
 });
 
 app.post('/api/games/topup', async (req, res) => {
     const { phone, price, serviceId, serviceName, user_id, type } = req.body;
-    if (!phone || !price || !serviceId || !user_id) return res.status(400).json({ success: false, message: "المعطيات المرسلة غير مكتملة" });
+
+    if (!phone || !price || !serviceId || !user_id) {
+        return res.status(400).json({ success: false, message: "المعطيات المرسلة غير مكتملة" });
+    }
 
     try {
         const user = await User.findOne({ phone });
-        if (!user || user.bal < Number(price)) return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لإتمام السداد" });
+        if (!user || user.bal < Number(price)) {
+            return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لإتمام السداد" });
+        }
 
         user.bal -= Number(price);
         await user.save();
 
         const referenceId = 'TMN-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-        const newTxn = new Transaction({ userId: user._id, phone, type: type || 'game', targetId: user_id, serviceId, serviceName, price: Number(price), referenceId });
+
+        const newTxn = new Transaction({
+            userId: user._id,
+            phone,
+            type: type || 'game',
+            targetId: user_id,
+            serviceId,
+            serviceName,
+            price: Number(price),
+            referenceId
+        });
         await newTxn.save();
 
         const form = new FormData();
@@ -221,22 +273,35 @@ app.post('/api/games/topup', async (req, res) => {
         form.append('reference', referenceId);
         form.append('player_id', String(user_id));
 
-        const response = await axios.post(MEGA_URL, form, { headers: { ...getMegaAuthHeader(), ...form.getHeaders() } });
+        const response = await axios.post(MEGA_URL, form, {
+            headers: {
+                ...getMegaAuthHeader(),
+                ...form.getHeaders()
+            }
+        });
 
         if (response.data && response.data.status === true) {
             newTxn.status = 'ناجحة ✅';
             newTxn.megaOrderId = response.data.orderid;
             await newTxn.save();
 
-            await new Message({ receiver: phone, title: "نجاح السداد الفوري ⚡", body: `تم تنفيذ طلب ${serviceName} للمعرّف/الرقم ${user_id} بنجاح. خُصم من حسابك ${price} YER.` }).save();
+            await new Message({
+                receiver: phone,
+                title: "نجاح السداد الفوري ⚡",
+                body: `تم تنفيذ طلب ${serviceName} للمعرّف/الرقم ${user_id} بنجاح. خُصم من حسابك ${price} YER.`
+            }).save();
+
             return res.json({ success: true, currentBal: user.bal, orderId: response.data.orderid });
         } else {
             newTxn.status = 'فاشلة ❌';
             await newTxn.save();
+
             user.bal += Number(price);
             await user.save();
+
             return res.json({ success: false, message: response.data.message || "رفض المزود تنفيذ العملية" });
         }
+
     } catch (e) {
         return res.json({ success: false, message: "العملية قيد المعالجة في السيرفر، يرجى مراجعة سجل العمليات" });
     }
@@ -266,7 +331,11 @@ app.post('/api/admin/user/update-balance', async (req, res) => {
     try {
         const user = await User.findOneAndUpdate({ phone }, { bal: Number(newBalance) }, { new: true });
         if(user) {
-            await new Message({ receiver: phone, title: "تحديث المحفظة الرقمية 💰", body: `تم تعديل وتعبئة رصيد حسابك بنجاح. رصيدك الحالي الجديد هو: ${newBalance} YER` }).save();
+            await new Message({
+                receiver: phone,
+                title: "تحديث المحفظة الرقمية 💰",
+                body: `تم تعديل وتعبئة رصيد حسابك بنجاح. رصيدك الحالي الجديد هو: ${newBalance} YER`
+            }).save();
         }
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
@@ -319,7 +388,9 @@ app.post('/api/admin/product/add', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-app.get('/admin', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'admin.html')); });
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
 
 // ==========================================
 // 🚀 بدء تشغيل السيرفر
@@ -328,3 +399,4 @@ app.listen(PORT, () => {
     console.log(`✅ متصل بسحابة أبو حسين (MongoDB)`);
     console.log(`🚀 منظومة تمويناتي تعمل بنجاح ومربوطة بميجا سنتر على المنفذ ${PORT}`);
 });
+

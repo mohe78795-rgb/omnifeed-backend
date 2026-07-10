@@ -227,14 +227,21 @@ app.get('/api/games', async (req, res) => {
             timeout: 15000
         });
 
+        // 🔍 طباعة الرد الفعلي القادم من ميجا سنتر في الـ Logs لمراقبته
+        console.log("=== الرد الحقيقي من ميجا سنتر ===", response.data);
+
         if (response.data && (response.data.status === true || response.data.status === "true")) {
-            return res.json({
-                success: true,
-                game_list: response.data.ServiceList || response.data.services || []
-            });
+            const list = response.data.ServiceList || response.data.services || response.data.data || [];
+            if (list.length > 0) {
+                return res.json({
+                    success: true,
+                    game_list: list
+                });
+            }
         }
-        res.json({ success: false, message: response.data.message || "فشل المزود في جلب الخدمات" });
+        res.json({ success: false, message: response.data.message || "لا توجد باقات سداد متاحة حالياً بالسيرفر" });
     } catch (e) {
+        console.error("خطأ جلب البيانات:", e.message);
         res.status(500).json({ success: false, message: "خطأ اتصال مع سيرفر الشحن" });
     }
 });
@@ -397,5 +404,5 @@ app.get('/admin', (req, res) => {
 // 🚀 بدء تشغيل السيرفر
 // ==========================================
 app.listen(PORT, () => {
-    console.log(`🚀 منظومة تمويناتي تعمل بنجاح ومربوطة بميجا سنتر على المنفذ ${PORT}`);
+    console.log("🚀 منظومة تمويناتي تعمل بنجاح ومربوطة بميجا سنتر");
 });

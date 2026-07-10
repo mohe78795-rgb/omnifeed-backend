@@ -1,11 +1,10 @@
---- START OF ROYAL ADMIN DASHBOARD ---
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>النسخة الملكية | تموينات أبو حسين</title>
-    
+    <title>النسخة الملكية المحدثة | تموينات أبو حسين</title>
+
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,112 +14,131 @@
 
     <style>
         :root {
-            --primary-glow: radial-gradient(rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0));
-            --accent-color: #10b981;
-            --secondary-color: #6366f1;
+            --bg-dark: #020617;
+            --panel-bg: rgba(15, 23, 42, 0.8);
+            --accent-emerald: #10b981;
+            --accent-gold: #fbbf24;
+            --nav-bg: rgba(30, 41, 59, 0.95);
         }
 
         * { font-family: 'Cairo', sans-serif; scroll-behavior: smooth; }
-        
+
         body {
-            background-color: #020617;
-            color: #e2e8f0;
+            background-color: var(--bg-dark);
+            color: #f1f5f9;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
             min-height: 100vh;
         }
 
-        /* Glassmorphism Effect */
+        /* Glassmorphism Re-imagined */
         .glass-panel {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
 
-        .neon-border {
-            position: relative;
-            overflow: hidden;
+        /* الملاحة السفلية - تصميم متميز */
+        .mobile-nav {
+            background: var(--nav-bg);
+            border-top: 2px solid var(--accent-emerald);
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
         }
-        .neon-border::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
-            transition: 0.5s;
-            transform: translateX(-100%);
-        }
-        .neon-border:hover::after { transform: translateX(100%); }
 
-        /* Custom Tabs */
-        .tab-btn {
+        .nav-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #94a3b8;
             position: relative;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .tab-btn.active {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--accent-color);
-            box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.1);
+
+        .nav-item.active {
+            color: var(--accent-emerald);
+            transform: translateY(-8px);
         }
-        .tab-btn.active::before {
+
+        .nav-item.active::after {
             content: '';
             position: absolute;
-            top: 0; left: 50%; transform: translateX(-50%);
-            width: 40%; height: 3px; background: var(--accent-color);
-            border-radius: 0 0 10px 10px;
+            bottom: -10px;
+            width: 6px;
+            height: 6px;
+            background: var(--accent-emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-emerald);
         }
 
         /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade { animation: fadeIn 0.5s ease forwards; }
-
-        /* Floating Badge */
-        .badge-pulse {
-            animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .hover-scale { transition: transform 0.2s; }
+        .hover-scale:hover { transform: scale(1.02); }
+        
+        .btn-premium {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
-        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        .btn-premium:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .card-order {
+            border-right: 4px solid transparent;
+            transition: all 0.3s;
+        }
+        .card-order:hover {
+            border-right-color: var(--accent-emerald);
+            background: rgba(255,255,255,0.03);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
-<body class="pb-20 md:pb-5">
+<body class="pb-24 lg:pb-8">
 
-    <!-- شاشة تسجيل الدخول الإبداعية -->
+    <!-- شاشة تسجيل الدخول -->
     <div id="admin-lock" class="fixed inset-0 z-[9999] bg-[#020617] flex items-center justify-center p-4">
-        <div class="max-w-md w-full glass-panel p-10 text-center relative">
-            <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-emerald-500 rounded-3xl rotate-12 opacity-20 blur-2xl"></div>
-            <i class="fas fa-fingerprint text-6xl text-emerald-500 mb-6"></i>
-            <h2 class="text-3xl font-black mb-2 tracking-tight">الوصول الملكي</h2>
-            <p class="text-slate-400 text-sm mb-8 font-light">أدخل مفتاح التشفير للإدارة</p>
-            <input type="password" id="admin-key-input" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-center font-black text-emerald-400 text-2xl outline-none focus:border-emerald-500/50 transition-all mb-6" placeholder="••••">
-            <button onclick="loginAdmin()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-4 rounded-2xl shadow-2xl shadow-emerald-500/20 transform active:scale-95 transition-all">فتح النظام</button>
+        <div class="max-w-md w-full glass-panel p-10 text-center border-emerald-500/20">
+            <div class="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
+                <i class="fas fa-shield-halved text-4xl text-emerald-500"></i>
+            </div>
+            <h2 class="text-3xl font-black mb-2">نظام التحكم</h2>
+            <p class="text-slate-400 text-sm mb-8">يرجى إدخال مفتاح الوصول للمتابعة</p>
+            <input type="password" id="admin-key-input" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl text-center font-black text-emerald-400 text-2xl outline-none focus:border-emerald-500 transition-all mb-6" placeholder="••••">
+            <button onclick="loginAdmin()" class="w-full btn-premium text-white font-black py-4 rounded-2xl">دخول آمن</button>
         </div>
     </div>
 
     <!-- المحتوى الرئيسي -->
-    <div id="admin-content" class="hidden opacity-0 transition-opacity duration-1000">
+    <div id="admin-content" class="hidden opacity-0 transition-opacity duration-700">
         
-        <!-- الهيدر الذكي -->
-        <header class="sticky top-0 z-[100] glass-panel rounded-none border-x-0 border-t-0 px-6 py-4 mb-8">
-            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <!-- الهيدر -->
+        <header class="sticky top-0 z-[100] glass-panel rounded-none border-x-0 border-t-0 px-6 py-4 mb-8 bg-slate-900/90">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <div class="relative">
-                        <img src="https://ui-avatars.com/api/?name=Abu+Hussein&background=10b981&color=fff" class="w-12 h-12 rounded-2xl shadow-lg border border-emerald-500/30">
-                        <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-[#020617] rounded-full badge-pulse"></span>
+                        <img src="https://ui-avatars.com/api/?name=Abu+Hussein&background=10b981&color=fff" class="w-12 h-12 rounded-xl shadow-lg border-2 border-emerald-500/50">
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
                     </div>
                     <div>
-                        <h1 class="text-xl font-black">أبو حسين <span class="text-emerald-500 font-light underline underline-offset-4">Command</span></h1>
-                        <p id="real-time-clock" class="text-[10px] text-slate-400 font-mono"></p>
+                        <h1 class="text-lg font-black text-white">القيادة <span class="text-emerald-500">العليا</span></h1>
+                        <p id="real-time-clock" class="text-[10px] text-emerald-500/70 font-mono"></p>
                     </div>
                 </div>
 
-                <!-- شريط الإحصائيات العلوي -->
-                <div class="flex gap-4 overflow-x-auto no-scrollbar">
-                    <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                        <i class="fas fa-chart-line text-emerald-500"></i>
-                        <span id="stat-revenue" class="font-bold text-sm">0 YER</span>
+                <div class="flex items-center gap-3">
+                    <div class="hidden md:flex flex-col items-end px-4">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">إجمالي المبيعات</span>
+                        <span id="stat-revenue" class="text-emerald-400 font-black">0 YER</span>
                     </div>
-                    <button onclick="logoutAdmin()" class="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all">
-                        <i class="fas fa-power-off"></i>
+                    <button onclick="logoutAdmin()" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all">
+                        <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
             </div>
@@ -130,81 +148,65 @@
             
             <!-- القائمة الجانبية (Desktop) -->
             <aside class="hidden lg:block lg:col-span-3 space-y-4">
-                <div class="glass-panel p-4 space-y-2">
-                    <p class="text-[10px] font-bold text-slate-500 px-4 mb-4 uppercase tracking-[0.2em]">التحكم الرئيسي</p>
-                    <button onclick="switchTab('orders')" id="tab-orders" class="tab-btn active w-full flex items-center gap-3 px-5 py-4 rounded-2xl font-bold text-sm">
-                        <i class="fas fa-shopping-bag w-5"></i> الطلبات الواردة
+                <div class="glass-panel p-4 space-y-1">
+                    <p class="text-[10px] font-bold text-slate-500 px-4 mb-3 uppercase tracking-widest">القائمة الرئيسية</p>
+                    <button onclick="switchTab('orders')" id="tab-orders" class="tab-btn active w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm transition-all hover:bg-white/5">
+                        <i class="fas fa-receipt w-5 text-emerald-500"></i> الطلبات
                     </button>
-                    <button onclick="switchTab('users')" id="tab-users" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-2xl font-bold text-sm">
-                        <i class="fas fa-users w-5"></i> العملاء والمحفظة
+                    <button onclick="switchTab('users')" id="tab-users" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm transition-all hover:bg-white/5">
+                        <i class="fas fa-user-shield w-5 text-emerald-500"></i> العملاء
                     </button>
-                    <button onclick="switchTab('manage-products')" id="tab-manage-products" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-2xl font-bold text-sm">
-                        <i class="fas fa-box-open w-5"></i> إدارة المنتجات
+                    <button onclick="switchTab('manage-products')" id="tab-manage-products" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm transition-all hover:bg-white/5">
+                        <i class="fas fa-box w-5 text-emerald-500"></i> المخزون
                     </button>
-                    <button onclick="switchTab('broadcast')" id="tab-broadcast" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-2xl font-bold text-sm">
-                        <i class="fas fa-paper-plane w-5"></i> مركز الإشعارات
+                    <button onclick="switchTab('broadcast')" id="tab-broadcast" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm transition-all hover:bg-white/5">
+                        <i class="fas fa-paper-plane w-5 text-emerald-500"></i> الإشعارات
                     </button>
-                </div>
-
-                <div class="glass-panel p-6">
-                    <h4 class="text-xs font-black mb-4 flex items-center gap-2"><i class="fas fa-microchip text-emerald-500"></i> حالة النظام</h4>
-                    <div class="space-y-3">
-                        <div class="flex justify-between text-[10px] font-bold">
-                            <span class="text-slate-400">اتصال السيرفر</span>
-                            <span class="text-emerald-500">99.9%</span>
-                        </div>
-                        <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-emerald-500 h-full w-[99%]"></div>
-                        </div>
-                    </div>
                 </div>
             </aside>
 
-            <!-- منطقة المحتوى الرئيسية -->
-            <main class="lg:col-span-9 space-y-8">
+            <!-- منطقة المحتوى -->
+            <main class="lg:col-span-9 space-y-6">
                 
-                <!-- لوحة الإحصائيات البيانية -->
-                <section class="glass-panel p-6 animate-fade">
+                <!-- الإحصائيات -->
+                <section class="glass-panel p-6 border-b-2 border-b-emerald-500/20">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-black text-lg">تحليل المبيعات</h3>
-                        <select class="bg-white/5 border-none text-xs p-2 rounded-lg outline-none">
-                            <option>آخر 7 أيام</option>
-                            <option>آخر 30 يوم</option>
-                        </select>
+                        <h3 class="font-black flex items-center gap-2"><i class="fas fa-chart-pie text-emerald-500"></i> مؤشر الأداء</h3>
+                        <div class="text-[10px] bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full font-bold">مباشر</div>
                     </div>
-                    <canvas id="salesChart" height="100"></canvas>
+                    <canvas id="salesChart" height="120"></canvas>
                 </section>
 
                 <!-- قسم الطلبات -->
-                <section id="panel-orders" class="admin-panel space-y-6">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <h3 class="text-2xl font-black">الطلبات <span id="orders-count" class="text-emerald-500 text-sm">0</span></h3>
-                        <div class="flex gap-2 bg-white/5 p-1 rounded-xl">
+                <section id="panel-orders" class="admin-panel space-y-4">
+                    <div class="flex justify-between items-end">
+                        <h2 class="text-2xl font-black">الطلبات الواردة <span id="orders-count" class="text-sm bg-emerald-500 text-black px-2 py-0.5 rounded ml-2">0</span></h2>
+                        <div class="flex gap-1 bg-slate-800/50 p-1 rounded-xl border border-white/5">
                             <button onclick="filterOrders('all')" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-500 text-black">الكل</button>
-                            <button onclick="filterOrders('pending')" class="px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/5">قيد الانتظار</button>
-                            <button onclick="filterOrders('completed')" class="px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/5">مكتمل</button>
+                            <button onclick="filterOrders('pending')" class="px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/5">المعلقة</button>
                         </div>
                     </div>
-                    <div id="adm-orders-list" class="grid gap-4">
-                        <!-- تحميل الطلبات هنا -->
-                    </div>
+                    <div id="adm-orders-list" class="grid gap-4"></div>
                 </section>
 
                 <!-- قسم المستخدمين -->
                 <section id="panel-users" class="admin-panel hidden space-y-6">
-                    <div class="relative group">
-                        <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                        <input type="text" onkeyup="searchUsers(this.value)" class="w-full p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-emerald-500/50" placeholder="ابحث عن عميل بالاسم أو الهاتف...">
+                    <div class="relative">
+                        <input type="text" onkeyup="searchUsers(this.value)" class="w-full p-4 pr-12 bg-slate-800/50 border border-white/10 rounded-2xl outline-none focus:border-emerald-500 shadow-inner" placeholder="ابحث عن عميل...">
+                        <i class="fas fa-search absolute right-5 top-1/2 -translate-y-1/2 text-slate-500"></i>
                     </div>
                     <div id="adm-users-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </section>
 
                 <!-- قسم المنتجات -->
                 <section id="panel-manage-products" class="admin-panel hidden space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-2xl font-black text-white">المخزن الرقمي</h3>
-                        <button onclick="openAddProductModal()" class="bg-emerald-500 text-black px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-2 hover:scale-105 transition-all shadow-lg shadow-emerald-500/20">
-                            <i class="fas fa-plus"></i> إضافة منتج
+                    <div class="flex justify-between items-center bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
+                        <div>
+                            <h3 class="text-xl font-black">إدارة المنتجات</h3>
+                            <p class="text-xs text-slate-400">تعديل، حذف أو إضافة منتجات جديدة</p>
+                        </div>
+                        <button onclick="openAddProductModal()" class="btn-premium px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2">
+                            <i class="fas fa-plus-circle"></i> إضافة
                         </button>
                     </div>
                     <div id="adm-products-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
@@ -212,19 +214,17 @@
 
                 <!-- قسم الإشعارات -->
                 <section id="panel-broadcast" class="admin-panel hidden">
-                    <div class="glass-panel p-8 max-w-2xl mx-auto border-t-4 border-t-indigo-500">
-                        <h3 class="text-2xl font-black mb-6 text-indigo-400"><i class="fas fa-bullhorn ml-2"></i> بث إشعار ذكي</h3>
+                    <div class="glass-panel p-8 max-w-xl mx-auto border-t-4 border-t-emerald-500">
+                        <div class="text-center mb-8">
+                            <i class="fas fa-bullhorn text-5xl text-emerald-500 mb-4"></i>
+                            <h3 class="text-2xl font-black">بث رسالة جماعية</h3>
+                            <p class="text-slate-400 text-sm">سيتم إرسال تنبيه فوري لجميع مستخدمي التطبيق</p>
+                        </div>
                         <div class="space-y-4">
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-400">عنوان التنبيه</label>
-                                <input type="text" id="msg-title" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl outline-none focus:border-indigo-500" placeholder="مثال: خصم 20% لفترة محدودة!">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-400">تفاصيل الرسالة</label>
-                                <textarea id="msg-body" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl outline-none focus:border-indigo-500 h-32 resize-none" placeholder="اكتب عرضك هنا..."></textarea>
-                            </div>
-                            <button onclick="sendAdminMessage()" class="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-3">
-                                <i class="fas fa-paper-plane"></i> إرسال لجميع العملاء الآن
+                            <input type="text" id="msg-title" class="w-full p-4 bg-black/20 border border-white/10 rounded-xl outline-none focus:border-emerald-500" placeholder="عنوان التنبيه">
+                            <textarea id="msg-body" class="w-full p-4 bg-black/20 border border-white/10 rounded-xl outline-none focus:border-emerald-500 h-32" placeholder="نص الرسالة..."></textarea>
+                            <button onclick="sendAdminMessage()" class="w-full btn-premium py-4 rounded-xl font-black flex items-center justify-center gap-3">
+                                <i class="fas fa-paper-plane"></i> إرسال الآن
                             </button>
                         </div>
                     </div>
@@ -233,26 +233,32 @@
             </main>
         </div>
 
-        <!-- الشريط السفلي (للجوال) -->
-        <nav class="lg:hidden fixed bottom-4 left-4 right-4 z-[200] glass-panel rounded-[2rem] p-2 flex justify-between items-center shadow-2xl border-white/10">
-            <button onclick="switchTab('orders')" class="p-4 rounded-2xl text-slate-400 hover:text-emerald-400 transition-all"><i class="fas fa-shopping-basket text-xl"></i></button>
-            <button onclick="switchTab('users')" class="p-4 rounded-2xl text-slate-400 hover:text-emerald-400 transition-all"><i class="fas fa-users text-xl"></i></button>
-            <button onclick="switchTab('manage-products')" class="p-4 rounded-2xl text-slate-400 hover:text-emerald-400 transition-all"><i class="fas fa-boxes-stacked text-xl"></i></button>
-            <button onclick="switchTab('broadcast')" class="p-4 rounded-2xl text-slate-400 hover:text-emerald-400 transition-all"><i class="fas fa-paper-plane text-xl"></i></button>
+        <!-- الشريط السفلي المحسن (للجوال) -->
+        <nav class="lg:hidden fixed bottom-6 left-6 right-6 z-[200] mobile-nav rounded-3xl p-3 flex justify-around items-center">
+            <button onclick="switchTab('orders')" id="m-tab-orders" class="nav-item active p-3">
+                <i class="fas fa-home text-2xl"></i>
+            </button>
+            <button onclick="switchTab('users')" id="m-tab-users" class="nav-item p-3">
+                <i class="fas fa-users text-2xl"></i>
+            </button>
+            <button onclick="switchTab('manage-products')" id="m-tab-manage-products" class="nav-item p-3">
+                <i class="fas fa-box-open text-2xl"></i>
+            </button>
+            <button onclick="switchTab('broadcast')" id="m-tab-broadcast" class="nav-item p-3">
+                <i class="fas fa-bell text-2xl"></i>
+            </button>
         </nav>
     </div>
 
     <script>
         const API = window.location.origin;
         let masterKey = "";
-        let salesChart;
         let allData = { orders: [], users: [], products: [], categories: [] };
 
-        // 1. نظام الدخول المتطور
+        // 1. نظام الدخول
         async function loginAdmin() {
             const inputKey = document.getElementById('admin-key-input').value;
             if(!inputKey) return;
-            
             masterKey = inputKey;
             await loadDashboard(true);
         }
@@ -265,11 +271,11 @@
                     body: JSON.stringify({ adminPass: masterKey })
                 });
                 let reply = await res.json();
-                
+
                 if(reply.success) {
                     allData = reply.data;
                     localStorage.setItem("hussain_admin_token", masterKey);
-                    
+
                     if(isFirst) {
                         document.getElementById('admin-lock').style.display = 'none';
                         const content = document.getElementById('admin-content');
@@ -278,91 +284,75 @@
                         initChart();
                         startClock();
                     }
-                    
+
                     renderOrders();
                     renderUsers();
                     renderProducts();
                     updateTopStats();
                 } else {
-                    Swal.fire({ icon: 'error', title: 'خطأ', text: 'رمز الدخول غير صحيح', background: '#0f172a', color: '#fff' });
+                    Swal.fire({ icon: 'error', title: 'فشل الوصول', text: 'رمز التشفير غير صحيح', background: '#0f172a', color: '#fff', confirmButtonColor: '#10b981' });
                 }
-            } catch(e) {
-                console.error(e);
-            }
+            } catch(e) { console.error(e); }
         }
 
-        // 2. تحديث الإحصائيات العلوية
         function updateTopStats() {
-            const totalRevenue = allData.orders
+            const total = allData.orders
                 .filter(o => o.status.includes('مكتمل'))
                 .reduce((acc, curr) => acc + Number(curr.total), 0);
-            document.getElementById('stat-revenue').innerText = `${totalRevenue.toLocaleString()} YER`;
+            document.getElementById('stat-revenue').innerText = `${total.toLocaleString()} YER`;
             document.getElementById('orders-count').innerText = allData.orders.length;
         }
 
-        // 3. الرسم البياني للمبيعات (Chart.js)
         function initChart() {
             const ctx = document.getElementById('salesChart').getContext('2d');
-            salesChart = new Chart(ctx, {
+            new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
                     datasets: [{
-                        label: 'المبيعات اليومية',
-                        data: [12000, 19000, 15000, 25000, 22000, 30000, 45000],
+                        label: 'المبيعات',
+                        data: [15000, 22000, 18000, 31000, 28000, 40000, 52000],
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#10b981'
+                        borderWidth: 4,
+                        pointRadius: 0
                     }]
                 },
                 options: {
-                    responsive: true,
                     plugins: { legend: { display: false } },
-                    scales: {
-                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                    scales: { 
+                        y: { display: false },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { family: 'Cairo' } } }
                     }
                 }
             });
         }
 
-        // 4. رندر الطلبات (تصميم Premium)
         function renderOrders(filter = 'all') {
             const list = document.getElementById('adm-orders-list');
             let filtered = allData.orders;
-            
             if(filter === 'pending') filtered = allData.orders.filter(o => !o.status.includes('مكتمل') && !o.status.includes('مرفوض'));
-            if(filter === 'completed') filtered = allData.orders.filter(o => o.status.includes('مكتمل'));
 
             list.innerHTML = filtered.map(o => `
-                <div class="glass-panel p-6 neon-border group transition-all hover:bg-white/5">
-                    <div class="flex flex-col lg:flex-row justify-between gap-6">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-4">
-                                <span class="bg-emerald-500/20 text-emerald-500 px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase">ID: ${o.id.slice(-6)}</span>
-                                <span class="text-slate-500 text-[10px] font-bold"><i class="far fa-clock ml-1"></i>${o.date}</span>
+                <div class="glass-panel p-5 card-order group">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-emerald-500 text-black text-[10px] font-black px-2 py-0.5 rounded">ID-${o.id.slice(-4)}</span>
+                                <span class="text-xs text-slate-500 font-bold">${o.date}</span>
                             </div>
-                            <h4 class="font-black text-lg text-white mb-2">${o.phone}</h4>
-                            <div class="flex flex-wrap gap-2">
-                                ${o.items.map(item => `
-                                    <span class="bg-white/5 border border-white/5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300">
-                                        ${item.name} <span class="text-emerald-500 mr-1">x${item.qty}</span>
-                                    </span>
-                                `).join('')}
+                            <h4 class="font-black text-lg">${o.phone}</h4>
+                            <div class="flex flex-wrap gap-2 text-[11px]">
+                                ${o.items.map(i => `<span class="bg-white/5 border border-white/10 px-2 py-1 rounded-lg">${i.name} (x${i.qty})</span>`).join('')}
                             </div>
                         </div>
-                        <div class="flex flex-col justify-between items-end gap-4 min-w-[200px]">
-                            <div class="text-left w-full">
-                                <p class="text-[10px] text-slate-500 font-black uppercase">المبلغ الإجمالي</p>
-                                <p class="text-2xl font-black text-emerald-400">${Number(o.total).toLocaleString()} <span class="text-xs">YER</span></p>
-                            </div>
-                            <div class="flex gap-2 w-full">
-                                <button onclick="updateStatus('${o.id}', 'مكتمل ✅')" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black py-3 rounded-xl text-xs transform active:scale-90 transition-all">اعتماد</button>
-                                <button onclick="updateStatus('${o.id}', 'مرفوض ❌')" class="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-times"></i></button>
+                        <div class="w-full md:w-auto flex flex-row md:flex-col justify-between items-end gap-2">
+                            <p class="text-xl font-black text-emerald-400">${Number(o.total).toLocaleString()} <span class="text-[10px]">YER</span></p>
+                            <div class="flex gap-2">
+                                <button onclick="updateStatus('${o.id}', 'مكتمل ✅')" class="bg-emerald-500 text-black px-4 py-2 rounded-xl text-xs font-black hover:scale-105 transition-transform">قبول</button>
+                                <button onclick="updateStatus('${o.id}', 'مرفوض ❌')" class="bg-red-500/10 text-red-500 p-2 rounded-xl hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
                     </div>
@@ -370,61 +360,70 @@
             `).reverse().join('');
         }
 
-        // 5. رندر المستخدمين
         function renderUsers() {
             const list = document.getElementById('adm-users-list');
             list.innerHTML = allData.users.map(u => `
-                <div class="glass-panel p-5 flex items-center justify-between group">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center text-xl shadow-inner">
-                            <i class="fas fa-user"></i>
+                <div class="glass-panel p-4 flex justify-between items-center hover:border-emerald-500/30 transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-emerald-500 border border-white/5">
+                            <i class="fas fa-user text-sm"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm text-white">${u.name || 'عميل جديد'}</h4>
-                            <p class="text-xs text-slate-500 font-mono">${u.phone}</p>
+                            <h4 class="font-bold text-sm text-white">${u.name || 'عميل'}</h4>
+                            <p class="text-[10px] text-slate-500 font-mono">${u.phone}</p>
                         </div>
                     </div>
                     <div class="text-left">
-                        <p class="text-[9px] text-slate-500 font-bold uppercase">المحفظة</p>
-                        <p class="text-emerald-400 font-black text-sm">${u.bal} <span class="text-[9px]">YER</span></p>
-                        <button onclick="topUpWallet('${u.phone}', ${u.bal})" class="mt-2 text-[10px] font-black text-indigo-400 hover:underline">شحن سريع +</button>
+                        <p class="text-[10px] text-slate-500 font-bold">الرصيد</p>
+                        <button onclick="topUpWallet('${u.phone}', ${u.bal})" class="text-emerald-400 font-black hover:underline">${u.bal} YER</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // 6. رندر المنتجات
         function renderProducts() {
             const list = document.getElementById('adm-products-list');
             list.innerHTML = allData.products.map(p => `
-                <div class="glass-panel p-4 overflow-hidden group">
-                    <div class="relative h-40 mb-4 rounded-xl overflow-hidden">
-                        <img src="${p.img}" class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                <div class="glass-panel p-3 overflow-hidden group hover-scale">
+                    <div class="relative h-32 mb-3 rounded-xl overflow-hidden">
+                        <img src="${p.img}" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                        <div class="absolute bottom-3 right-3">
-                            <p class="text-white font-black text-sm">${p.name}</p>
-                            <p class="text-emerald-400 font-bold text-xs">${p.price} YER</p>
+                        <div class="absolute bottom-2 right-2 left-2 flex justify-between items-end">
+                            <p class="text-white font-black text-xs truncate">${p.name}</p>
+                            <p class="text-emerald-400 font-black text-xs">${p.price} YER</p>
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="editProduct('${p.name}')" class="flex-1 bg-white/5 hover:bg-white/10 p-2 rounded-lg text-xs font-bold text-slate-300">تعديل</button>
-                        <button onclick="deleteProduct('${p.name}')" class="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash-alt"></i></button>
+                    <div class="flex gap-1">
+                        <button onclick="editProduct('${p.name}')" class="flex-1 bg-white/5 hover:bg-white/10 p-2 rounded-lg text-[10px] font-bold">تعديل</button>
+                        <button onclick="deleteProduct('${p.name}')" class="p-2 bg-red-500/10 text-red-500 rounded-lg text-[10px] hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // 7. تحويل التبويبات
         function switchTab(id) {
+            // اخفاء جميع الألواح
             document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
             document.getElementById(`panel-${id}`).classList.remove('hidden');
-            
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            const activeBtn = document.getElementById(`tab-${id}`);
-            if(activeBtn) activeBtn.classList.add('active');
+
+            // تحديث حالة الأزرار (Desktop)
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-emerald-500/10', 'text-emerald-500'));
+            const activeTab = document.getElementById(`tab-${id}`);
+            if(activeTab) activeTab.classList.add('active', 'bg-emerald-500/10', 'text-emerald-500');
+
+            // تحديث حالة الأزرار (Mobile)
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            const activeMobileTab = document.getElementById(`m-tab-${id}`);
+            if(activeMobileTab) activeMobileTab.classList.add('active');
         }
 
-        // 8. وظائف مساعدة (إشعارات SweetAlert)
+        function startClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('real-time-clock').innerText = now.toLocaleString('ar-YE');
+            }, 1000);
+        }
+
         async function updateStatus(id, status) {
             const res = await fetch(`${API}/api/admin/order/update-status`, {
                 method: 'POST',
@@ -432,22 +431,18 @@
                 body: JSON.stringify({ adminPass: masterKey, id, status })
             });
             if(res.ok) {
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم التحديث', showConfirmButton: false, timer: 2000, background: '#0f172a', color: '#fff' });
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم التحديث بنجاح', showConfirmButton: false, timer: 1500, background: '#1e293b', color: '#fff' });
                 loadDashboard();
             }
         }
 
         async function topUpWallet(phone, current) {
             const { value: amount } = await Swal.fire({
-                title: 'شحن المحفظة',
+                title: 'شحن رصيد',
                 input: 'number',
                 inputLabel: `الرصيد الحالي: ${current} YER`,
-                inputPlaceholder: 'أدخل الرصيد الجديد الإجمالي',
-                background: '#0f172a',
-                color: '#fff',
-                confirmButtonColor: '#10b981'
+                background: '#0f172a', color: '#fff', confirmButtonColor: '#10b981'
             });
-
             if (amount) {
                 await fetch(`${API}/api/admin/user/update-balance`, {
                     method: 'POST',
@@ -458,21 +453,12 @@
             }
         }
 
-        function startClock() {
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('real-time-clock').innerText = now.toLocaleString('ar-YE');
-            }, 1000);
-        }
-
         function filterOrders(type) {
-            // تحديث تصميم أزرار الفلترة
             event.target.parentElement.querySelectorAll('button').forEach(b => b.className = 'px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/5');
             event.target.className = 'px-4 py-2 rounded-lg text-xs font-bold bg-emerald-500 text-black';
             renderOrders(type);
         }
 
-        // التحقق التلقائي عند التحميل
         window.onload = () => {
             const saved = localStorage.getItem("hussain_admin_token");
             if(saved) {
@@ -481,6 +467,10 @@
             }
         };
 
+        function logoutAdmin() {
+            localStorage.removeItem("hussain_admin_token");
+            location.reload();
+        }
     </script>
 </body>
 </html>

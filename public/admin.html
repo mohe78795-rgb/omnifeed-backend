@@ -2,474 +2,209 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>النسخة الملكية المحدثة | تموينات أبو حسين</title>
-
-    <!-- Libraries -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة التحكم وإدارة تموينات أبو حسين</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-
     <style>
-        :root {
-            --bg-dark: #020617;
-            --panel-bg: rgba(15, 23, 42, 0.8);
-            --accent-emerald: #10b981;
-            --accent-gold: #fbbf24;
-            --nav-bg: rgba(30, 41, 59, 0.95);
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        *{font-family:'Cairo',sans-serif;}
+        .img-preview { 
+            width: 100%; height: 160px; border-radius: 20px; 
+            background-size: cover; background-position: center; 
+            display: none; margin-top: 15px; border: 2px solid #10b981; 
         }
-
-        * { font-family: 'Cairo', sans-serif; scroll-behavior: smooth; }
-
-        body {
-            background-color: var(--bg-dark);
-            color: #f1f5f9;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
-            min-height: 100vh;
-        }
-
-        /* Glassmorphism Re-imagined */
-        .glass-panel {
-            background: var(--panel-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-        }
-
-        /* الملاحة السفلية - تصميم متميز */
-        .mobile-nav {
-            background: var(--nav-bg);
-            border-top: 2px solid var(--accent-emerald);
-            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-        }
-
-        .nav-item {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            color: #94a3b8;
-            position: relative;
-        }
-
-        .nav-item.active {
-            color: var(--accent-emerald);
-            transform: translateY(-8px);
-        }
-
-        .nav-item.active::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            width: 6px;
-            height: 6px;
-            background: var(--accent-emerald);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-emerald);
-        }
-
-        /* Animations */
-        .hover-scale { transition: transform 0.2s; }
-        .hover-scale:hover { transform: scale(1.02); }
-        
-        .btn-premium {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-        .btn-premium:hover {
-            filter: brightness(1.1);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        .card-order {
-            border-right: 4px solid transparent;
-            transition: all 0.3s;
-        }
-        .card-order:hover {
-            border-right-color: var(--accent-emerald);
-            background: rgba(255,255,255,0.03);
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-dark); }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        #permission-modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="pb-24 lg:pb-8">
+<body class="bg-[#030712] text-white p-4 md:p-8">
 
-    <!-- شاشة تسجيل الدخول -->
-    <div id="admin-lock" class="fixed inset-0 z-[9999] bg-[#020617] flex items-center justify-center p-4">
-        <div class="max-w-md w-full glass-panel p-10 text-center border-emerald-500/20">
-            <div class="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
-                <i class="fas fa-shield-halved text-4xl text-emerald-500"></i>
-            </div>
-            <h2 class="text-3xl font-black mb-2">نظام التحكم</h2>
-            <p class="text-slate-400 text-sm mb-8">يرجى إدخال مفتاح الوصول للمتابعة</p>
-            <input type="password" id="admin-key-input" class="w-full p-4 bg-black/40 border border-white/10 rounded-2xl text-center font-black text-emerald-400 text-2xl outline-none focus:border-emerald-500 transition-all mb-6" placeholder="••••">
-            <button onclick="loginAdmin()" class="w-full btn-premium text-white font-black py-4 rounded-2xl">دخول آمن</button>
+    <div id="permission-modal">
+        <div class="bg-[#0f172a] p-8 rounded-3xl w-[90%] max-w-sm text-center border border-emerald-500/20">
+            <h3 class="text-xl font-black mb-4">الوصول للمعرض</h3>
+            <button onclick="invokeNativeGallery()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl transition hover:bg-emerald-400">سماح بالوصول</button>
         </div>
     </div>
 
-    <!-- المحتوى الرئيسي -->
-    <div id="admin-content" class="hidden opacity-0 transition-opacity duration-700">
-        
-        <!-- الهيدر -->
-        <header class="sticky top-0 z-[100] glass-panel rounded-none border-x-0 border-t-0 px-6 py-4 mb-8 bg-slate-900/90">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
-                <div class="flex items-center gap-4">
-                    <div class="relative">
-                        <img src="https://ui-avatars.com/api/?name=Abu+Hussein&background=10b981&color=fff" class="w-12 h-12 rounded-xl shadow-lg border-2 border-emerald-500/50">
-                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-black text-white">القيادة <span class="text-emerald-500">العليا</span></h1>
-                        <p id="real-time-clock" class="text-[10px] text-emerald-500/70 font-mono"></p>
-                    </div>
-                </div>
+    <div class="max-w-4xl mx-auto space-y-8">
+        <h1 class="text-2xl md:text-3xl font-black text-center text-emerald-400 border-b border-slate-800 pb-4">🛠️ لوحة تشغيل المتجر وتعبئة البيانات التجريبية</h1>
 
-                <div class="flex items-center gap-3">
-                    <div class="hidden md:flex flex-col items-end px-4">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase">إجمالي المبيعات</span>
-                        <span id="stat-revenue" class="text-emerald-400 font-black">0 YER</span>
-                    </div>
-                    <button onclick="logoutAdmin()" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
+        <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 space-y-4">
+            <h3 class="font-bold text-xl text-emerald-400 border-b border-slate-800 pb-2"><i class="fas fa-folder-plus ml-2"></i>الخطوة 1: إضافة قسم جديد للمتجر (Category)</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 mb-2">الرمز السري للأدمن (adminPass):</label>
+                    <input type="password" id="adminPassCat" value="123456" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 mb-2">اسم القسم:</label>
+                    <input type="text" id="catName" value="شحن ألعاب فوري" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
                 </div>
             </div>
-        </header>
 
-        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            <!-- القائمة الجانبية (Desktop) -->
-            <aside class="hidden lg:block lg:col-span-3 space-y-4">
-                <div class="glass-panel p-4 space-y-1">
-                    <p class="text-[10px] font-bold text-slate-500 px-4 mb-3 uppercase tracking-widest">القائمة الرئيسية</p>
-                    <button onclick="switchTab('orders')" id="tab-orders" class="tab-btn active w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm transition-all hover:bg-white/5">
-                        <i class="fas fa-receipt w-5 text-emerald-500"></i> الطلبات
-                    </button>
-                    <button onclick="switchTab('users')" id="tab-users" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm transition-all hover:bg-white/5">
-                        <i class="fas fa-user-shield w-5 text-emerald-500"></i> العملاء
-                    </button>
-                    <button onclick="switchTab('manage-products')" id="tab-manage-products" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm transition-all hover:bg-white/5">
-                        <i class="fas fa-box w-5 text-emerald-500"></i> المخزون
-                    </button>
-                    <button onclick="switchTab('broadcast')" id="tab-broadcast" class="tab-btn w-full flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm transition-all hover:bg-white/5">
-                        <i class="fas fa-paper-plane w-5 text-emerald-500"></i> الإشعارات
-                    </button>
-                </div>
-            </aside>
+            <div>
+                <label class="block text-sm font-bold text-slate-400 mb-2">رابط صورة القسم (أو اختر صورة من المعرض بالأسفل):</label>
+                <input type="text" id="catImg" value="https://via.placeholder.com/150" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+            </div>
 
-            <!-- منطقة المحتوى -->
-            <main class="lg:col-span-9 space-y-6">
-                
-                <!-- الإحصائيات -->
-                <section class="glass-panel p-6 border-b-2 border-b-emerald-500/20">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-black flex items-center gap-2"><i class="fas fa-chart-pie text-emerald-500"></i> مؤشر الأداء</h3>
-                        <div class="text-[10px] bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full font-bold">مباشر</div>
-                    </div>
-                    <canvas id="salesChart" height="120"></canvas>
-                </section>
+            <div class="p-6 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer text-center bg-slate-950/40 hover:border-emerald-500/50 transition" onclick="requestGalleryPermission('catImg')">
+                <i class="fas fa-camera text-2xl text-emerald-400 mb-2"></i>
+                <p class="text-sm text-slate-400">اضغط لاختيار صورة القسم من المعرض</p>
+            </div>
+            <div id="cat-preview-box" class="img-preview"></div>
 
-                <!-- قسم الطلبات -->
-                <section id="panel-orders" class="admin-panel space-y-4">
-                    <div class="flex justify-between items-end">
-                        <h2 class="text-2xl font-black">الطلبات الواردة <span id="orders-count" class="text-sm bg-emerald-500 text-black px-2 py-0.5 rounded ml-2">0</span></h2>
-                        <div class="flex gap-1 bg-slate-800/50 p-1 rounded-xl border border-white/5">
-                            <button onclick="filterOrders('all')" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-500 text-black">الكل</button>
-                            <button onclick="filterOrders('pending')" class="px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/5">المعلقة</button>
-                        </div>
-                    </div>
-                    <div id="adm-orders-list" class="grid gap-4"></div>
-                </section>
-
-                <!-- قسم المستخدمين -->
-                <section id="panel-users" class="admin-panel hidden space-y-6">
-                    <div class="relative">
-                        <input type="text" onkeyup="searchUsers(this.value)" class="w-full p-4 pr-12 bg-slate-800/50 border border-white/10 rounded-2xl outline-none focus:border-emerald-500 shadow-inner" placeholder="ابحث عن عميل...">
-                        <i class="fas fa-search absolute right-5 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                    </div>
-                    <div id="adm-users-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                </section>
-
-                <!-- قسم المنتجات -->
-                <section id="panel-manage-products" class="admin-panel hidden space-y-6">
-                    <div class="flex justify-between items-center bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
-                        <div>
-                            <h3 class="text-xl font-black">إدارة المنتجات</h3>
-                            <p class="text-xs text-slate-400">تعديل، حذف أو إضافة منتجات جديدة</p>
-                        </div>
-                        <button onclick="openAddProductModal()" class="btn-premium px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2">
-                            <i class="fas fa-plus-circle"></i> إضافة
-                        </button>
-                    </div>
-                    <div id="adm-products-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
-                </section>
-
-                <!-- قسم الإشعارات -->
-                <section id="panel-broadcast" class="admin-panel hidden">
-                    <div class="glass-panel p-8 max-w-xl mx-auto border-t-4 border-t-emerald-500">
-                        <div class="text-center mb-8">
-                            <i class="fas fa-bullhorn text-5xl text-emerald-500 mb-4"></i>
-                            <h3 class="text-2xl font-black">بث رسالة جماعية</h3>
-                            <p class="text-slate-400 text-sm">سيتم إرسال تنبيه فوري لجميع مستخدمي التطبيق</p>
-                        </div>
-                        <div class="space-y-4">
-                            <input type="text" id="msg-title" class="w-full p-4 bg-black/20 border border-white/10 rounded-xl outline-none focus:border-emerald-500" placeholder="عنوان التنبيه">
-                            <textarea id="msg-body" class="w-full p-4 bg-black/20 border border-white/10 rounded-xl outline-none focus:border-emerald-500 h-32" placeholder="نص الرسالة..."></textarea>
-                            <button onclick="sendAdminMessage()" class="w-full btn-premium py-4 rounded-xl font-black flex items-center justify-center gap-3">
-                                <i class="fas fa-paper-plane"></i> إرسال الآن
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-            </main>
+            <button class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-4 rounded-2xl transition shadow-lg shadow-purple-600/20" onclick="addCategory()">إضافة القسم إلى قاعدة البيانات</button>
         </div>
 
-        <!-- الشريط السفلي المحسن (للجوال) -->
-        <nav class="lg:hidden fixed bottom-6 left-6 right-6 z-[200] mobile-nav rounded-3xl p-3 flex justify-around items-center">
-            <button onclick="switchTab('orders')" id="m-tab-orders" class="nav-item active p-3">
-                <i class="fas fa-home text-2xl"></i>
-            </button>
-            <button onclick="switchTab('users')" id="m-tab-users" class="nav-item p-3">
-                <i class="fas fa-users text-2xl"></i>
-            </button>
-            <button onclick="switchTab('manage-products')" id="m-tab-manage-products" class="nav-item p-3">
-                <i class="fas fa-box-open text-2xl"></i>
-            </button>
-            <button onclick="switchTab('broadcast')" id="m-tab-broadcast" class="nav-item p-3">
-                <i class="fas fa-bell text-2xl"></i>
-            </button>
-        </nav>
+        <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 space-y-6">
+            <h3 class="font-bold text-xl text-emerald-400 border-b border-slate-800 pb-2"><i class="fas fa-plug ml-2"></i>الخطوة 2: جلب الخدمات من ميجا سنتر وتجربة الشحن</h3>
+            <p class="text-xs text-slate-400 bg-slate-950 p-3 rounded-xl border border-slate-800">بعد إضافة القسم، جرب الآن جلب باقات ميجا سنتر أو إرسال طلب تجريبي ليتفعل الحساب وتظهر البيانات.</p>
+            
+            <button class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-2xl transition" onclick="fetchServices()">فحص وجلب باقات ميجا سنتر المتاحة</button>
+            
+            <div class="border-t border-slate-800 pt-4 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-400 mb-2">رقم هاتف العميل (المسجل ولديه رصيد):</label>
+                        <input type="text" id="userPhone" value="777777777" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-400 mb-2">معرف الخدمة في ميجا سنتر (Service ID):</label>
+                        <input type="text" id="serviceId" value="101" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-400 mb-2">اسم الباقة:</label>
+                        <input type="text" id="serviceName" value="PUBG Mobile 60 UC" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-400 mb-2">السعر المتوقع (مطابقة التكلفة):</label>
+                        <input type="number" id="price" value="500" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 mb-2">آيدي اللاعب للتجربة (Player ID):</label>
+                    <input type="text" id="playerId" value="123456789" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <button class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-4 rounded-2xl transition shadow-lg shadow-emerald-500/10" onclick="sendTopup()">إرسال طلب شحن فوري حقيقي</button>
+            </div>
+        </div>
+
+        <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5">
+            <h3 class="font-bold text-slate-400 mb-2"><i class="fas fa-terminal ml-2"></i>شاشة استجابة السيرفر (مثل بوست مان)</h3>
+            <div id="output" class="response-box bg-slate-950 text-emerald-400 p-4 rounded-2xl min-height-[120px] max-h-[300px] overflow-y-auto font-mono text-left" style="direction: ltr;">في انتظار تنفيذ أي عملية...</div>
+        </div>
     </div>
 
     <script>
-        const API = window.location.origin;
-        let masterKey = "";
-        let allData = { orders: [], users: [], products: [], categories: [] };
+        const BASE_URL = "https://0zk30qr9iu.onrender.com";
+        let currentTargetInput = "";
 
-        // 1. نظام الدخول
-        async function loginAdmin() {
-            const inputKey = document.getElementById('admin-key-input').value;
-            if(!inputKey) return;
-            masterKey = inputKey;
-            await loadDashboard(true);
+        // 1. طلب الإذن من المستخدم واختيار الحقل المستهدف لقيمة الصورة
+        function requestGalleryPermission(inputId) {
+            currentTargetInput = inputId;
+            document.getElementById('permission-modal').style.display = 'flex';
         }
 
-        async function loadDashboard(isFirst = false) {
-            try {
-                let res = await fetch(`${API}/api/admin/dashboard`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ adminPass: masterKey })
-                });
-                let reply = await res.json();
-
-                if(reply.success) {
-                    allData = reply.data;
-                    localStorage.setItem("hussain_admin_token", masterKey);
-
-                    if(isFirst) {
-                        document.getElementById('admin-lock').style.display = 'none';
-                        const content = document.getElementById('admin-content');
-                        content.classList.remove('hidden');
-                        setTimeout(() => content.style.opacity = '1', 50);
-                        initChart();
-                        startClock();
-                    }
-
-                    renderOrders();
-                    renderUsers();
-                    renderProducts();
-                    updateTopStats();
-                } else {
-                    Swal.fire({ icon: 'error', title: 'فشل الوصول', text: 'رمز التشفير غير صحيح', background: '#0f172a', color: '#fff', confirmButtonColor: '#10b981' });
-                }
-            } catch(e) { console.error(e); }
-        }
-
-        function updateTopStats() {
-            const total = allData.orders
-                .filter(o => o.status.includes('مكتمل'))
-                .reduce((acc, curr) => acc + Number(curr.total), 0);
-            document.getElementById('stat-revenue').innerText = `${total.toLocaleString()} YER`;
-            document.getElementById('orders-count').innerText = allData.orders.length;
-        }
-
-        function initChart() {
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-                    datasets: [{
-                        label: 'المبيعات',
-                        data: [15000, 22000, 18000, 31000, 28000, 40000, 52000],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: { 
-                        y: { display: false },
-                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { family: 'Cairo' } } }
-                    }
-                }
-            });
-        }
-
-        function renderOrders(filter = 'all') {
-            const list = document.getElementById('adm-orders-list');
-            let filtered = allData.orders;
-            if(filter === 'pending') filtered = allData.orders.filter(o => !o.status.includes('مكتمل') && !o.status.includes('مرفوض'));
-
-            list.innerHTML = filtered.map(o => `
-                <div class="glass-panel p-5 card-order group">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-emerald-500 text-black text-[10px] font-black px-2 py-0.5 rounded">ID-${o.id.slice(-4)}</span>
-                                <span class="text-xs text-slate-500 font-bold">${o.date}</span>
-                            </div>
-                            <h4 class="font-black text-lg">${o.phone}</h4>
-                            <div class="flex flex-wrap gap-2 text-[11px]">
-                                ${o.items.map(i => `<span class="bg-white/5 border border-white/10 px-2 py-1 rounded-lg">${i.name} (x${i.qty})</span>`).join('')}
-                            </div>
-                        </div>
-                        <div class="w-full md:w-auto flex flex-row md:flex-col justify-between items-end gap-2">
-                            <p class="text-xl font-black text-emerald-400">${Number(o.total).toLocaleString()} <span class="text-[10px]">YER</span></p>
-                            <div class="flex gap-2">
-                                <button onclick="updateStatus('${o.id}', 'مكتمل ✅')" class="bg-emerald-500 text-black px-4 py-2 rounded-xl text-xs font-black hover:scale-105 transition-transform">قبول</button>
-                                <button onclick="updateStatus('${o.id}', 'مرفوض ❌')" class="bg-red-500/10 text-red-500 p-2 rounded-xl hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-times"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).reverse().join('');
-        }
-
-        function renderUsers() {
-            const list = document.getElementById('adm-users-list');
-            list.innerHTML = allData.users.map(u => `
-                <div class="glass-panel p-4 flex justify-between items-center hover:border-emerald-500/30 transition-all">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-emerald-500 border border-white/5">
-                            <i class="fas fa-user text-sm"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-sm text-white">${u.name || 'عميل'}</h4>
-                            <p class="text-[10px] text-slate-500 font-mono">${u.phone}</p>
-                        </div>
-                    </div>
-                    <div class="text-left">
-                        <p class="text-[10px] text-slate-500 font-bold">الرصيد</p>
-                        <button onclick="topUpWallet('${u.phone}', ${u.bal})" class="text-emerald-400 font-black hover:underline">${u.bal} YER</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderProducts() {
-            const list = document.getElementById('adm-products-list');
-            list.innerHTML = allData.products.map(p => `
-                <div class="glass-panel p-3 overflow-hidden group hover-scale">
-                    <div class="relative h-32 mb-3 rounded-xl overflow-hidden">
-                        <img src="${p.img}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                        <div class="absolute bottom-2 right-2 left-2 flex justify-between items-end">
-                            <p class="text-white font-black text-xs truncate">${p.name}</p>
-                            <p class="text-emerald-400 font-black text-xs">${p.price} YER</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-1">
-                        <button onclick="editProduct('${p.name}')" class="flex-1 bg-white/5 hover:bg-white/10 p-2 rounded-lg text-[10px] font-bold">تعديل</button>
-                        <button onclick="deleteProduct('${p.name}')" class="p-2 bg-red-500/10 text-red-500 rounded-lg text-[10px] hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function switchTab(id) {
-            // اخفاء جميع الألواح
-            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-            document.getElementById(`panel-${id}`).classList.remove('hidden');
-
-            // تحديث حالة الأزرار (Desktop)
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-emerald-500/10', 'text-emerald-500'));
-            const activeTab = document.getElementById(`tab-${id}`);
-            if(activeTab) activeTab.classList.add('active', 'bg-emerald-500/10', 'text-emerald-500');
-
-            // تحديث حالة الأزرار (Mobile)
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            const activeMobileTab = document.getElementById(`m-tab-${id}`);
-            if(activeMobileTab) activeMobileTab.classList.add('active');
-        }
-
-        function startClock() {
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('real-time-clock').innerText = now.toLocaleString('ar-YE');
-            }, 1000);
-        }
-
-        async function updateStatus(id, status) {
-            const res = await fetch(`${API}/api/admin/order/update-status`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ adminPass: masterKey, id, status })
-            });
-            if(res.ok) {
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم التحديث بنجاح', showConfirmButton: false, timer: 1500, background: '#1e293b', color: '#fff' });
-                loadDashboard();
+        // 2. التواصل مع تطبيق الأندرويد أو فتح اختيار الملفات التقليدي كبديل تراجعي
+        function invokeNativeGallery() {
+            document.getElementById('permission-modal').style.display = 'none';
+            if (window.AndroidBridge && typeof window.AndroidBridge.openGallery === "function") {
+                window.AndroidBridge.openGallery();
+            } else {
+                // بديل في حال التصفح العادي (محاكاة اختيار الرابط تلقائياً للتجربة)
+                const mockUrl = prompt("أدخل رابط الصورة يدويًا كمحاكاة للأندرويد:", "https://via.placeholder.com/150");
+                if(mockUrl) window.handleSelectedImage(mockUrl);
             }
         }
 
-        async function topUpWallet(phone, current) {
-            const { value: amount } = await Swal.fire({
-                title: 'شحن رصيد',
-                input: 'number',
-                inputLabel: `الرصيد الحالي: ${current} YER`,
-                background: '#0f172a', color: '#fff', confirmButtonColor: '#10b981'
-            });
-            if (amount) {
-                await fetch(`${API}/api/admin/user/update-balance`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ adminPass: masterKey, phone, newBalance: Number(amount) })
-                });
-                loadDashboard();
+        // 3. الدالة التي يستدعيها الأندرويد لإرسال مسار الصورة المحددة
+        window.handleSelectedImage = function(imagePath) {
+            // تحديث قيمة حقل الإدخال النصي الخاص برابط الصورة تلقائياً بالمسار القادم من الهاتف
+            const targetInput = document.getElementById(currentTargetInput);
+            if (targetInput) {
+                targetInput.value = imagePath;
             }
-        }
 
-        function filterOrders(type) {
-            event.target.parentElement.querySelectorAll('button').forEach(b => b.className = 'px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/5');
-            event.target.className = 'px-4 py-2 rounded-lg text-xs font-bold bg-emerald-500 text-black';
-            renderOrders(type);
-        }
-
-        window.onload = () => {
-            const saved = localStorage.getItem("hussain_admin_token");
-            if(saved) {
-                masterKey = saved;
-                loadDashboard(true);
+            // إظهار المعاينة المرئية للمستخدم
+            const previewBox = document.getElementById('cat-preview-box');
+            if (previewBox) {
+                previewBox.style.backgroundImage = "url('" + imagePath + "')";
+                previewBox.style.display = 'block';
+                console.log("تم تحديث الواجهة بالصورة: " + imagePath);
             }
         };
 
-        function logoutAdmin() {
-            localStorage.removeItem("hussain_admin_token");
-            location.reload();
+        // --- دوال ربط السيرفر والـ API ---
+        
+        async function addCategory() {
+            const output = document.getElementById('output');
+            output.innerText = "جاري إضافة القسم...";
+            
+            const sendData = {
+                adminPass: document.getElementById('adminPassCat').value,
+                name: document.getElementById('catName').value,
+                sub: "باقات شحن فورية وتلقائية",
+                img: document.getElementById('catImg').value
+            };
+
+            try {
+                const res = await fetch(`${BASE_URL}/api/admin/category/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sendData)
+                });
+                const data = await res.json();
+                output.innerText = "رد السيرفر:\n" + JSON.stringify(data, null, 4);
+                if(data.success) {
+                    alert("تم إضافة القسم بنجاح! جرب الآن تحديث تطبيقك أو موقعك وستظهر الواجهة فوراً.");
+                }
+            } catch (e) {
+                output.innerText = "خطأ في الاتصال:\n" + e.message;
+            }
+        }
+
+        async function fetchServices() {
+            const output = document.getElementById('output');
+            output.innerText = "جاري جلب باقات ميجا سنتر الحالية...";
+            try {
+                const res = await fetch(`${BASE_URL}/api/games`);
+                const data = await res.json();
+                output.innerText = "قائمة الخدمات القادمة من ميجا سنتر:\n" + JSON.stringify(data, null, 4);
+            } catch (e) {
+                output.innerText = "خطأ:\n" + e.message;
+            }
+        }
+
+        async function sendTopup() {
+            const output = document.getElementById('output');
+            output.innerText = "جاري إرسال طلب الشحن الفوري...";
+            
+            const sendData = {
+                phone: document.getElementById('userPhone').value,
+                price: document.getElementById('price').value,
+                serviceId: document.getElementById('serviceId').value,
+                serviceName: document.getElementById('serviceName').value,
+                user_id: document.getElementById('playerId').value,
+                type: "game"
+            };
+
+            try {
+                const res = await fetch(`${BASE_URL}/api/games/topup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sendData)
+                });
+                const data = await res.json();
+                output.innerText = "رد نظام ميجا سنتر وسيرفرك:\n" + JSON.stringify(data, null, 4);
+            } catch (e) {
+                output.innerText = "خطأ:\n" + e.message;
+            }
         }
     </script>
 </body>

@@ -199,7 +199,17 @@ app.get('/api/messages/:phone', async (req, res) => {
 // 🕹️ 2️⃣ مسارات ميجا سنتر (شحن الألعاب والسداد)
 // ==========================================
 
+// متغيرات لتخزين الخدمات في الذاكرة (Cache) لتجنب الحظر
+let cachedServices = null;
+let lastFetchTime = 0;
+
 app.get('/api/games', async (req, res) => {
+    const currentTime = Date.now();
+    // إذا كانت البيانات موجودة ولم يمر عليها أكثر من 15 دقيقة، أرجعها فوراً
+    if (cachedServices && (currentTime - lastFetchTime < 15 * 60 * 1000)) {
+        return res.json({ success: true, game_list: cachedServices, from_cache: true });
+    }
+
     const form = new FormData();
     form.append('request', 'servicelist');
 
@@ -210,10 +220,20 @@ app.get('/api/games', async (req, res) => {
         });
 
         if (response.data && (response.data.status === true || response.data.status === "true")) {
-            return res.json({ success: true, game_list: response.data.ServiceList || [] });
+            cachedServices = response.data.ServiceList || [];
+            lastFetchTime = currentTime;
+            return res.json({ success: true, game_list: cachedServices });
+        }
+
+        // في حال فشل السيرفر، إذا كان لدينا كاش قديم نرسله بدل تعطل التطبيق
+        if (cachedServices) {
+            return res.json({ success: true, game_list: cachedServices, note: "بيانات مؤقتة" });
         }
         res.json({ success: false, message: "فشل تحديث قائمة الخدمات" });
     } catch (e) {
+        if (cachedServices) {
+            return res.json({ success: true, game_list: cachedServices, note: "بيانات مؤقتة بسبب خطأ اتصال" });
+        }
         res.status(500).json({ success: false, message: "خطأ اتصال مع سيرفر الشحن" });
     }
 });
@@ -286,6 +306,59 @@ app.post('/api/games/topup', async (req, res) => {
         await newTxn.save();
 
         return res.json({ success: false, message: "العملية قيد المعالجة، يرجى عدم تكرار الطلب ومراجعة السجل بعد دقائق." });
+    }
+});
+
+// ==========================================
+// 📥 4️⃣ مسار استقبال تحديثات العمليات (Webhook)
+// ==========================================
+app.post('/api/mega-webhook', async (req, res) => {
+    const { reference, orderid, status, result } = req.body;
+
+    console.log(`📥 تحديث ويب هوك مستلم للعملية المرجعية: ${reference}, الحالة: ${status}`);
+
+    try {
+        const txn = await Transaction.findOne({ referenceId: reference });
+        if (!txn) {
+            return res.status(404).json({ success: false, message: "العملية غير موجودة" });
+        }
+
+        if (txn.status !== 'معلقة (تحقق يدوي) ⚠️' && txn.status !== 'قيد التنفيذ ⏳') {
+            return res.json({ success: true, message: "العملية محدثة مسبقاً" });
+        }
+
+        if (String(status) === '1') { 
+            txn.status = 'ناجحة ✅';
+            txn.megaOrderId = orderid;
+            await txn.save();
+
+            await new Message({
+                receiver: txn.phone,
+                title: "نجاح الشحن ⚡",
+                body: `تم تنفيذ طلبك بنجاح. ${result || ''}`
+            }).save();
+
+        } else if (String(status) === '0') { 
+            txn.status = 'فاشلة ❌';
+            txn.megaOrderId = orderid;
+            await txn.save();
+
+            const user = await User.findById(txn.userId);
+            if (user) {
+                user.bal += txn.price;
+                await user.save();
+
+                await new Message({
+                    receiver: txn.phone,
+                    title: "إلغاء العملية وإعادة الرصيد ↩️",
+                    body: `تم رفض عملية الشحن لـ ${txn.serviceName}. السبب: ${result || 'غير محدد'}. تم إعادة مبلغ ${txn.price} إلى حسابك.`
+                }).save();
+            }
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error("❌ خطأ في معالجة الويب هوك:", error.message);
+        res.status(500).json({ success: false });
     }
 });
 

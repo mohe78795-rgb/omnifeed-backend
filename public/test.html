@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة اختبار السيرفر وميجا سنتر (بديل بوست مان)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h1 { text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .section {
+            background: #fdfdfd;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        h3 { margin-top: 0; color: #2980b9; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #2980b9; }
+        .btn-green { background-color: #2ecc71; }
+        .btn-green:hover { background-color: #27ae60; }
+        .response-box {
+            background: #1e1e1e;
+            color: #757575;
+            padding: 15px;
+            border-radius: 6px;
+            min-height: 80px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Courier New', Courier, monospace;
+            direction: ltr;
+            text-align: left;
+            border: 1px solid #333;
+        }
+        .success-text { color: #4af626 !important; }
+        .error-text { color: #ff5252 !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🛠️ واجهة اختبار السيرفر وسداد ميجا سنتر</h1>
+
+    <div class="section">
+        <h3>1. جلب الخدمات والباقات من ميجا سنتر</h3>
+        <p style="font-size: 13px; color: #666;">يقوم بضرب مسار <code style="direction: ltr; display: inline-block;">GET /api/games</code> للتأكد من الاتصال بميجا سنتر وعرض الباقات المتاحة.</p>
+        <button onclick="fetchMegaServices()">إرسال طلب جلب الخدمات (Fetch Services)</button>
+    </div>
+
+    <div class="section">
+        <h3>2. إرسال طلب شحن فوري وتجربة التكلفة (Topup Test)</h3>
+        <p style="font-size: 13px; color: #666;">يقوم بضرب مسار <code style="direction: ltr; display: inline-block;">POST /api/games/topup</code> المربوط مباشرة بالمنظومة.</p>
+        
+        <div class="form-group">
+            <label>رقم هاتف العميل (المسجل بالسيرفر ولديه رصيد):</label>
+            <input type="text" id="userPhone" placeholder="مثال: 777777777" value="777777777">
+        </div>
+        
+        <div class="form-group">
+            <label>رقم الخدمة في ميجا سنتر (Service ID):</label>
+            <input type="text" id="serviceId" placeholder="مثال: 101" value="101">
+        </div>
+
+        <div class="form-group">
+            <label>اسم الخدمة/الباقة (Service Name):</label>
+            <input type="text" id="serviceName" placeholder="مثال: PUBG Mobile 60 UC" value="PUBG Mobile 60 UC">
+        </div>
+
+        <div class="form-group">
+            <label>سعر الباقة (Price) - سيتم مطابقته مع الـ price_check:</label>
+            <input type="number" id="servicePrice" placeholder="مثال: 500" value="500">
+        </div>
+
+        <div class="form-group">
+            <label>المعرف المستهدف / آيدي اللاعب (Player ID):</label>
+            <input type="text" id="playerId" placeholder="اكتب الآيدي التجريبي المراد شحنه" value="123456789">
+        </div>
+
+        <button class="btn-green" onclick="sendTopupRequest()">إرسال طلب شحن (Send Topup Request)</button>
+    </div>
+
+    <div class="section">
+        <h3>شاشة الاستجابة (Response Body)</h3>
+        <div id="responseOutput" class="response-box">اضغط على أي زر في الأعلى لرؤية رد السيرفر هنا...</div>
+    </div>
+</div>
+
+<script>
+    // دالة لجلب الخدمات من ميجا سنتر
+    async function fetchMegaServices() {
+        const output = document.getElementById('responseOutput');
+        output.innerText = "جاري إرسال الطلب والاتصال بميجا سنتر...";
+        output.className = "response-box";
+
+        try {
+            const response = await fetch('/api/categories'); // يمكنك تغيير المسار إلى /api/games إذا كان السيرفر يعمل محلياً
+            const data = await response.json();
+            
+            output.innerText = JSON.stringify(data, null, 4);
+            output.classList.add("success-text");
+        } catch (error) {
+            output.innerText = "خطأ في الاتصال بالسيرفر:\n" + error.message;
+            output.classList.add("error-text");
+        }
+    }
+
+    // دالة لإرسال طلب الشحن الفوري
+    async function sendTopupRequest() {
+        const output = document.getElementById('responseOutput');
+        output.innerText = "جاري معالجة الطلب، والتحقق من المحفظة، وإرساله لميجا سنتر...";
+        output.className = "response-box";
+
+        // تجهيز البيانات من الحقول
+        const bodyData = {
+            phone: document.getElementById('userPhone').value,
+            price: document.getElementById('servicePrice').value,
+            serviceId: document.getElementById('serviceId').value,
+            serviceName: document.getElementById('serviceName').value,
+            user_id: document.getElementById('playerId').value,
+            type: "game"
+        };
+
+        try {
+            const response = await fetch('/api/games/topup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bodyData)
+            });
+
+            const data = await response.json();
+            
+            output.innerText = JSON.stringify(data, null, 4);
+            
+            if (data.success) {
+                output.classList.add("success-text");
+            } else {
+                output.classList.add("error-text");
+            }
+
+        } catch (error) {
+            output.innerText = "خطأ حرج أثناء إرسال الطلب:\n" + error.message;
+            output.classList.add("error-text");
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -8,11 +8,33 @@ const FormData = require('form-data');
 const crypto = require('crypto');
 // ─── [تعديل 1] استيراد وتجهيز FIREBASE ───
 const admin = require('firebase-admin');
-const serviceAccount = require('./firebase-account-key.json');
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+let serviceAccount;
+
+// إذا كنا على سيرفر Render، سنقرأ البيانات من متغير البيئة النصي الآمن
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (err) {
+        console.error("❌ خطأ في تحليل نص FIREBASE_SERVICE_ACCOUNT المستلم:", err.message);
+    }
+} else {
+    // إذا كنت تعمل محلياً على جهازك، سيقرأ من الملف كالمعتاد
+    try {
+        serviceAccount = require('./firebase-account-key.json');
+    } catch (err) {
+        console.warn("⚠️ لم يتم العثور على ملف firebase-account-key.json محلياً.");
+    }
+}
+
+if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    console.log("✅ تم تفعيل خدمة Firebase Admin بنجاح.");
+} else {
+    console.error("❌ فشل تشغيل Firebase: لا يوجد ملف مفتاح أو متغير بيئة معرّف!");
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;

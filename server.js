@@ -6,7 +6,7 @@ require('dotenv').config();
 const axios = require('axios');
 const FormData = require('form-data');
 const crypto = require('crypto');
-// ─── [تعديل 1] استيراد وتجهيز FIREBASE ───
+// ─── استيراد وتجهيز FIREBASE ───
 const admin = require('firebase-admin');
 
 let serviceAccount;
@@ -59,7 +59,7 @@ mongoose.connect(MONGO_URI)
 // 🗃️ تعريف موديلات قاعدة البيانات (Schemas & Models)
 // ==========================================
 
-// ─── [تعديل 2] جدول تخزين رموز الأجهزة الخاصة بالإشعارات ───
+// جدول تخزين رموز الأجهزة الخاصة بالإشعارات
 const DeviceToken = mongoose.model('DeviceToken', new mongoose.Schema({
     phone: { type: String, required: true }, // لربط الهاتف بالجهاز
     token: { type: String, required: true, unique: true },
@@ -126,19 +126,31 @@ const Transaction = mongoose.model('Transaction', new mongoose.Schema({
 }));
 
 // ==========================================
-// 📣 دالة مساعدة لإرسال الإشعارات الفورية (FCM)
+// 📣 دالة إرسال الإشعارات الفورية (FCM) المحدثة والمطورة
 // ==========================================
 async function sendPushNotification(targetPhone, title, body) {
     try {
-        // البحث عن جميع الرموز المسجلة لهذا رقم الهاتف (قد يكون مسجل في أكثر من جهاز)
         const devices = await DeviceToken.find({ phone: targetPhone });
         if (!devices || devices.length === 0) return;
 
         const tokens = devices.map(d => d.token);
 
+        // هيكل الرسالة المطور المتوافق تماماً مع كود الأندرويد لديك
         const message = {
+            tokens: tokens,
             notification: { title, body },
-            tokens: tokens
+            data: {
+                title: title,
+                body: body
+            },
+            android: {
+                priority: "high", // إجبار الأندرويد على إظهاره فوراً
+                notification: {
+                    channelId: "messages_channel", // مطابقة لقناتك في الجافا
+                    sound: "default",
+                    importance: "max"
+                }
+            }
         };
 
         const response = await admin.messaging().sendEachForMulticast(message);
@@ -187,13 +199,12 @@ function makeEmbedUrl(url) {
 // 🌐 1️⃣ مسارات العميل (المتجر والمستخدمين)
 // ==========================================
 
-// ─── [تعديل 3] مسار استقبال وحفظ الـ Token القادم من الأندرويد ───
+// مسار استقبال وحفظ الـ Token القادم من الأندرويد
 app.post('/api/register-token', async (req, res) => {
-    const { token, user_id } = req.body; // الـ user_id هنا يمثل رقم هاتف المستخدم المرسل من دالة أندرويد
+    const { token, user_id } = req.body; 
     if (!token || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
 
     try {
-        // تحديث الرمز أو إنشائه إن لم يكن موجوداً
         await DeviceToken.findOneAndUpdate(
             { token: token },
             { phone: user_id, token: token },
@@ -254,8 +265,7 @@ app.post('/api/orders/add', async (req, res) => {
         await user.save();
         const newOrder = new Order({ phone, items: order.items, total: order.total });
         await newOrder.save();
-        
-        // ─── [تعديل 4] إشعار فوري عند إنشاء طلب متجر ───
+
         sendPushNotification(phone, "تم استلام طلبك 📦", `خصم ${order.total} YER. طلبك قيد المراجعة حالياً.`);
 
         res.json({ success: true, currentBal: user.bal });
@@ -355,8 +365,7 @@ app.post('/api/games/topup', async (req, res) => {
             const nBody = `تم تنفيذ طلب ${serviceName} للرقم ${user_id} بنجاح.`;
 
             await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
-            
-            // ─── [تعديل 5] إشعار فوري عند نجاح الشحن التلقائي ───
+
             sendPushNotification(phone, nTitle, nBody);
 
             return res.json({ success: true, currentBal: user.bal, orderId: data.orderid });
@@ -404,8 +413,7 @@ app.post('/api/mega-webhook', async (req, res) => {
             const nTitle = "نجاح الشحن ⚡";
             const nBody = `تم تنفيذ طلبك بنجاح. ${result || ''}`;
             await new Message({ receiver: txn.phone, title: nTitle, body: nBody }).save();
-            
-            // ─── [تعديل 6] إشعار فوري عبر الويب هوك عند اكتمال العملية المعلقة ───
+
             sendPushNotification(txn.phone, nTitle, nBody);
 
         } else if (String(status) === '0') {
@@ -420,10 +428,9 @@ app.post('/api/mega-webhook', async (req, res) => {
 
                 const nTitle = "إلغاء العملية وإعادة الرصيد ↩️";
                 const nBody = `تم رفض عملية الشحن لـ ${txn.serviceName}. السبب: ${result || 'غير محدد'}. تم إعادة مبلغ ${txn.price} إلى حسابك.`;
-                
+
                 await new Message({ receiver: txn.phone, title: nTitle, body: nBody }).save();
-                
-                // ─── [تعديل 7] إشعار فوري بفشل الشحن وإرجاع الرصيد ───
+
                 sendPushNotification(txn.phone, nTitle, nBody);
             }
         }
@@ -462,10 +469,9 @@ app.post('/api/admin/user/update-balance', async (req, res) => {
         if(user) {
             const nTitle = "تحديث الرصيد 💰";
             const nBody = `تم تعديل رصيد حسابك. رصيدك الحالي: ${newBalance} YER`;
-            
+
             await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
-            
-            // ─── [تعديل 8] إشعار فوري للمستخدم عند تعديل رصيده يدوياً من الأدمن ───
+
             sendPushNotification(phone, nTitle, nBody);
         }
         res.json({ success: true });
@@ -478,33 +484,48 @@ app.post('/api/admin/order/update-status', async (req, res) => {
     try {
         const order = await Order.findOneAndUpdate({ id }, { status }, { new: true });
         if (order) {
-            // إرسال إشعار للعميل بتحديث حالة طلبه
             sendPushNotification(order.phone, "تحديث حالة الطلب 📦", `طلبك رقم ${id} أصبح: ${status}`);
         }
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// مسار إرسال الرسائل المخصصة أو العامة مع معالجة حزمة البيانات المتطورة
 app.post('/api/messages/send', async (req, res) => {
     const { adminPass, receiver, title, body } = req.body;
     if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
         await new Message({ receiver, title, body }).save();
-        
-        // ─── [تعديل 9] إشعار عند إرسال رسالة مخصصة أو عامة للجميع ───
+
         if (receiver === 'ALL') {
-            // إذا كانت الرسالة عامة، نرسلها لكل المسجلين في الإشعارات
             const allDevices = await DeviceToken.find({});
             const tokens = allDevices.map(d => d.token);
             if (tokens.length > 0) {
-                await admin.messaging().sendEachForMulticast({ notification: { title, body }, tokens });
+                // إرسال الإشعار العام إلى جميع الرموز المخزنة بهيكل متوافق تماماً مع الأندرويد
+                await admin.messaging().sendEachForMulticast({
+                    tokens: tokens,
+                    notification: { title, body },
+                    data: { title, body },
+                    android: {
+                        priority: "high",
+                        notification: {
+                            channelId: "messages_channel",
+                            sound: "default",
+                            importance: "max"
+                        }
+                    }
+                });
+                console.log(`🔔 [إشعار عام] تم إرسال الرسالة إلى جميع الأجهزة بنجاح.`);
             }
         } else {
-            sendPushNotification(receiver, title, body);
+            // إرسال إشعار مخصص لرقم محدد فقط عبر الدالة المطورة
+            await sendPushNotification(receiver, title, body);
         }
-
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
+    } catch (e) { 
+        console.error("❌ خطأ أثناء إرسال الرسالة:", e.message);
+        res.status(500).json({ success: false }); 
+    }
 });
 
 app.post('/api/admin/ad/add', async (req, res) => {

@@ -6,6 +6,13 @@ require('dotenv').config();
 const axios = require('axios');
 const FormData = require('form-data');
 const crypto = require('crypto');
+// ─── [تعديل 1] استيراد وتجهيز FIREBASE ───
+const admin = require('firebase-admin');
+const serviceAccount = require('./firebase-account-key.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +36,13 @@ mongoose.connect(MONGO_URI)
 // ==========================================
 // 🗃️ تعريف موديلات قاعدة البيانات (Schemas & Models)
 // ==========================================
+
+// ─── [تعديل 2] جدول تخزين رموز الأجهزة الخاصة بالإشعارات ───
+const DeviceToken = mongoose.model('DeviceToken', new mongoose.Schema({
+    phone: { type: String, required: true }, // لربط الهاتف بالجهاز
+    token: { type: String, required: true, unique: true },
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
 
 const User = mongoose.model('User', new mongoose.Schema({
     name: { type: String, required: true },
@@ -90,6 +104,29 @@ const Transaction = mongoose.model('Transaction', new mongoose.Schema({
 }));
 
 // ==========================================
+// 📣 دالة مساعدة لإرسال الإشعارات الفورية (FCM)
+// ==========================================
+async function sendPushNotification(targetPhone, title, body) {
+    try {
+        // البحث عن جميع الرموز المسجلة لهذا رقم الهاتف (قد يكون مسجل في أكثر من جهاز)
+        const devices = await DeviceToken.find({ phone: targetPhone });
+        if (!devices || devices.length === 0) return;
+
+        const tokens = devices.map(d => d.token);
+
+        const message = {
+            notification: { title, body },
+            tokens: tokens
+        };
+
+        const response = await admin.messaging().sendEachForMulticast(message);
+        console.log(`🔔 [إشعار] تم دفع الإشعار بنجاح إلى (${response.successCount}) جهاز.`);
+    } catch (error) {
+        console.error("❌ خطأ أثناء إرسال الإشعار الفوري عبر Firebase:", error.message);
+    }
+}
+
+// ==========================================
 // 🔑 إعدادات ربط منظومة ميجا سنتر (V1.3)
 // ==========================================
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
@@ -97,13 +134,11 @@ const MEGA_USERNAME = 'u_4082361957';
 const MEGA_API_KEY = 'trrC6caLfhvod3HPxTE5ND9Ld6wvdsa5jm1Nlq2GrNdD7';
 const MEGA_URL = 'https://megatec-center.com/api/rest.php';
 
-// 1. توليد ترويسة التوثيق (Authorization Header)
 const getMegaAuthHeader = () => {
     const authString = Buffer.from(`${MEGA_USERNAME}:${MEGA_API_KEY}`).toString('base64');
     return { 'Authorization': `Basic ${authString}` };
 };
 
-// 2. معالجة أكواد الأخطاء (Page 12)
 const getMegaErrorMessage = (code) => {
     const errors = {
         '400': 'طلب غير مكتمل أو مفقود',
@@ -119,7 +154,6 @@ const getMegaErrorMessage = (code) => {
     return errors[String(code)] || `خطأ غير معروف برمز: ${code}`;
 };
 
-// مساعدة لتحويل روابط يوتيوب
 function makeEmbedUrl(url) {
     if (!url) return "";
     let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -130,6 +164,25 @@ function makeEmbedUrl(url) {
 // ==========================================
 // 🌐 1️⃣ مسارات العميل (المتجر والمستخدمين)
 // ==========================================
+
+// ─── [تعديل 3] مسار استقبال وحفظ الـ Token القادم من الأندرويد ───
+app.post('/api/register-token', async (req, res) => {
+    const { token, user_id } = req.body; // الـ user_id هنا يمثل رقم هاتف المستخدم المرسل من دالة أندرويد
+    if (!token || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
+
+    try {
+        // تحديث الرمز أو إنشائه إن لم يكن موجوداً
+        await DeviceToken.findOneAndUpdate(
+            { token: token },
+            { phone: user_id, token: token },
+            { upsert: true, new: true }
+        );
+        console.log(`📱 [نظام] تم تسجيل رمز جهاز جديد للهاتف: ${user_id}`);
+        res.json({ success: true, message: "تم تسجيل جهازك في نظام الإشعارات" });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
 
 app.get('/api/categories', async (req, res) => {
     try { res.json(await Category.find({})); } catch (e) { res.status(500).json([]); }
@@ -170,7 +223,6 @@ app.get('/api/auth/user/:phone', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// طلبات السلة العادية
 app.post('/api/orders/add', async (req, res) => {
     const { phone, order } = req.body;
     try {
@@ -180,6 +232,10 @@ app.post('/api/orders/add', async (req, res) => {
         await user.save();
         const newOrder = new Order({ phone, items: order.items, total: order.total });
         await newOrder.save();
+        
+        // ─── [تعديل 4] إشعار فوري عند إنشاء طلب متجر ───
+        sendPushNotification(phone, "تم استلام طلبك 📦", `خصم ${order.total} YER. طلبك قيد المراجعة حالياً.`);
+
         res.json({ success: true, currentBal: user.bal });
     } catch (e) { res.status(500).json({ success: false }); }
 });
@@ -199,13 +255,11 @@ app.get('/api/messages/:phone', async (req, res) => {
 // 🕹️ 2️⃣ مسارات ميجا سنتر (شحن الألعاب والسداد)
 // ==========================================
 
-// متغيرات لتخزين الخدمات في الذاكرة (Cache) لتجنب الحظر
 let cachedServices = null;
 let lastFetchTime = 0;
 
 app.get('/api/games', async (req, res) => {
     const currentTime = Date.now();
-    // إذا كانت البيانات موجودة ولم يمر عليها أكثر من 15 دقيقة، أرجعها فوراً
     if (cachedServices && (currentTime - lastFetchTime < 15 * 60 * 1000)) {
         return res.json({ success: true, game_list: cachedServices, from_cache: true });
     }
@@ -225,7 +279,6 @@ app.get('/api/games', async (req, res) => {
             return res.json({ success: true, game_list: cachedServices });
         }
 
-        // في حال فشل السيرفر، إذا كان لدينا كاش قديم نرسله بدل تعطل التطبيق
         if (cachedServices) {
             return res.json({ success: true, game_list: cachedServices, note: "بيانات مؤقتة" });
         }
@@ -246,7 +299,6 @@ app.post('/api/games/topup', async (req, res) => {
     const user = await User.findOne({ phone });
     if (!user || user.bal < Number(price)) return res.json({ success: false, message: "رصيدك الحالي غير كافٍ" });
 
-    // خصم مبدئي وإنشاء سجل العملية
     user.bal -= Number(price);
     await user.save();
 
@@ -257,13 +309,12 @@ app.post('/api/games/topup', async (req, res) => {
     });
     await newTxn.save();
 
-    // تجهيز بيانات الطلب (V1.3)
     const form = new FormData();
     form.append('request', 'neworder');
     form.append('service', String(serviceId));
     form.append('reference', referenceId);
     form.append('player_id', String(user_id));
-    form.append('price_check', String(price)); // مطابقة التكلفة للأمان المالي
+    form.append('price_check', String(price));
 
     try {
         const response = await axios.post(MEGA_URL, form, {
@@ -278,28 +329,27 @@ app.post('/api/games/topup', async (req, res) => {
             newTxn.megaOrderId = data.orderid;
             await newTxn.save();
 
-            await new Message({
-                receiver: phone,
-                title: "نجاح الشحن الفوري ⚡",
-                body: `تم تنفيذ طلب ${serviceName} للرقم ${user_id} بنجاح.`
-            }).save();
+            const nTitle = "نجاح الشحن الفوري ⚡";
+            const nBody = `تم تنفيذ طلب ${serviceName} للرقم ${user_id} بنجاح.`;
+
+            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
+            
+            // ─── [تعديل 5] إشعار فوري عند نجاح الشحن التلقائي ───
+            sendPushNotification(phone, nTitle, nBody);
 
             return res.json({ success: true, currentBal: user.bal, orderId: data.orderid });
         } else {
-            // معالجة الفشل من طرف المزود
             const errorMsg = getMegaErrorMessage(data.code);
             newTxn.status = 'فاشلة ❌';
             newTxn.errorCode = data.code;
             await newTxn.save();
 
-            // استرداد الرصيد
             user.bal += Number(price);
             await user.save();
 
             return res.json({ success: false, message: errorMsg });
         }
     } catch (e) {
-        // حالة حرجة: خطأ اتصال (لا نسترد الرصيد فوراً للحماية)
         console.error("Critical Network Error:", e.message);
         newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
         newTxn.errorCode = 'TIMEOUT_ERROR';
@@ -310,35 +360,33 @@ app.post('/api/games/topup', async (req, res) => {
 });
 
 // ==========================================
-// 📥 4️⃣ مسار استقبال تحديثات العمليات (Webhook)
+// 🌐 4️⃣ مسار استقبال تحديثات العمليات (Webhook)
 // ==========================================
 app.post('/api/mega-webhook', async (req, res) => {
     const { reference, orderid, status, result } = req.body;
-
     console.log(`📥 تحديث ويب هوك مستلم للعملية المرجعية: ${reference}, الحالة: ${status}`);
 
     try {
         const txn = await Transaction.findOne({ referenceId: reference });
-        if (!txn) {
-            return res.status(404).json({ success: false, message: "العملية غير موجودة" });
-        }
+        if (!txn) return res.status(404).json({ success: false, message: "العملية غير موجودة" });
 
         if (txn.status !== 'معلقة (تحقق يدوي) ⚠️' && txn.status !== 'قيد التنفيذ ⏳') {
             return res.json({ success: true, message: "العملية محدثة مسبقاً" });
         }
 
-        if (String(status) === '1') { 
+        if (String(status) === '1') {
             txn.status = 'ناجحة ✅';
             txn.megaOrderId = orderid;
             await txn.save();
 
-            await new Message({
-                receiver: txn.phone,
-                title: "نجاح الشحن ⚡",
-                body: `تم تنفيذ طلبك بنجاح. ${result || ''}`
-            }).save();
+            const nTitle = "نجاح الشحن ⚡";
+            const nBody = `تم تنفيذ طلبك بنجاح. ${result || ''}`;
+            await new Message({ receiver: txn.phone, title: nTitle, body: nBody }).save();
+            
+            // ─── [تعديل 6] إشعار فوري عبر الويب هوك عند اكتمال العملية المعلقة ───
+            sendPushNotification(txn.phone, nTitle, nBody);
 
-        } else if (String(status) === '0') { 
+        } else if (String(status) === '0') {
             txn.status = 'فاشلة ❌';
             txn.megaOrderId = orderid;
             await txn.save();
@@ -348,11 +396,13 @@ app.post('/api/mega-webhook', async (req, res) => {
                 user.bal += txn.price;
                 await user.save();
 
-                await new Message({
-                    receiver: txn.phone,
-                    title: "إلغاء العملية وإعادة الرصيد ↩️",
-                    body: `تم رفض عملية الشحن لـ ${txn.serviceName}. السبب: ${result || 'غير محدد'}. تم إعادة مبلغ ${txn.price} إلى حسابك.`
-                }).save();
+                const nTitle = "إلغاء العملية وإعادة الرصيد ↩️";
+                const nBody = `تم رفض عملية الشحن لـ ${txn.serviceName}. السبب: ${result || 'غير محدد'}. تم إعادة مبلغ ${txn.price} إلى حسابك.`;
+                
+                await new Message({ receiver: txn.phone, title: nTitle, body: nBody }).save();
+                
+                // ─── [تعديل 7] إشعار فوري بفشل الشحن وإرجاع الرصيد ───
+                sendPushNotification(txn.phone, nTitle, nBody);
             }
         }
         res.json({ success: true });
@@ -388,11 +438,13 @@ app.post('/api/admin/user/update-balance', async (req, res) => {
     try {
         const user = await User.findOneAndUpdate({ phone }, { bal: Number(newBalance) }, { new: true });
         if(user) {
-            await new Message({
-                receiver: phone,
-                title: "تحديث الرصيد 💰",
-                body: `تم تعديل رصيد حسابك. رصيدك الحالي: ${newBalance} YER`
-            }).save();
+            const nTitle = "تحديث الرصيد 💰";
+            const nBody = `تم تعديل رصيد حسابك. رصيدك الحالي: ${newBalance} YER`;
+            
+            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
+            
+            // ─── [تعديل 8] إشعار فوري للمستخدم عند تعديل رصيده يدوياً من الأدمن ───
+            sendPushNotification(phone, nTitle, nBody);
         }
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
@@ -402,7 +454,11 @@ app.post('/api/admin/order/update-status', async (req, res) => {
     const { adminPass, id, status } = req.body;
     if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
-        await Order.findOneAndUpdate({ id }, { status });
+        const order = await Order.findOneAndUpdate({ id }, { status }, { new: true });
+        if (order) {
+            // إرسال إشعار للعميل بتحديث حالة طلبه
+            sendPushNotification(order.phone, "تحديث حالة الطلب 📦", `طلبك رقم ${id} أصبح: ${status}`);
+        }
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
@@ -412,6 +468,19 @@ app.post('/api/messages/send', async (req, res) => {
     if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
         await new Message({ receiver, title, body }).save();
+        
+        // ─── [تعديل 9] إشعار عند إرسال رسالة مخصصة أو عامة للجميع ───
+        if (receiver === 'ALL') {
+            // إذا كانت الرسالة عامة، نرسلها لكل المسجلين في الإشعارات
+            const allDevices = await DeviceToken.find({});
+            const tokens = allDevices.map(d => d.token);
+            if (tokens.length > 0) {
+                await admin.messaging().sendEachForMulticast({ notification: { title, body }, tokens });
+            }
+        } else {
+            sendPushNotification(receiver, title, body);
+        }
+
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });

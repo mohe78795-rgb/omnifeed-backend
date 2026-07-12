@@ -12,3 +12,4 @@ yarn-error.log*
 # users.json
 # db.json
 serviceAccountKey.json
+firebase-account-key.json

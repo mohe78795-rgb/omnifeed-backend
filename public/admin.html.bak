@@ -3,209 +3,515 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>لوحة التحكم وإدارة تموينات أبو حسين</title>
+    <title>إدارة تموينات أبو حسين الملكية 🛠️</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        *{font-family:'Cairo',sans-serif;}
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
+        
+        /* الخلفية الفاخرة والخطوط المتوافقة مع التطبيق */
+        body { 
+            background-color: #0b0c10; 
+            color: #ffffff; 
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        /* حاوية المعاينة للصور */
         .img-preview { 
             width: 100%; height: 160px; border-radius: 20px; 
             background-size: cover; background-position: center; 
-            display: none; margin-top: 15px; border: 2px solid #10b981; 
+            display: none; margin-top: 15px; border: 2px solid #c5a862; 
         }
-        #permission-modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
+
+        /* واجهة طلب الصلاحيات */
+        #permission-modal { 
+            display: none; position: fixed; inset: 0; z-index: 9999; 
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); 
+            align-items: center; justify-content: center; 
+        }
+
+        /* التبويبات */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* حقول الإدخال الملكية */
+        .royal-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: #0d0f11;
+            border: 1px solid #1d2127;
+            border-radius: 1rem;
+            font-size: 13px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.2s ease;
+            text-align: right;
+        }
+        .royal-input:focus {
+            border-color: #c5a862;
+            background: #121418;
+            box-shadow: 0 0 10px rgba(197, 168, 98, 0.05);
+        }
+
+        /* الهيدر والبطاقات الزجاجية الفخمة */
+        .cyber-header {
+            background: #0d0f11;
+            border-bottom: 2px solid #171a1f;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .card-glass {
+            background: #121418;
+            border: 1px solid rgba(197, 168, 98, 0.1);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            transition: all 0.25s ease;
+        }
+
+        /* المعاينة الداخلية للمنتجات */
+        .card-glass .img-container {
+            background-color: #ffffff;
+            border-radius: 1.25rem;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            overflow: hidden;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-glass img {
+            height: 100%;
+            max-height: 85px;
+            object-fit: contain;
+        }
+
+        /* تصميم أزرار التحكم السفلية المذهبة */
+        .tab-btn-royal {
+            transition: all 0.2s ease;
+            border: 1px solid rgba(197, 168, 98, 0.1);
+        }
+        .tab-btn-royal.active-btn {
+            background-color: #c5a862;
+            color: #0b0c10;
+            font-weight: 900;
+            box-shadow: 0 4px 14px rgba(197, 168, 98, 0.35);
+        }
     </style>
 </head>
-<body class="bg-[#030712] text-white p-4 md:p-8">
+<body class="pb-24">
 
+    <!-- نافذة إذن الوصول للمعرض وكاميرا الأندرويد -->
     <div id="permission-modal">
-        <div class="bg-[#0f172a] p-8 rounded-3xl w-[90%] max-w-sm text-center border border-emerald-500/20">
-            <h3 class="text-xl font-black mb-4">الوصول للمعرض</h3>
-            <button onclick="invokeNativeGallery()" class="w-full bg-emerald-500 text-black font-black py-4 rounded-2xl transition hover:bg-emerald-400">سماح بالوصول</button>
+        <div class="bg-[#0d0f11] p-8 rounded-3xl w-[90%] max-w-sm text-center border border-[#c5a862]/30">
+            <h3 class="text-xl font-black mb-4 text-[#c5a862]">الوصول للكاميرا والمعرض</h3>
+            <p class="text-sm text-slate-400 mb-6">يرجى تأكيد إذن الوصول لرفع صور المنتجات والأقسام مباشرة.</p>
+            <button onclick="invokeNativeGallery()" class="w-full bg-[#c5a862] hover:bg-[#b09350] text-black font-black py-4 rounded-2xl transition">سماح بالوصول 📸</button>
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto space-y-8">
-        <h1 class="text-2xl md:text-3xl font-black text-center text-emerald-400 border-b border-slate-800 pb-4">🛠️ لوحة تشغيل المتجر وتعبئة البيانات التجريبية</h1>
-
-        <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 space-y-4">
-            <h3 class="font-bold text-xl text-emerald-400 border-b border-slate-800 pb-2"><i class="fas fa-folder-plus ml-2"></i>الخطوة 1: إضافة قسم جديد للمتجر (Category)</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-bold text-slate-400 mb-2">الرمز السري للأدمن (adminPass):</label>
-                    <input type="password" id="adminPassCat" value="123456" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-400 mb-2">اسم القسم:</label>
-                    <input type="text" id="catName" value="شحن ألعاب فوري" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                </div>
-            </div>
-
+    <!-- الهيدر العلوي الملكي -->
+    <header class="cyber-header p-6 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <label class="block text-sm font-bold text-slate-400 mb-2">رابط صورة القسم (أو اختر صورة من المعرض بالأسفل):</label>
-                <input type="text" id="catImg" value="https://via.placeholder.com/150" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+                <h1 class="text-2xl font-black text-[#c5a862]">لوحة الإدارة الشاملة 🛠️</h1>
+                <p class="text-xs text-slate-400">تموينات أبو حسين - نظام التحكم الفخم</p>
             </div>
-
-            <div class="p-6 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer text-center bg-slate-950/40 hover:border-emerald-500/50 transition" onclick="requestGalleryPermission('catImg')">
-                <i class="fas fa-camera text-2xl text-emerald-400 mb-2"></i>
-                <p class="text-sm text-slate-400">اضغط لاختيار صورة القسم من المعرض</p>
-            </div>
-            <div id="cat-preview-box" class="img-preview"></div>
-
-            <button class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-4 rounded-2xl transition shadow-lg shadow-purple-600/20" onclick="addCategory()">إضافة القسم إلى قاعدة البيانات</button>
-        </div>
-
-        <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5 space-y-6">
-            <h3 class="font-bold text-xl text-emerald-400 border-b border-slate-800 pb-2"><i class="fas fa-plug ml-2"></i>الخطوة 2: جلب الخدمات من ميجا سنتر وتجربة الشحن</h3>
-            <p class="text-xs text-slate-400 bg-slate-950 p-3 rounded-xl border border-slate-800">بعد إضافة القسم، جرب الآن جلب باقات ميجا سنتر أو إرسال طلب تجريبي ليتفعل الحساب وتظهر البيانات.</p>
-            
-            <button class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-2xl transition" onclick="fetchServices()">فحص وجلب باقات ميجا سنتر المتاحة</button>
-            
-            <div class="border-t border-slate-800 pt-4 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-400 mb-2">رقم هاتف العميل (المسجل ولديه رصيد):</label>
-                        <input type="text" id="userPhone" value="777777777" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-400 mb-2">معرف الخدمة في ميجا سنتر (Service ID):</label>
-                        <input type="text" id="serviceId" value="101" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-400 mb-2">اسم الباقة:</label>
-                        <input type="text" id="serviceName" value="PUBG Mobile 60 UC" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-400 mb-2">السعر المتوقع (مطابقة التكلفة):</label>
-                        <input type="number" id="price" value="500" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-slate-400 mb-2">آيدي اللاعب للتجربة (Player ID):</label>
-                    <input type="text" id="playerId" value="123456789" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                </div>
-
-                <button class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-4 rounded-2xl transition shadow-lg shadow-emerald-500/10" onclick="sendTopup()">إرسال طلب شحن فوري حقيقي</button>
+            <!-- حقل كلمة المرور للأمان بمحاذاة ممتازة -->
+            <div class="flex items-center gap-2 bg-[#121418] px-4 py-3 rounded-xl border border-slate-800 w-full md:w-auto">
+                <i class="fas fa-lock text-[#c5a862]"></i>
+                <input type="password" id="adminPass" value="123456" class="bg-transparent border-none outline-none text-sm text-white w-full" placeholder="رمز الأدمن">
             </div>
         </div>
+    </header>
 
-        <div class="bg-slate-900/50 p-6 rounded-3xl border border-white/5">
-            <h3 class="font-bold text-slate-400 mb-2"><i class="fas fa-terminal ml-2"></i>شاشة استجابة السيرفر (مثل بوست مان)</h3>
-            <div id="output" class="response-box bg-slate-950 text-emerald-400 p-4 rounded-2xl min-height-[120px] max-h-[300px] overflow-y-auto font-mono text-left" style="direction: ltr;">في انتظار تنفيذ أي عملية...</div>
+    <!-- الإحصائيات السريعة بتصميم ذهبي مصمت -->
+    <div class="max-w-6xl mx-auto p-4 grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+        <div class="card-glass p-4 text-center">
+            <span class="text-xs text-slate-400">إجمالي المنتجات</span>
+            <h2 id="stat-products" class="text-2xl font-black text-[#c5a862] mt-1">--</h2>
+        </div>
+        <div class="card-glass p-4 text-center">
+            <span class="text-xs text-slate-400">المستخدمين المسجلين</span>
+            <h2 id="stat-users" class="text-2xl font-black text-[#c5a862] mt-1">--</h2>
+        </div>
+        <div class="card-glass p-4 text-center">
+            <span class="text-xs text-slate-400">الطلبات النشطة</span>
+            <h2 id="stat-orders" class="text-2xl font-black text-[#c5a862] mt-1">--</h2>
+        </div>
+        <div class="card-glass p-4 text-center">
+            <span class="text-xs text-slate-400">حالة الاتصال</span>
+            <h2 class="text-sm font-black text-[#c5a862] mt-2">
+                <i class="fas fa-circle text-xs animate-pulse ml-1 text-[#c5a862]"></i> متصل
+            </h2>
         </div>
     </div>
+
+    <!-- قائمة التنقل السريعة الفخمة (Tabs) المتناسقة مع التطبيق الجديد -->
+    <div class="max-w-6xl mx-auto px-4 mt-4">
+        <div class="flex bg-[#0d0f11] p-2 rounded-2xl border border-slate-800 gap-2 overflow-x-auto">
+            <button onclick="switchTab('notifications')" id="btn-notifications" class="tab-btn-royal active-btn flex-1 py-3 px-4 rounded-xl font-bold text-sm">الإشعارات 🔔</button>
+            <button onclick="switchTab('users')" id="btn-users" class="tab-btn-royal flex-1 py-3 px-4 rounded-xl font-bold text-sm text-slate-400 hover:bg-[#121418]">المستخدمين 👥</button>
+            <button onclick="switchTab('products')" id="btn-products" class="tab-btn-royal flex-1 py-3 px-4 rounded-xl font-bold text-sm text-slate-400 hover:bg-[#121418]">المنتجات 🍎</button>
+            <button onclick="switchTab('orders')" id="btn-orders" class="tab-btn-royal flex-1 py-3 px-4 rounded-xl font-bold text-sm text-slate-400 hover:bg-[#121418]">الطلبات 📦</button>
+        </div>
+    </div>
+
+    <!-- محتويات الصفحات -->
+    <main class="max-w-6xl mx-auto p-4 mt-4">
+
+        <!-- 🔔 صفحة الإشعارات الشاملة -->
+        <div id="tab-notifications" class="tab-content active">
+            <div class="card-glass p-6">
+                <h3 class="font-bold text-xl text-[#c5a862] mb-4"><i class="fas fa-paper-plane ml-2"></i>مركز إرسال الإشعارات الفورية</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">المستلم (رقم الهاتف أو اكتب ALL لإرسال جماعي)</label>
+                        <input type="text" id="notif-receiver" class="royal-input" placeholder="مثال: 735429057 أو ALL">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">عنوان الإشعار</label>
+                        <input type="text" id="notif-title" class="royal-input" placeholder="مثال: عرض خاص جديد! 🔥">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">محتوى الإشعار</label>
+                        <textarea id="notif-body" rows="4" class="royal-input" placeholder="اكتب نص الرسالة هنا..."></textarea>
+                    </div>
+                    <button onclick="triggerNotification()" class="w-full bg-[#c5a862] hover:bg-[#b09350] text-black font-black py-4 rounded-xl transition">إرسال الإشعار فوراً 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 👥 صفحة إدارة المستخدمين والأرصدة -->
+        <div id="tab-users" class="tab-content">
+            <div class="card-glass p-6 mb-6">
+                <h3 class="font-bold text-xl text-[#c5a862] mb-4"><i class="fas fa-wallet ml-2"></i>تعديل الرصيد والمحفظة لعميل</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">رقم هاتف العميل</label>
+                        <input type="text" id="user-phone" class="royal-input" placeholder="مثال: 735429057">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">الرصيد الجديد (ر.ي)</label>
+                        <input type="number" id="user-balance" class="royal-input" placeholder="مثال: 5000">
+                    </div>
+                </div>
+                <button onclick="triggerUpdateBalance()" class="w-full bg-[#c5a862] hover:bg-[#b09350] text-black font-black py-4 rounded-xl mt-4 transition">حفظ وتحديث الرصيد 💰</button>
+            </div>
+
+            <!-- قائمة المستخدمين وقاعدة البيانات -->
+            <div class="card-glass p-6">
+                <h3 class="font-bold text-lg text-[#c5a862] mb-4"><i class="fas fa-users ml-2"></i>قائمة العملاء والتوكنز</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="pb-3">الرقم</th>
+                                <th class="pb-3">الرصيد</th>
+                                <th class="pb-3 text-center">التوكن (FCM)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list-body">
+                            <!-- سيتم تعبئتها ديناميكياً من قاعدة البيانات -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🍎 صفحة إدارة المنتجات (إضافة وحذف) -->
+        <div id="tab-products" class="tab-content">
+            <div class="card-glass p-6 mb-6">
+                <h3 class="font-bold text-xl text-[#c5a862] mb-4"><i class="fas fa-plus ml-2"></i>إضافة منتج جديد للمتجر</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">اسم المنتج</label>
+                        <input type="text" id="prod-name" class="royal-input" placeholder="مثال: كرتون بيض بلدي">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">السعر (بالريال)</label>
+                        <input type="number" id="prod-price" class="royal-input" placeholder="مثال: 1500">
+                    </div>
+                </div>
+                <!-- رفع الصورة المتوافق مع المتصفح والأندرويد -->
+                <div class="mb-4">
+                    <label class="text-xs text-slate-400 block mb-2">صورة المنتج</label>
+                    <div onclick="requestGalleryPermission('p-file')" class="p-6 border-2 border-dashed border-[#c5a862]/30 hover:border-[#c5a862] rounded-2xl cursor-pointer text-center bg-[#121418] transition">
+                        <i class="fas fa-camera text-2xl text-[#c5a862] mb-2 animate-pulse"></i>
+                        <p class="text-sm text-slate-300">انقر هنا لاختيار صورة للمنتج</p>
+                    </div>
+                    <input type="file" id="p-file" class="hidden" onchange="previewSelectedImage(this)">
+                    <div id="p-preview-box" class="img-preview"></div>
+                </div>
+                <button onclick="addNewProduct()" class="w-full bg-[#c5a862] hover:bg-[#b09350] text-black font-black py-4 rounded-xl transition">إضافة وتثبيت في المتجر 🛒</button>
+            </div>
+
+            <!-- قائمة المنتجات الحالية -->
+            <div class="card-glass p-6">
+                <h3 class="font-bold text-lg text-[#c5a862] mb-4">المنتجات المعروضة حالياً</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="products-grid">
+                    <!-- تعبئة تلقائية من السيرفر -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 📦 صفحة الطلبات الواردة (Orders) -->
+        <div id="tab-orders" class="tab-content">
+            <div class="card-glass p-6">
+                <h3 class="font-bold text-xl text-[#c5a862] mb-4"><i class="fas fa-shopping-basket ml-2"></i>الالطلبات الواردة من العملاء</h3>
+                <div class="space-y-4" id="orders-container">
+                    <!-- تعبئة تلقائية للطلبات وتتبعها -->
+                </div>
+            </div>
+        </div>
+
+    </main>
 
     <script>
-        const BASE_URL = "https://0zk30qr9iu.onrender.com";
         let currentTargetInput = "";
+        let selectedBase64Image = "";
 
-        // 1. طلب الإذن من المستخدم واختيار الحقل المستهدف لقيمة الصورة
+        // تبديل التبويبات الفخم مع التوهج الذهبى
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn-royal').forEach(el => {
+                el.classList.remove('active-btn');
+                el.classList.add('text-slate-400', 'hover:bg-[#121418]');
+            });
+
+            document.getElementById('tab-' + tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('text-slate-400', 'hover:bg-[#121418]');
+            activeBtn.classList.add('active-btn');
+
+            // جلب البيانات الفوري بناءً على التبويب النشط
+            if (tabId === 'users') fetchUsers();
+            if (tabId === 'products') fetchProducts();
+            if (tabId === 'orders') fetchOrders();
+        }
+
+        // جلب الإحصائيات من قاعدة البيانات
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/admin/stats?adminPass=' + getPass());
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('stat-products').innerText = data.productsCount || 0;
+                    document.getElementById('stat-users').innerText = data.usersCount || 0;
+                    document.getElementById('stat-orders').innerText = data.ordersCount || 0;
+                }
+            } catch (err) { console.error("خطأ في جلب الإحصائيات", err); }
+        }
+
+        function getPass() {
+            return document.getElementById('adminPass').value;
+        }
+
+        // صلاحيات استيراد وتصوير المنتجات عبر الكاميرا والاندرويد
         function requestGalleryPermission(inputId) {
             currentTargetInput = inputId;
             document.getElementById('permission-modal').style.display = 'flex';
         }
 
-        // 2. التواصل مع تطبيق الأندرويد أو فتح اختيار الملفات التقليدي كبديل تراجعي
         function invokeNativeGallery() {
             document.getElementById('permission-modal').style.display = 'none';
             if (window.AndroidBridge && typeof window.AndroidBridge.openGallery === "function") {
                 window.AndroidBridge.openGallery();
             } else {
-                // بديل في حال التصفح العادي (محاكاة اختيار الرابط تلقائياً للتجربة)
-                const mockUrl = prompt("أدخل رابط الصورة يدويًا كمحاكاة للأندرويد:", "https://via.placeholder.com/150");
-                if(mockUrl) window.handleSelectedImage(mockUrl);
+                document.getElementById(currentTargetInput).click();
             }
         }
 
-        // 3. الدالة التي يستدعيها الأندرويد لإرسال مسار الصورة المحددة
         window.handleSelectedImage = function(imagePath) {
-            // تحديث قيمة حقل الإدخال النصي الخاص برابط الصورة تلقائياً بالمسار القادم من الهاتف
-            const targetInput = document.getElementById(currentTargetInput);
-            if (targetInput) {
-                targetInput.value = imagePath;
-            }
-
-            // إظهار المعاينة المرئية للمستخدم
-            const previewBox = document.getElementById('cat-preview-box');
+            const previewBox = document.getElementById('p-preview-box');
             if (previewBox) {
                 previewBox.style.backgroundImage = "url('" + imagePath + "')";
                 previewBox.style.display = 'block';
-                console.log("تم تحديث الواجهة بالصورة: " + imagePath);
+                selectedBase64Image = imagePath;
             }
         };
 
-        // --- دوال ربط السيرفر والـ API ---
-        
-        async function addCategory() {
-            const output = document.getElementById('output');
-            output.innerText = "جاري إضافة القسم...";
-            
-            const sendData = {
-                adminPass: document.getElementById('adminPassCat').value,
-                name: document.getElementById('catName').value,
-                sub: "باقات شحن فورية وتلقائية",
-                img: document.getElementById('catImg').value
-            };
-
-            try {
-                const res = await fetch(`${BASE_URL}/api/admin/category/add`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(sendData)
-                });
-                const data = await res.json();
-                output.innerText = "رد السيرفر:\n" + JSON.stringify(data, null, 4);
-                if(data.success) {
-                    alert("تم إضافة القسم بنجاح! جرب الآن تحديث تطبيقك أو موقعك وستظهر الواجهة فوراً.");
+        function previewSelectedImage(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewBox = document.getElementById('p-preview-box');
+                    previewBox.style.backgroundImage = `url('${e.target.result}')`;
+                    previewBox.style.display = 'block';
+                    selectedBase64Image = e.target.result;
                 }
-            } catch (e) {
-                output.innerText = "خطأ في الاتصال:\n" + e.message;
+                reader.readAsDataURL(file);
             }
         }
 
-        async function fetchServices() {
-            const output = document.getElementById('output');
-            output.innerText = "جاري جلب باقات ميجا سنتر الحالية...";
-            try {
-                const res = await fetch(`${BASE_URL}/api/games`);
-                const data = await res.json();
-                output.innerText = "قائمة الخدمات القادمة من ميجا سنتر:\n" + JSON.stringify(data, null, 4);
-            } catch (e) {
-                output.innerText = "خطأ:\n" + e.message;
+        // نظام الإشعارات والربط البرمجي
+        async function triggerNotification() {
+            const receiver = document.getElementById('notif-receiver').value;
+            const title = document.getElementById('notif-title').value;
+            const body = document.getElementById('notif-body').value;
+
+            if(!receiver || !title || !body) return alert("يرجى ملء جميع الحقول!");
+
+            const res = await fetch('/api/messages/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: getPass(), receiver, title, body })
+            });
+
+            if (res.ok) {
+                alert("🚀 تم إرسال الإشعار الملكي بنجاح!");
+                document.getElementById('notif-title').value = '';
+                document.getElementById('notif-body').value = '';
+            } else {
+                alert("❌ فشل الإرسال، تحقق من صحة البيانات ورمز الأدمن.");
             }
         }
 
-        async function sendTopup() {
-            const output = document.getElementById('output');
-            output.innerText = "جاري إرسال طلب الشحن الفوري...";
-            
-            const sendData = {
-                phone: document.getElementById('userPhone').value,
-                price: document.getElementById('price').value,
-                serviceId: document.getElementById('serviceId').value,
-                serviceName: document.getElementById('serviceName').value,
-                user_id: document.getElementById('playerId').value,
-                type: "game"
-            };
+        // تحديث الرصيد وإرسال إشعار فوري للعميل
+        async function triggerUpdateBalance() {
+            const phone = document.getElementById('user-phone').value;
+            const newBalance = document.getElementById('user-balance').value;
 
-            try {
-                const res = await fetch(`${BASE_URL}/api/games/topup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(sendData)
-                });
-                const data = await res.json();
-                output.innerText = "رد نظام ميجا سنتر وسيرفرك:\n" + JSON.stringify(data, null, 4);
-            } catch (e) {
-                output.innerText = "خطأ:\n" + e.message;
+            if(!phone || !newBalance) return alert("يرجى إدخال الهاتف والرصيد الجديد!");
+
+            const res = await fetch('/api/admin/user/update-balance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: getPass(), phone, newBalance })
+            });
+
+            if (res.ok) {
+                alert("💰 تم تحديث رصيد العميل وإشعاره بنجاح!");
+                fetchUsers();
+                fetchStats();
+            } else {
+                alert("❌ حدث خطأ، تأكد من صحة رقم الهاتف والرمز الخاص بالأدمن.");
             }
         }
+
+        // جلب قائمة العملاء
+        async function fetchUsers() {
+            const res = await fetch('/api/admin/users?adminPass=' + getPass());
+            if (res.ok) {
+                const users = await res.json();
+                const tbody = document.getElementById('users-list-body');
+                tbody.innerHTML = users.map(user => `
+                    <tr class="border-b border-slate-800 hover:bg-[#121418]/50">
+                        <td class="py-3 font-bold">${user.phone}</td>
+                        <td class="py-3 text-[#c5a862] font-black">${user.balance || 0} ر.ي</td>
+                        <td class="py-3 text-xs text-slate-500 text-center truncate max-w-[150px]">${user.token ? '🟢 نشط ومفعل' : '🔴 غير مفعل'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // إضافة منتج جديد بقاعدة البيانات مع تفعيل الخلفية البيضاء النقية للصورة
+        async function addNewProduct() {
+            const name = document.getElementById('prod-name').value;
+            const price = document.getElementById('prod-price').value;
+
+            if(!name || !price) return alert("يرجى كتابة اسم المنتج وسعره!");
+
+            const res = await fetch('/api/admin/products/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: getPass(), name, price, image: selectedBase64Image })
+            });
+
+            if (res.ok) {
+                alert("🍎 تم إضافة المنتج بنجاح وتثبيته في لوحة العرض!");
+                document.getElementById('prod-name').value = '';
+                document.getElementById('prod-price').value = '';
+                document.getElementById('p-preview-box').style.display = 'none';
+                selectedBase64Image = "";
+                fetchProducts();
+                fetchStats();
+            } else {
+                alert("❌ فشل الإضافة، يرجى المحاولة لاحقاً.");
+            }
+        }
+
+        // جلب وحذف المنتجات بتصميم بطاقة متناسق ومستقبلي
+        async function fetchProducts() {
+            const res = await fetch('/api/products');
+            if (res.ok) {
+                const products = await res.json();
+                const grid = document.getElementById('products-grid');
+                grid.innerHTML = products.map(p => `
+                    <div class="card-glass p-4 flex flex-col justify-between">
+                        <div class="img-container mb-3">
+                            <img src="${p.image || 'https://placehold.co/150'}" alt="${p.name}">
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-center text-[#c5a862] text-sm">${p.name}</h3>
+                            <p class="text-[#c5a862]/80 font-black text-center text-xs mt-1">${p.price} ر.ي</p>
+                        </div>
+                        <button onclick="deleteProduct('${p._id}')" class="mt-4 bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white py-2 rounded-xl text-xs font-bold transition">حذف المنتج 🗑️</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function deleteProduct(id) {
+            if(!confirm("هل أنت متأكد من رغبتك بحذف هذا المنتج؟")) return;
+            const res = await fetch(`/api/admin/products/delete/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminPass: getPass() })
+            });
+            if(res.ok) {
+                alert("تم الحذف بنجاح!");
+                fetchProducts();
+                fetchStats();
+            }
+        }
+
+        // تتبع الطلبات وقراءتها مباشرة وتأكيد المزامنة مع خرائط جوجل والواتساب
+        async function fetchOrders() {
+            const res = await fetch('/api/admin/orders?adminPass=' + getPass());
+            if (res.ok) {
+                const orders = await res.json();
+                const container = document.getElementById('orders-container');
+                if (orders.length === 0) {
+                    container.innerHTML = `<p class="text-slate-400 text-center py-6 text-sm">لا توجد طلبات واردة حالياً.</p>`;
+                    return;
+                }
+                container.innerHTML = orders.map(order => `
+                    <div class="card-glass p-5">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs text-slate-400">الطلب #${order._id.substring(18)}</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'}">${order.status === 'completed' ? 'مكتمل' : 'معلق'}</span>
+                        </div>
+                        <p class="font-bold text-[#c5a862] mb-2">رقم العميل: ${order.phone}</p>
+                        <div class="text-sm text-slate-300 space-y-1 mb-4">
+                            ${order.items.map(item => `<p class="text-xs">• ${item.name} (${item.quantity} حبات)</p>`).join('')}
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <!-- رابط محادثة واتساب مباشر للعميل برمز الدولة لليمن -->
+                            <a href="https://wa.me/967${order.phone}" target="_blank" class="bg-[#121418] border border-[#25D366] text-[#25D366] font-bold py-3 rounded-xl text-center text-xs hover:bg-[#25D366] hover:text-black transition"><i class="fab fa-whatsapp ml-1"></i> تواصل واتساب</a>
+                            <!-- زر موقع العميل GPS المباشر -->
+                            <a href="https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}" target="_blank" class="bg-[#121418] border border-[#3b82f6] text-[#3b82f6] font-bold py-3 rounded-xl text-center text-xs hover:bg-[#3b82f6] hover:text-white transition"><i class="fas fa-map-marker-alt ml-1"></i> موقع الـ GPS</a>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // مؤقت الإحصائيات التلقائي
+        window.onload = function() {
+            fetchStats();
+            setInterval(fetchStats, 10000); 
+        };
     </script>
 </body>
 </html>
+

@@ -575,7 +575,8 @@
     </div>
 
     <script>
-        const API_URL = "https://0zk30qr9iu.onrender.com";
+        // سنستخدم نظام النطاق النسبي ليعمل الرابط تلقائياً محلياً وسحابياً دون أخطاء CORS
+        const API_URL = window.location.origin;
         let ADMIN_PIN = "";
         
         let db = {
@@ -589,14 +590,14 @@
             document.getElementById('loading').style.display = status ? 'flex' : 'none';
         }
 
-        // محاولة تسجيل الدخول والاتصال براندر
+        // محاولة تسجيل الدخول والاتصال
         async function tryLogin() {
             const pin = document.getElementById('admin-pin').value;
             if(!pin) return alert("يرجى إدخال رمز الأدمين أولاً!");
             
             showLoader(true);
             try {
-                // سنقوم بجلب بيانات المستخدمين كفحص أولي للرمز للتأكد من الصلاحية
+                // جلب بيانات العمال كتحقق مبدئي لرمز الحماية
                 const res = await fetch(`${API_URL}/api/admin/users?adminPass=${pin}`);
                 if (res.ok) {
                     ADMIN_PIN = pin;
@@ -613,7 +614,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                alert("تعذر الاتصال بالسيرفر، تأكد من تشغيل سيرفر راندر (قد يستغرق استيقاظ السيرفر المجاني حوالي دقيقة).");
+                alert("تعذر الاتصال بالسيرفر، تأكد من تشغيل السيرفر أو صحة الاتصال.");
             } finally {
                 showLoader(false);
             }
@@ -652,7 +653,7 @@
         function updateStats() {
             document.getElementById('stat-users').innerText = db.users.length;
             
-            const totalBalances = db.users.reduce((sum, user) => sum + (Number(user.bal) || 0), 0);
+            const totalBalances = db.users.reduce((sum, user) => sum + (Number(user.balance) || 0), 0);
             document.getElementById('stat-balances').innerText = totalBalances.toLocaleString() + " YER";
             
             const pendingOrders = db.orders.filter(o => o.status && o.status.includes('⏳')).length;
@@ -679,10 +680,10 @@
                 tr.innerHTML = `
                     <td style="font-weight:bold;">${user.name || 'عميل مجهول'}</td>
                     <td>${user.phone || 'بدون هاتف'}</td>
-                    <td style="color:var(--gold); font-weight:bold;">${(user.bal || 0).toLocaleString()} YER</td>
+                    <td style="color:var(--gold); font-weight:bold;">${(user.balance || 0).toLocaleString()} YER</td>
                     <td>${user.joinDate || 'غير مسجل'}</td>
                     <td>
-                        <button class="action-btn btn-info" onclick="openBalanceModal('${user.phone}', '${user.name}', ${user.bal})"><i class="fa-solid fa-wallet"></i> شحن رصيد</button>
+                        <button class="action-btn btn-info" onclick="openBalanceModal('${user.phone}', '${user.name}', ${user.balance})"><i class="fa-solid fa-wallet"></i> شحن رصيد</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -710,8 +711,8 @@
                 
                 showLoader(true);
                 try {
-                    // إرسال تعديل الرصيد إلى السيرفر
-                    const res = await fetch(`${API_URL}/api/admin/update-balance`, {
+                    // إرسال تعديل الرصيد المطابق لمسار السيرفر الجديد /api/admin/user/update-balance
+                    const res = await fetch(`${API_URL}/api/admin/user/update-balance`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -721,7 +722,8 @@
                         })
                     });
                     
-                    if(res.ok) {
+                    const resData = await res.json();
+                    if(res.ok && resData.success !== false) {
                         alert("تم تحديث الرصيد وإرسال إشعار تلقائي للعميل بنجاح! 🎉");
                         closeModal('balance-modal');
                         await refreshAllData();
@@ -753,9 +755,9 @@
                     <td style="font-size:0.8rem;">${order.date || 'بدون تاريخ'}</td>
                     <td><span style="font-weight:bold;">${order.status}</span></td>
                     <td>
-                        <button class="action-btn btn-success" onclick="updateOrderStatus('${order._id}', 'مقبول وتم التجهيز ✅')">قبول</button>
-                        <button class="action-btn btn-danger" onclick="updateOrderStatus('${order._id}', 'مرفوض ❌')">رفض</button>
-                        <button class="action-btn btn-warn" onclick="updateOrderStatus('${order._id}', 'تم التوصيل 🚚')">توصيل</button>
+                        <button class="action-btn btn-success" onclick="updateOrderStatus('${order.id}', 'مقبول وتم التجهيز ✅')">قبول</button>
+                        <button class="action-btn btn-danger" onclick="updateOrderStatus('${order.id}', 'مرفوض ❌')">رفض</button>
+                        <button class="action-btn btn-warn" onclick="updateOrderStatus('${order.id}', 'تم التوصيل 🚚')">توصيل</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -763,20 +765,22 @@
         }
 
         // تغيير حالة الطلب وسحب رصيد أو رفضه
-        async function updateOrderStatus(orderId, newStatus) {
+        async function updateOrderStatus(orderInvoiceId, newStatus) {
             if(!confirm(`هل أنت متأكد من تغيير حالة الطلب إلى [ ${newStatus} ]؟`)) return;
             showLoader(true);
             try {
-                const res = await fetch(`${API_URL}/api/admin/update-order-status`, {
+                // إرسال الطلب المطابق لمسار السيرفر الجديد /api/admin/orders/update-status مع البارامتر id
+                const res = await fetch(`${API_URL}/api/admin/orders/update-status`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         adminPass: ADMIN_PIN,
-                        orderId: orderId,
+                        id: orderInvoiceId,
                         status: newStatus
                     })
                 });
-                if(res.ok) {
+                const resData = await res.json();
+                if(res.ok && resData.success !== false) {
                     alert("تم تحديث حالة الطلب بنجاح!");
                     await refreshAllData();
                 } else {
@@ -813,15 +817,17 @@
             if(!confirm("هل أنت متأكد تماماً من حذف هذه السلعة من المتجر بشكل نهائي؟")) return;
             showLoader(true);
             try {
-                const res = await fetch(`${API_URL}/api/admin/delete-product`, {
+                // إرسال طلب حذف مطابق لمسار السيرفر /api/admin/products/delete وتمرير البارامتر id
+                const res = await fetch(`${API_URL}/api/admin/products/delete`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         adminPass: ADMIN_PIN,
-                        productId: prodId
+                        id: prodId
                     })
                 });
-                if(res.ok) {
+                const resData = await res.json();
+                if(res.ok && resData.success !== false) {
                     alert("تم مسح السلعة بنجاح!");
                     await refreshAllData();
                 } else {
@@ -844,7 +850,8 @@
 
             showLoader(true);
             try {
-                const res = await fetch(`${API_URL}/api/admin/send-message`, {
+                // الربط مع المسار المطابق للسيرفر /api/messages/send
+                const res = await fetch(`${API_URL}/api/messages/send`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -854,9 +861,10 @@
                         body: body
                     })
                 });
+                const resData = await res.json();
 
-                if(res.ok) {
-                    alert(`تم إرسال الرسالة إلى [${receiver}] وحفظها بسجل العميل السحابي بنجاح! 🚀`);
+                if(res.ok && resData.success !== false) {
+                    alert(`تم إرسال الرسالة إلى [${receiver}] بنجاح! 🚀`);
                     document.getElementById('msg-title').value = "";
                     document.getElementById('msg-body').value = "";
                 } else {
@@ -885,19 +893,21 @@
 
             showLoader(true);
             try {
-                const res = await fetch(`${API_URL}/api/admin/add-product`, {
+                // إرسال طلب إضافة مطابق لمسار السيرفر /api/admin/products/add وتمرير البارامتر image
+                const res = await fetch(`${API_URL}/api/admin/products/add`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         adminPass: ADMIN_PIN,
-                        name,
+                        name: name,
                         price: Number(price),
-                        img: img || "https://megatec-center.com/img/raw/11_img.jpeg",
-                        cat
+                        image: img || "https://megatec-center.com/img/raw/11_img.jpeg",
+                        cat: cat
                     })
                 });
+                const resData = await res.json();
 
-                if(res.ok) {
+                if(res.ok && resData.success !== false) {
                     alert("تم حفظ ونشر السلعة الجديدة بنجاح للمستهلكين! 🎉");
                     closeModal('product-modal');
                     // تصفير الخانات

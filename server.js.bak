@@ -6,12 +6,11 @@ require('dotenv').config();
 const axios = require('axios');
 const FormData = require('form-data');
 const crypto = require('crypto');
-// ─── [تعديل 1] استيراد وتجهيز FIREBASE ───
 const admin = require('firebase-admin');
 
 let serviceAccount;
 
-// إذا كنا على سيرفر Render، سنقرأ البيانات من متغير البيئة النصي الآمن
+// قراءة بيانات مفتاح Firebase من متغيرات البيئة أو محلياً
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
         serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -19,7 +18,6 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         console.error("❌ خطأ في تحليل نص FIREBASE_SERVICE_ACCOUNT المستلم:", err.message);
     }
 } else {
-    // إذا كنت تعمل محلياً على جهازك، سيقرأ من الملف كالمعتاد
     try {
         serviceAccount = require('./firebase-account-key.json');
     } catch (err) {
@@ -43,8 +41,9 @@ const PORT = process.env.PORT || 3000;
 // 🛠️ إعدادات الوسائط (Middleware)
 // ==========================================
 app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.static(path.join(__dirname, 'public'))); // مفقود سابقاً لتقديم ملفات الإدارة الساكنة
 
 // ==========================================
 // 🗄️ الاتصال بقاعدة البيانات (MongoDB)
@@ -58,10 +57,8 @@ mongoose.connect(MONGO_URI)
 // ==========================================
 // 🗃️ تعريف موديلات قاعدة البيانات (Schemas & Models)
 // ==========================================
-
-// ─── [تعديل 2] جدول تخزين رموز الأجهزة الخاصة بالإشعارات ───
 const DeviceToken = mongoose.model('DeviceToken', new mongoose.Schema({
-    phone: { type: String, required: true }, // لربط الهاتف بالجهاز
+    phone: { type: String, required: true },
     token: { type: String, required: true, unique: true },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }));
@@ -83,8 +80,8 @@ const Category = mongoose.model('Category', new mongoose.Schema({
 const Product = mongoose.model('Product', new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
-    img: String,
-    cat: { type: String, required: true }
+    img: { type: String, default: "" },
+    cat: { type: String, required: true } // تعديل ليكون الحقل مطلوباً ومطابقاً للكود النموذجي
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
@@ -125,39 +122,33 @@ const Transaction = mongoose.model('Transaction', new mongoose.Schema({
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }));
 
+const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
+    appName: { type: String, default: "تموينات أبو حسين" },
+    maintenanceMode: { type: Boolean, default: false },
+    whatsappSupport: { type: String, default: "967737465252" },
+    appVersion: { type: String, default: "1.0.0" }
+}));
+
 // ==========================================
-// 📣 دالة مساعدة لإرسال الإشعارات الفورية (FCM) - معدلة ومحسنة لقنوات الأندرويد
+// 📣 دالة إرسال الإشعارات الفورية (FCM)
 // ==========================================
 async function sendPushNotification(targetPhone, title, body) {
     try {
-        // البحث عن جميع الرموز المسجلة لهذا رقم الهاتف
         const devices = await DeviceToken.find({ phone: targetPhone });
         if (!devices || devices.length === 0) return;
-
         const tokens = devices.map(d => d.token);
-
         const message = {
             notification: { title, body },
-            // 🔥 تمرير القناة المشتركة لضمان عمل الصوت والظهور كـ Banner منبثق بالأجهزة الحديثة
-            android: {
-                notification: {
-                    channelId: "messages_channel",
-                    sound: "default"
-                }
-            },
+            android: { notification: { channelId: "messages_channel", sound: "default" } },
             tokens: tokens
         };
-
         const response = await admin.messaging().sendEachForMulticast(message);
         console.log(`🔔 [إشعار] تم دفع الإشعار بنجاح إلى (${response.successCount}) جهاز.`);
     } catch (error) {
-        console.error("❌ خطأ أثناء إرسال الإشعار الفوري عبر Firebase:", error.message);
+        console.error("❌ خطأ إرسال الإشعار:", error.message);
     }
 }
 
-// ==========================================
-// 🔑 إعدادات ربط منظومة ميجا سنتر (V1.3)
-// ==========================================
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
 const MEGA_USERNAME = 'u_4082361957';
 const MEGA_API_KEY = 'trrC6caLfhvod3HPxTE5ND9Ld6wvdsa5jm1Nlq2GrNdD7';
@@ -170,13 +161,13 @@ const getMegaAuthHeader = () => {
 
 const getMegaErrorMessage = (code) => {
     const errors = {
-        '400': 'طلب غير مكتمل أو مفقود',
-        '401': 'خطأ في التوثيق - يرجى مراجعة مفاتيح الربط',
+        '400': 'طلب غير مكتمل أو مفقود', 
+        '401': 'خطأ في التوثيق - يرجى مراجعة مفاتيح الربط', 
         '404': 'الخدمة غير موجودة حالياً',
-        '405': 'رصيد الوكيل في ميجا سنتر لا يكفي',
-        '410': 'رقم المعرف (ID) غير صحيح أو الخدمة متوقفة عليه',
+        '405': 'رصيد الوكيل في ميجا سنتر لا يكفي', 
+        '410': 'رقم المعرف (ID) غير صحيح أو الخدمة متوقفة عليه', 
         '412': 'رقم المرجع (Reference) مستخدم مسبقاً',
-        '413': 'السعر المرسل لا يطابق السعر الحالي (Price Check Error)',
+        '413': 'السعر المرسل لا يطابق السعر الحالي (Price Check Error)', 
         '429': 'طلبات كثيرة جداً - يرجى المحاولة بعد قليل',
         '500': 'خطأ داخلي في سيرفر المزود'
     };
@@ -191,26 +182,16 @@ function makeEmbedUrl(url) {
 }
 
 // ==========================================
-// 🌐 1️⃣ مسارات العميل (المتجر والمستخدمين)
+// 🌐 مسارات العميل والربط (APIs)
 // ==========================================
-
-// ─── [تعديل 3] مسار استقبال وحفظ الـ Token القادم من الأندرويد ───
 app.post('/api/register-token', async (req, res) => {
-    const { token, user_id } = req.body; // الـ user_id هنا يمثل رقم هاتف المستخدم
+    const { token, user_id } = req.body;
     if (!token || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
-
     try {
-        // تحديث الرمز أو إنشائه إن لم يكن موجوداً
-        await DeviceToken.findOneAndUpdate(
-            { token: token },
-            { phone: user_id, token: token },
-            { upsert: true, new: true }
-        );
+        await DeviceToken.findOneAndUpdate({ token }, { phone: user_id, token }, { upsert: true, new: true });
         console.log(`📱 [نظام] تم تسجيل رمز جهاز جديد للهاتف: ${user_id}`);
         res.json({ success: true, message: "تم تسجيل جهازك في نظام الإشعارات" });
-    } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
-    }
+    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
 app.get('/api/categories', async (req, res) => {
@@ -256,23 +237,21 @@ app.post('/api/orders/add', async (req, res) => {
     const { phone, order } = req.body;
     try {
         const user = await User.findOne({ phone });
-        if (!user || user.bal < order.total) return res.status(400).json({ success: false, message: "رصيدك غير كافٍ" });
+        if (!user || user.bal < order.total) return res.status(400).json({ success: false, message: "الرصيد غير كافٍ" });
         user.bal -= order.total;
         await user.save();
-        const newOrder = new Order({ phone, items: order.items, total: order.total });
-        await newOrder.save();
-
-        // ─── [تعديل 4] إشعار فوري عند إنشاء طلب متجر ───
+        await new Order({ phone, items: order.items, total: order.total }).save();
         sendPushNotification(phone, "تم استلام طلبك 📦", `خصم ${order.total} YER. طلبك قيد المراجعة حالياً.`);
-
         res.json({ success: true, currentBal: user.bal });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// ─── [مفقود سابقاً] مسار جلب طلبات العميل ───
 app.get('/api/orders/:phone', async (req, res) => {
     try { res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
+// ─── [مفقود سابقاً] مسار جلب رسائل وإشعارات العميل ───
 app.get('/api/messages/:phone', async (req, res) => {
     try {
         const messages = await Message.find({ $or: [{ receiver: req.params.phone }, { receiver: 'ALL' }] }).sort({ _id: -1 });
@@ -281,60 +260,50 @@ app.get('/api/messages/:phone', async (req, res) => {
 });
 
 // ==========================================
-// 🕹️ 2️⃣ مسارات ميجا سنتر (شحن الألعاب والسداد)
+// 🕹️ مسارات ميجا سنتر والويب هوك
 // ==========================================
 
 let cachedServices = null;
 let lastFetchTime = 0;
 
+// ─── [مفقود سابقاً] مسار استيراد قائمة الخدمات من ميجا سنتر ───
 app.get('/api/games', async (req, res) => {
     const currentTime = Date.now();
     if (cachedServices && (currentTime - lastFetchTime < 15 * 60 * 1000)) {
         return res.json({ success: true, game_list: cachedServices, from_cache: true });
     }
-
     const form = new FormData();
     form.append('request', 'servicelist');
-
     try {
         const response = await axios.post(MEGA_URL, form, {
-            headers: { ...form.getHeaders(), ...getMegaAuthHeader() },
-            timeout: 15000
+            headers: { ...form.getHeaders(), ...getMegaAuthHeader() }, timeout: 15000
         });
-
         if (response.data && (response.data.status === true || response.data.status === "true")) {
             cachedServices = response.data.ServiceList || [];
             lastFetchTime = currentTime;
             return res.json({ success: true, game_list: cachedServices });
         }
-
-        if (cachedServices) {
-            return res.json({ success: true, game_list: cachedServices, note: "بيانات مؤقتة" });
-        }
+        if (cachedServices) return res.json({ success: true, game_list: cachedServices, note: "بيانات مؤقتة" });
         res.json({ success: false, message: "فشل تحديث قائمة الخدمات" });
     } catch (e) {
-        if (cachedServices) {
-            return res.json({ success: true, game_list: cachedServices, note: "بيانات مؤقتة بسبب خطأ اتصال" });
-        }
+        if (cachedServices) return res.json({ success: true, game_list: cachedServices, note: "بيانات مؤقتة بسبب خطأ اتصال" });
         res.status(500).json({ success: false, message: "خطأ اتصال مع سيرفر الشحن" });
     }
 });
 
 app.post('/api/games/topup', async (req, res) => {
     const { phone, price, serviceId, serviceName, user_id, type } = req.body;
-
     if (!phone || !price || !serviceId || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
 
     const user = await User.findOne({ phone });
-    if (!user || user.bal < Number(price)) return res.json({ success: false, message: "رصيدك الحالي غير كافٍ" });
+    if (!user || user.bal < Number(price)) return res.json({ success: false, message: "رصيدك غير كافٍ" });
 
     user.bal -= Number(price);
     await user.save();
 
     const referenceId = 'TMN-' + crypto.randomBytes(4).toString('hex').toUpperCase();
     const newTxn = new Transaction({
-        userId: user._id, phone, type: type || 'game',
-        targetId: user_id, serviceId, serviceName, price: Number(price), referenceId
+        userId: user._id, phone, type: type || 'game', targetId: user_id, serviceId, serviceName, price: Number(price), referenceId
     });
     await newTxn.save();
 
@@ -347,12 +316,9 @@ app.post('/api/games/topup', async (req, res) => {
 
     try {
         const response = await axios.post(MEGA_URL, form, {
-            headers: { ...form.getHeaders(), ...getMegaAuthHeader() },
-            timeout: 30000
+            headers: { ...form.getHeaders(), ...getMegaAuthHeader() }, timeout: 30000
         });
-
         const data = response.data;
-
         if (data && (data.status === true || data.status === "true")) {
             newTxn.status = 'ناجحة ✅';
             newTxn.megaOrderId = data.orderid;
@@ -360,41 +326,30 @@ app.post('/api/games/topup', async (req, res) => {
 
             const nTitle = "نجاح الشحن الفوري ⚡";
             const nBody = `تم تنفيذ طلب ${serviceName} للرقم ${user_id} بنجاح.`;
-
-            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
-
-            // ─── [تعديل 5] إشعار فوري عند نجاح الشحن التلقائي مع القناة ───
+            await new Message({ receiver: phone, title: nTitle, body: nBody }).save(); // تعديل: حفظ الرسالة
             sendPushNotification(phone, nTitle, nBody);
 
             return res.json({ success: true, currentBal: user.bal, orderId: data.orderid });
         } else {
-            const errorMsg = getMegaErrorMessage(data.code);
+            user.bal += Number(price);
+            await user.save();
             newTxn.status = 'فاشلة ❌';
             newTxn.errorCode = data.code;
             await newTxn.save();
-
-            user.bal += Number(price);
-            await user.save();
-
-            return res.json({ success: false, message: errorMsg });
+            return res.json({ success: false, message: getMegaErrorMessage(data.code) });
         }
     } catch (e) {
-        console.error("Critical Network Error:", e.message);
         newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
         newTxn.errorCode = 'TIMEOUT_ERROR';
         await newTxn.save();
-
         return res.json({ success: false, message: "العملية قيد المعالجة، يرجى عدم تكرار الطلب ومراجعة السجل بعد دقائق." });
     }
 });
 
-// ==========================================
-// 🌐 4️⃣ مسار استقبال تحديثات العمليات (Webhook)
-// ==========================================
+// ─── [مفقود سابقاً] مسار الويب هوك لاستلام التحديثات الفورية من ميجا سنتر ───
 app.post('/api/mega-webhook', async (req, res) => {
     const { reference, orderid, status, result } = req.body;
     console.log(`📥 تحديث ويب هوك مستلم للعملية المرجعية: ${reference}, الحالة: ${status}`);
-
     try {
         const txn = await Transaction.findOne({ referenceId: reference });
         if (!txn) return res.status(404).json({ success: false, message: "العملية غير موجودة" });
@@ -411,8 +366,6 @@ app.post('/api/mega-webhook', async (req, res) => {
             const nTitle = "نجاح الشحن ⚡";
             const nBody = `تم تنفيذ طلبك بنجاح. ${result || ''}`;
             await new Message({ receiver: txn.phone, title: nTitle, body: nBody }).save();
-
-            // ─── [تعديل 6] إشعار فوري عبر الويب هوك عند اكتمال العملية المعلقة ───
             sendPushNotification(txn.phone, nTitle, nBody);
 
         } else if (String(status) === '0') {
@@ -427,10 +380,7 @@ app.post('/api/mega-webhook', async (req, res) => {
 
                 const nTitle = "إلغاء العملية وإعادة الرصيد ↩️";
                 const nBody = `تم رفض عملية الشحن لـ ${txn.serviceName}. السبب: ${result || 'غير محدد'}. تم إعادة مبلغ ${txn.price} إلى حسابك.`;
-
                 await new Message({ receiver: txn.phone, title: nTitle, body: nBody }).save();
-
-                // ─── [تعديل 7] إشعار فوري بفشل الشحن وإرجاع الرصيد ───
                 sendPushNotification(txn.phone, nTitle, nBody);
             }
         }
@@ -442,23 +392,32 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 💼 3️⃣ مسارات لوحة التحكم (Admin)
+// 💼 مسارات الإدارة (Admin APIs) لخدمة الواجهة المنفصلة
 // ==========================================
+app.get('/api/admin/stats', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    res.json({
+        productsCount: await Product.countDocuments(),
+        usersCount: await User.countDocuments(),
+        pendingOrders: await Order.countDocuments({ status: 'قيد المراجعة ⏳' }),
+        categoriesCount: await Category.countDocuments()
+    });
+});
 
-app.post('/api/admin/dashboard', async (req, res) => {
-    const { adminPass } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        const [orders, users, categories, products, ads, txns] = await Promise.all([
-            Order.find({}).sort({ _id: -1 }),
-            User.find({}).sort({ _id: -1 }),
-            Category.find({}),
-            Product.find({}),
-            Ad.find({ active: true }).sort({ _id: -1 }),
-            Transaction.find({}).sort({ _id: -1 })
-        ]);
-        res.json({ success: true, data: { orders, users, categories, products, ads, txns } });
-    } catch (e) { res.status(500).json({ success: false }); }
+app.get('/api/admin/users', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    const users = await User.find({}).sort({ _id: -1 });
+    const result = await Promise.all(users.map(async u => {
+        const t = await DeviceToken.findOne({ phone: u.phone });
+        return { id: u._id, name: u.name, phone: u.phone, balance: u.bal, joinDate: u.joinDate, token: t ? t.token : null };
+    }));
+    res.json(result);
+});
+
+app.post('/api/admin/users/delete', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await User.findByIdAndDelete(req.body.id);
+    res.json({ success: true });
 });
 
 app.post('/api/admin/user/update-balance', async (req, res) => {
@@ -466,92 +425,131 @@ app.post('/api/admin/user/update-balance', async (req, res) => {
     if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
         const user = await User.findOneAndUpdate({ phone }, { bal: Number(newBalance) }, { new: true });
-        if(user) {
+        if (user) {
             const nTitle = "تحديث الرصيد 💰";
             const nBody = `تم تعديل رصيد حسابك. رصيدك الحالي: ${newBalance} YER`;
-
-            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
-
-            // ─── [تعديل 8] إشعار فوري للمستخدم عند تعديل رصيده يدوياً من الأدمن ───
+            await new Message({ receiver: phone, title: nTitle, body: nBody }).save(); // تعديل: حفظ الرسالة بسجل العميل
             sendPushNotification(phone, nTitle, nBody);
         }
         res.json({ success: true });
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-app.post('/api/admin/order/update-status', async (req, res) => {
-    const { adminPass, id, status } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        const order = await Order.findOneAndUpdate({ id }, { status }, { new: true });
-        if (order) {
-            // إرسال إشعار للعميل بتحديث حالة طلبه
-            sendPushNotification(order.phone, "تحديث حالة الطلب 📦", `طلبك رقم ${id} أصبح: ${status}`);
-        }
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-app.post('/api/messages/send', async (req, res) => {
-    const { adminPass, receiver, title, body } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        await new Message({ receiver, title, body }).save();
-
-        // ─── [تعديل 9] إشعار عند إرسال رسالة مخصصة أو عامة للجميع ───
-        if (receiver === 'ALL') {
-            // إذا كانت الرسالة عامة، نرسلها لكل المسجلين في الإشعارات متضمنة قناة أندرويد الصوتية
-            const allDevices = await DeviceToken.find({});
-            const tokens = allDevices.map(d => d.token);
-            if (tokens.length > 0) {
-                await admin.messaging().sendEachForMulticast({ 
-                    notification: { title, body },
-                    android: {
-                        notification: {
-                            channelId: "messages_channel",
-                            sound: "default"
-                        }
-                    },
-                    tokens 
-                });
-            }
-        } else {
-            sendPushNotification(receiver, title, body);
-        }
-
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
-});
-
-app.post('/api/admin/ad/add', async (req, res) => {
-    const { adminPass, videoUrl } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        const embedLink = makeEmbedUrl(videoUrl);
-        await Ad.updateMany({}, { active: false });
-        await new Ad({ videoUrl: embedLink, active: true }).save();
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
+app.get('/api/admin/categories', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    res.json(await Category.find({}).sort({ _id: -1 }));
 });
 
 app.post('/api/admin/category/add', async (req, res) => {
-    const { adminPass, name, sub, img } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        await new Category({ name, sub, img }).save();
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await new Category({ name: req.body.name, sub: req.body.sub, img: req.body.img }).save();
+    res.json({ success: true });
 });
 
-app.post('/api/admin/product/add', async (req, res) => {
-    const { adminPass, name, price, img, cat } = req.body;
-    if (adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    try {
-        await new Product({ name, price: Number(price), img, cat }).save();
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false }); }
+app.post('/api/admin/category/delete', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await Category.findByIdAndDelete(req.body.id);
+    res.json({ success: true });
 });
 
+app.get('/api/admin/products', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    res.json(await Product.find({}).sort({ _id: -1 }));
+});
+
+app.post('/api/admin/products/add', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await new Product({ name: req.body.name, price: Number(req.body.price), img: req.body.image, cat: req.body.cat }).save();
+    res.json({ success: true });
+});
+
+app.post('/api/admin/products/delete', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await Product.findByIdAndDelete(req.body.id);
+    res.json({ success: true });
+});
+
+app.get('/api/admin/orders', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    res.json(await Order.find({}).sort({ _id: -1 }));
+});
+
+app.post('/api/admin/orders/update-status', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    const order = await Order.findOneAndUpdate({ id: req.body.id }, { status: req.body.status }, { new: true });
+    if (order) sendPushNotification(order.phone, "تحديث حالة الطلب 📦", `طلبك رقم ${req.body.id} أصبح: ${req.body.status}`);
+    res.json({ success: true });
+});
+
+app.get('/api/admin/transactions', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    res.json(await Transaction.find({}).sort({ _id: -1 }));
+});
+
+app.get('/api/admin/ads', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    res.json(await Ad.find({}).sort({ _id: -1 }));
+});
+
+app.post('/api/admin/ad/add', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    const embed = makeEmbedUrl(req.body.videoUrl);
+    await Ad.updateMany({}, { active: false });
+    await new Ad({ videoUrl: embed, active: true }).save();
+    res.json({ success: true });
+});
+
+app.post('/api/admin/ad/delete', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    await Ad.findByIdAndDelete(req.body.id);
+    res.json({ success: true });
+});
+
+app.post('/api/messages/send', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    const { receiver, title, body } = req.body;
+    await new Message({ receiver, title, body }).save();
+    if (receiver === 'ALL') {
+        const devices = await DeviceToken.find({});
+        const tokens = devices.map(d => d.token);
+        if (tokens.length > 0) {
+            await admin.messaging().sendEachForMulticast({
+                notification: { title, body },
+                android: { notification: { channelId: "messages_channel", sound: "default" } },
+                tokens
+            });
+        }
+    } else {
+        sendPushNotification(receiver, title, body);
+    }
+    res.json({ success: true });
+});
+
+app.get('/api/admin/tokens', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    res.json(await DeviceToken.find({}).sort({ _id: -1 }));
+});
+
+app.get('/api/admin/settings', async (req, res) => {
+    if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
+    let config = await AppSetting.findOne();
+    if (!config) { config = new AppSetting(); await config.save(); }
+    res.json(config);
+});
+
+app.post('/api/admin/settings/update', async (req, res) => {
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    let config = await AppSetting.findOne();
+    if (!config) config = new AppSetting();
+    config.appName = req.body.appName;
+    config.whatsappSupport = req.body.whatsappSupport;
+    config.appVersion = req.body.appVersion;
+    config.maintenanceMode = req.body.maintenanceMode;
+    await config.save();
+    res.json({ success: true });
+});
+
+// ─── [مفقود سابقاً] مسار عرض واجهة التحكم للأدمن ───
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });

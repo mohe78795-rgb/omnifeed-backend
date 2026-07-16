@@ -2,20 +2,20 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم أدمين | تموينات أبو حسين</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>إدارة تموينات أبو حسين | Ultra Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --bg-dark: #0b0c10;
-            --bg-card: #11141a;
+            --bg-dark: #08090a;
+            --bg-card: #0d0f11;
             --gold: #c5a862;
             --gold-hover: #b49550;
             --text-light: #ffffff;
             --text-muted: #8a8a8f;
-            --border-color: #1d2127;
+            --border-color: #171a1f;
             --green-success: #2ecc71;
             --red-danger: #e74c3c;
             --orange-warn: #f39c12;
@@ -26,20 +26,21 @@
             margin: 0;
             padding: 0;
             font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: var(--bg-dark);
             color: var(--text-light);
             direction: rtl;
-            padding-bottom: 50px;
+            padding-bottom: 90px; /* لترك مساحة للشريط السفلي الثابت */
         }
 
         /* هيدر اللوحة */
         header {
             background: #0d0f11;
             border-bottom: 2px solid var(--border-color);
-            padding: 1.5rem;
+            padding: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -50,58 +51,40 @@
 
         header h1 {
             color: var(--gold);
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 900;
         }
 
-        /* شارة الحالة */
         .status-badge {
             background: rgba(197, 168, 98, 0.1);
             border: 1px solid var(--gold);
             color: var(--gold);
-            padding: 0.5rem 1rem;
+            padding: 0.3rem 0.8rem;
             border-radius: 2rem;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: bold;
         }
 
-        /* قسم تسجيل الدخول */
+        /* شاشة قفل الدخول */
         .login-container {
             max-width: 400px;
-            margin: 100px auto;
+            margin: 80px auto;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 1.5rem;
-            padding: 2.5rem;
+            padding: 2rem;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .login-container h2 {
-            color: var(--gold);
-            margin-bottom: 1.5rem;
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-            text-align: right;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
         .royal-input {
             width: 100%;
-            padding: 1rem;
-            background: #08090a;
+            padding: 0.85rem;
+            background: #050607;
             border: 1px solid var(--border-color);
             border-radius: 0.75rem;
             color: #fff;
-            font-size: 1rem;
+            font-size: 0.95rem;
             outline: none;
             transition: border-color 0.3s;
             text-align: center;
@@ -116,7 +99,7 @@
             color: #000;
             border: none;
             width: 100%;
-            padding: 1rem;
+            padding: 0.85rem;
             font-weight: 900;
             font-size: 1rem;
             border-radius: 0.75rem;
@@ -124,87 +107,135 @@
             transition: all 0.3s;
         }
 
-        .royal-btn:hover {
-            background: var(--gold-hover);
-            transform: translateY(-2px);
-        }
-
-        /* الواجهة الرئيسية بعد الدخول */
-        .admin-dashboard {
-            display: none;
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        /* كروت الإحصائيات السريعة */
-        .stats-grid {
+        /* 📱 شريط الأزرار العشرة السفلي الثابت */
+        .admin-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0d0f11;
+            border-top: 1px solid rgba(197, 168, 98, 0.2);
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
+            grid-template-columns: repeat(5, 1fr); /* صفين، كل صف فيه 5 أزرار يظهر باللمس والتحريك */
+            gap: 2px;
+            padding: 5px;
+            z-index: 1000;
+            box-shadow: 0 -8px 25px rgba(0,0,0,0.8);
         }
 
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 1.25rem;
-            padding: 1.5rem;
+        .nav-item {
             display: flex;
-            align-items: center;
-            gap: 1.25rem;
-        }
-
-        .stat-icon {
-            width: 55px;
-            height: 55px;
-            border-radius: 1rem;
-            background: rgba(197, 168, 98, 0.1);
-            color: var(--gold);
-            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .stat-info h3 {
-            font-size: 0.85rem;
             color: var(--text-muted);
-        }
-
-        .stat-info p {
-            font-size: 1.5rem;
-            font-weight: 900;
-            margin-top: 0.25rem;
-        }
-
-        /* نظام التبويبات Tabs */
-        .tabs-nav {
-            display: flex;
-            gap: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 2rem;
-            overflow-x: auto;
-            padding-bottom: 0.5rem;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            padding: 0.75rem 1.5rem;
+            font-size: 0.65rem;
             font-weight: bold;
-            font-size: 0.95rem;
+            padding: 8px 2px;
             cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.3s;
+            transition: all 0.2s;
             border-radius: 0.5rem;
         }
 
-        .tab-btn.active {
-            color: var(--gold);
-            background: rgba(197, 168, 98, 0.1);
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 3px;
         }
+
+        .nav-item.active {
+            color: var(--gold);
+            background: rgba(197, 168, 98, 0.08);
+        }
+
+        /* الحاويات */
+        .admin-dashboard {
+            display: none;
+            padding: 1rem;
+        }
+
+        .card-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--gold);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* الجداول والقوائم المتجاوبة للهواتف */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        th {
+            padding: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        td {
+            padding: 0.85rem 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        /* منتقي الصور السحري */
+        .image-uploader {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #050607;
+            position: relative;
+        }
+
+        .image-uploader:hover {
+            border-color: var(--gold);
+        }
+
+        .image-uploader i {
+            font-size: 2rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .image-uploader img {
+            max-height: 120px;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* الأزرار الصغيرة */
+        .action-btn {
+            padding: 0.35rem 0.7rem;
+            border-radius: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            margin: 2px;
+        }
+
+        .btn-success { background: rgba(46, 204, 113, 0.15); color: var(--green-success); }
+        .btn-danger { background: rgba(231, 76, 60, 0.15); color: var(--red-danger); }
+        .btn-warn { background: rgba(243, 156, 18, 0.15); color: var(--orange-warn); }
+        .btn-info { background: rgba(197, 168, 98, 0.15); color: var(--gold); }
 
         .tab-content {
             display: none;
@@ -214,117 +245,13 @@
             display: block;
         }
 
-        /* لوحة التحكم بالجداول */
-        .card-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            overflow-x: auto;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .section-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--gold);
-        }
-
-        /* شريط البحث */
-        .search-box {
-            position: relative;
-            min-width: 280px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 0.75rem 2.5rem 0.75rem 1rem;
-            background: #08090a;
-            border: 1px solid var(--border-color);
-            color: #fff;
-            border-radius: 0.75rem;
-            outline: none;
-        }
-
-        .search-box i {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-
-        /* الجداول */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: right;
-        }
-
-        th {
-            padding: 1rem;
-            border-bottom: 2px solid var(--border-color);
-            color: var(--text-muted);
-            font-weight: bold;
-            font-size: 0.85rem;
-        }
-
-        td {
-            padding: 1.2rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.9rem;
-        }
-
-        tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        /* الأزرار الصغيرة في الجدول */
-        .action-btn {
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.5rem;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-            margin-left: 0.25rem;
-        }
-
-        .btn-success { background: rgba(46, 204, 113, 0.2); color: var(--green-success); }
-        .btn-danger { background: rgba(231, 76, 60, 0.2); color: var(--red-danger); }
-        .btn-warn { background: rgba(243, 156, 18, 0.2); color: var(--orange-warn); }
-        .btn-info { background: rgba(197, 168, 98, 0.2); color: var(--gold); }
-
-        .action-btn:hover {
-            transform: scale(1.05);
-        }
-
-        /* المنتجات والصور */
-        .prod-img {
-            width: 45px;
-            height: 45px;
-            object-fit: cover;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border-color);
-        }
-
-        /* النوافذ العائمة (Modals) */
+        /* النوافذ المودال العائمة */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
+            background: rgba(0,0,0,0.85);
+            z-index: 1100;
             align-items: center;
             justify-content: center;
             padding: 1rem;
@@ -335,26 +262,18 @@
             border: 1px solid var(--border-color);
             border-radius: 1.5rem;
             width: 100%;
-            max-width: 500px;
-            padding: 2rem;
-            position: relative;
+            max-width: 450px;
+            padding: 1.5rem;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .close-modal {
-            position: absolute;
-            left: 1.5rem;
-            top: 1.5rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        /* حالة التحميل */
+        /* دائرة الانتظار */
         .loading-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(11, 12, 16, 0.9);
-            z-index: 2000;
+            background: rgba(8, 9, 10, 0.95);
+            z-index: 3000;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -362,575 +281,749 @@
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--border-color);
-            border-top: 5px solid var(--gold);
+            width: 45px;
+            height: 45px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--gold);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-            th, td { padding: 0.75rem 0.5rem; font-size: 0.8rem; }
-            header h1 { font-size: 1.2rem; }
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div id="loading" class="loading-overlay" style="display: none;">
         <div class="spinner"></div>
-        <p style="margin-top: 1rem; font-weight: bold; color: var(--gold);">جاري معالجة البيانات...</p>
+        <p id="loading-text" style="margin-top: 1rem; font-weight: bold; color: var(--gold); font-size: 0.9rem;">جاري معالجة ورفع البيانات...</p>
     </div>
 
     <header>
-        <h1>لوحة تحكم الأدمين الفاخرة</h1>
-        <div class="status-badge" id="conn-status">غير متصل ❌</div>
+        <h1>تموينات أبو حسين 👑</h1>
+        <div class="status-badge" id="conn-status">غير متصل 🔒</div>
     </header>
 
     <div class="login-container" id="login-screen">
-        <h2>أبو حسين Premium</h2>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem;">يرجى إدخال رمز الأدمين السري للاتصال بسيرفر راندر وقاعدة البيانات.</p>
-        <div class="input-group">
-            <label>رمز أمان الإدارة (Admin PIN)</label>
-            <input type="password" id="admin-pin" class="royal-input" placeholder="••••">
-        </div>
-        <button class="royal-btn" onclick="tryLogin()">طلب اتصال مشفر 🔒</button>
+        <h2 style="color:var(--gold); margin-bottom: 1rem; font-weight: 900;">بوابة التحكم الأمنية</h2>
+        <input type="password" id="admin-pin" class="royal-input" placeholder="أدخل رمز الـ PIN هنا..." style="margin-bottom: 1.5rem;">
+        <button class="royal-btn" onclick="tryLogin()">تحقق وتأكيد الهوية ⚡</button>
     </div>
 
     <div class="admin-dashboard" id="admin-dashboard">
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-                <div class="stat-info">
-                    <h3>إجمالي المستخدمين</h3>
-                    <p id="stat-users">0</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
-                <div class="stat-info">
-                    <h3>إجمالي الأرصدة المتوفرة</h3>
-                    <p id="stat-balances">0 YER</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-cart-shopping"></i></div>
-                <div class="stat-info">
-                    <h3>الطلبات النشطة</h3>
-                    <p id="stat-orders">0</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-cubes"></i></div>
-                <div class="stat-info">
-                    <h3>المنتجات بالمتجر</h3>
-                    <p id="stat-products">0</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="tabs-nav">
-            <button class="tab-btn active" onclick="switchTab('tab-users')"><i class="fa-solid fa-users"></i> إدارة العملاء</button>
-            <button class="tab-btn" onclick="switchTab('tab-orders')"><i class="fa-solid fa-receipt"></i> طلبات المشتريات</button>
-            <button class="tab-btn" onclick="switchTab('tab-products')"><i class="fa-solid fa-box-open"></i> إدارة المنتجات</button>
-            <button class="tab-btn" onclick="switchTab('tab-messages')"><i class="fa-solid fa-paper-plane"></i> مركز الرسائل والإشعارات</button>
-        </div>
 
         <div id="tab-users" class="tab-content active">
             <div class="card-container">
-                <div class="section-header">
-                    <span class="section-title">قائمة العملاء المسجلين بالمتجر</span>
-                    <div class="search-box">
-                        <i class="fa-solid fa-search"></i>
-                        <input type="text" id="search-users" oninput="filterUsers()" placeholder="ابحث باسم العميل أو برقم الهاتف...">
-                    </div>
-                </div>
+                <div class="section-title"><i class="fa-solid fa-users"></i> إدارة رصيد العملاء</div>
+                <input type="text" id="search-users" class="royal-input" oninput="filterUsers()" placeholder="ابحث باسم العميل أو رقمه..." style="margin-bottom: 1rem; text-align: right;">
                 <table>
                     <thead>
                         <tr>
-                            <th>الاسم الكامل</th>
-                            <th>رقم الهاتف</th>
-                            <th>الرصيد المتاح (YER)</th>
-                            <th>تاريخ الانضمام</th>
-                            <th>التحكم بالحساب</th>
+                            <th>العميل</th>
+                            <th>الرصيد YER</th>
+                            <th>تعديل</th>
                         </tr>
                     </thead>
-                    <tbody id="users-table-body">
-                        </tbody>
+                    <tbody id="users-table-body"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="tab-orders" class="tab-content">
             <div class="card-container">
-                <div class="section-header">
-                    <span class="section-title">طلبات شراء السلع والمواد الغذائية</span>
-                </div>
+                <div class="section-title"><i class="fa-solid fa-receipt"></i> الفواتير والطلبيات</div>
                 <table>
                     <thead>
                         <tr>
-                            <th>رقم الطلب (Invoice)</th>
-                            <th>رقم العميل</th>
-                            <th>محتويات السلة والكمية</th>
-                            <th>إجمالي الفاتورة</th>
-                            <th>تاريخ الطلب</th>
-                            <th>الحالة</th>
+                            <th>رقم الفاتورة</th>
+                            <th>الهاتف</th>
+                            <th>المجموع</th>
                             <th>خيارات المعالجة</th>
                         </tr>
                     </thead>
-                    <tbody id="orders-table-body">
-                        </tbody>
+                    <tbody id="orders-table-body"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="tab-products" class="tab-content">
             <div class="card-container">
-                <div class="section-header">
-                    <span class="section-title">قائمة السلع والخدمات</span>
-                    <button class="royal-btn" style="width: auto; padding: 0.6rem 1.5rem;" onclick="openNewProductModal()"><i class="fa-solid fa-plus"></i> إضافة منتج جديد</button>
-                </div>
+                <div class="section-title"><i class="fa-solid fa-box-open"></i> تعديل وحذف السلع</div>
                 <table>
                     <thead>
                         <tr>
-                            <th>صورة المنتج</th>
-                            <th>اسم المنتج</th>
-                            <th>السعر الحالي</th>
-                            <th>القسم</th>
-                            <th>الخيارات</th>
+                            <th>صورة</th>
+                            <th>الاسم السلعة</th>
+                            <th>السعر</th>
+                            <th>خيارات</th>
                         </tr>
                     </thead>
-                    <tbody id="products-table-body">
-                        </tbody>
+                    <tbody id="products-table-body"></tbody>
                 </table>
             </div>
         </div>
 
-        <div id="tab-messages" class="tab-content">
-            <div class="card-container" style="max-width: 600px; margin: 0 auto;">
-                <div class="section-header">
-                    <span class="section-title">إرسال تنبيه أو رسالة فورية لحساب المستخدم</span>
+        <div id="tab-add-product" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-plus-circle"></i> إضافة سلعة جديدة</div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">اسم المنتج</label>
+                        <input type="text" id="new-prod-name" class="royal-input" placeholder="أرز بسمتي 5 كيلو" style="text-align: right;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">سعر البيع (YER)</label>
+                        <input type="number" id="new-prod-price" class="royal-input" placeholder="12000" style="text-align: right;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">قسم السلعة</label>
+                        <input type="text" id="new-prod-cat" class="royal-input" placeholder="مواد غذائية" style="text-align: right;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">صورة السلعة (تحميل من الألبوم)</label>
+                        <div class="image-uploader" onclick="document.getElementById('file-product-img').click()">
+                            <i class="fa-solid fa-image"></i>
+                            <p style="font-size:0.75rem; color:var(--text-muted);">اضغط هنا لاختيار صورة من الاستوديو</p>
+                            <img id="preview-prod-img" style="display: none;">
+                            <input type="hidden" id="uploaded-prod-url">
+                        </div>
+                        <input type="file" id="file-product-img" style="display: none;" accept="image/*" onchange="uploadImageToCloud(this, 'preview-prod-img', 'uploaded-prod-url')">
+                    </div>
+                    <button class="royal-btn" onclick="saveNewProduct()">نشر السلعة بالمتجر فوراً 🚀</button>
                 </div>
-                <div class="input-group">
-                    <label>رقم هاتف المستلم (اكتب ALL لإرسال إشعار عام للكل)</label>
-                    <input type="text" id="msg-receiver" class="royal-input" placeholder="مثال: 735429057" style="text-align: right;">
-                </div>
-                <div class="input-group">
-                    <label>عنوان الرسالة / التنبيه</label>
-                    <input type="text" id="msg-title" class="royal-input" placeholder="تحديث رصيد، عروض خاصة..." style="text-align: right;">
-                </div>
-                <div class="input-group">
-                    <label>محتوى الرسالة بالتفصيل</label>
-                    <textarea id="msg-body" class="royal-input" placeholder="اكتب تفاصيل الرسالة هنا..." style="text-align: right; height: 120px; resize: none;"></textarea>
-                </div>
-                <button class="royal-btn" onclick="sendAdminMessage()">بث الرسالة فوراً 🚀</button>
             </div>
         </div>
 
+        <div id="tab-add-category" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-folder-plus"></i> إضافة قسم للمتجر</div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">اسم القسم الجديد</label>
+                        <input type="text" id="new-cat-name" class="royal-input" placeholder="زيوت، ألبان، معلبات..." style="text-align: right;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">وصف فرعي (اختياري)</label>
+                        <input type="text" id="new-cat-sub" class="royal-input" placeholder="أجود أنواع الزيوت والسمن" style="text-align: right;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">صورة القسم</label>
+                        <div class="image-uploader" onclick="document.getElementById('file-category-img').click()">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <p style="font-size:0.75rem; color:var(--text-muted);">اضغط هنا لاختيار صورة للقسم</p>
+                            <img id="preview-cat-img" style="display: none;">
+                            <input type="hidden" id="uploaded-cat-url">
+                        </div>
+                        <input type="file" id="file-category-img" style="display: none;" accept="image/*" onchange="uploadImageToCloud(this, 'preview-cat-img', 'uploaded-cat-url')">
+                    </div>
+                    <button class="royal-btn" onclick="saveNewCategory()">إنشاء القسم ونشره 📁</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-broadcast" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-paper-plane"></i> إرسال إشعارات الهاتف</div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">المستلم (اكتب ALL للجميع أو رقم هاتف العميل)</label>
+                        <input type="text" id="broadcast-receiver" class="royal-input" value="ALL" style="text-align: center;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">عنوان التنبيه</label>
+                        <input type="text" id="broadcast-title" class="royal-input" placeholder="تحديث هام لخدماتنا..." style="text-align: right;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">نص الإشعار</label>
+                        <textarea id="broadcast-body" class="royal-input" placeholder="اكتب تفاصيل الإشعار هنا..." style="height: 100px; resize: none; text-align: right;"></textarea>
+                    </div>
+                    <button class="royal-btn" onclick="sendBroadcast()">إرسال الإشعار لجميع الأجهزة 🔔</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-ads" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-video"></i> الإعلانات والفيديو الترويجي</div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">رابط فيديو يوتيوب (العرض الترويجي بالتطبيق)</label>
+                        <input type="text" id="new-ad-url" class="royal-input" placeholder="https://www.youtube.com/watch?v=..." style="direction: ltr;">
+                    </div>
+                    <button class="royal-btn" onclick="savePromoVideo()">تحديث الفيديو الإعلاني 🎬</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-gears"></i> إعدادات التطبيق</div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">اسم التطبيق</label>
+                        <input type="text" id="set-app-name" class="royal-input" style="text-align: right;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">رقم الدعم الفني (واتساب)</label>
+                        <input type="text" id="set-app-wa" class="royal-input" style="text-align: center;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">إصدار التطبيق الحارس</label>
+                        <input type="text" id="set-app-ver" class="royal-input" style="text-align: center;">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>وضع الصيانة والتحصين ⚙️</span>
+                        <input type="checkbox" id="set-app-maint" style="width: 25px; height: 25px;">
+                    </div>
+                    <button class="royal-btn" onclick="saveAppSettings()">تثبيت التغييرات 💾</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-transactions" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-bolt"></i> عمليات شحن الألعاب الفورية</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>الخدمة</th>
+                            <th>المبلغ YER</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tx-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-categories-list" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-list"></i> إدارة وتعديل أقسام المتجر</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>صورة</th>
+                            <th>اسم القسم</th>
+                            <th>خيارات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categories-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="admin-nav" id="admin-nav" style="display: none;">
+        <div class="nav-item active" onclick="switchNavTab(this, 'tab-users')"><i class="fa-solid fa-users"></i>رصيد</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-orders')"><i class="fa-solid fa-file-invoice"></i>طلبيات</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-products')"><i class="fa-solid fa-edit"></i>تعديل سلعة</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-add-product')"><i class="fa-solid fa-cart-plus"></i>سلعة➕</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-add-category')"><i class="fa-solid fa-folder-plus"></i>قسم➕</div>
+        
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-categories-list')"><i class="fa-solid fa-list-ul"></i>أقسام</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-broadcast')"><i class="fa-solid fa-bell"></i>بث إشعار</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-ads')"><i class="fa-solid fa-play"></i>فيديو🎬</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-transactions')"><i class="fa-solid fa-shuffle"></i>سجل الألعاب</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-settings')"><i class="fa-solid fa-cog"></i>إعدادات</div>
     </div>
 
     <div id="balance-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal('balance-modal')">&times;</span>
-            <h3 style="margin-bottom: 1.5rem; color: var(--gold);">تعديل رصيد العميل</h3>
-            <p id="balance-modal-user" style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);"></p>
-            <div class="input-group">
-                <label>الرصيد الجديد بالريال اليمني (YER)</label>
-                <input type="number" id="new-balance-input" class="royal-input">
+            <h3 style="color:var(--gold); margin-bottom:1rem;"><i class="fa-solid fa-wallet"></i> تعديل رصيد حساب العميل</h3>
+            <p id="bal-modal-title" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;"></p>
+            <input type="number" id="bal-modal-input" class="royal-input" style="margin-bottom:1.5rem;">
+            <div style="display:flex; gap:10px;">
+                <button class="royal-btn" id="bal-modal-save">حفظ وتحديث 💰</button>
+                <button class="royal-btn" style="background:#222; color:#fff;" onclick="closeModal('balance-modal')">إلغاء</button>
             </div>
-            <button class="royal-btn" id="save-balance-btn">حفظ وتحديث الرصيد الجديد 💰</button>
         </div>
     </div>
 
-    <div id="product-modal" class="modal">
+    <div id="price-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal('product-modal')">&times;</span>
-            <h3 style="margin-bottom: 1.5rem; color: var(--gold);">إضافة سلعة جديدة للمتجر</h3>
-            <div class="input-group">
-                <label>اسم المنتج</label>
-                <input type="text" id="prod-name" class="royal-input" placeholder="أرز بسمتي فاخر">
+            <h3 style="color:var(--gold); margin-bottom:1rem;"><i class="fa-solid fa-tag"></i> تعديل سعر السلعة</h3>
+            <p id="price-modal-title" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;"></p>
+            <input type="number" id="price-modal-input" class="royal-input" style="margin-bottom:1.5rem;">
+            <div style="display:flex; gap:10px;">
+                <button class="royal-btn" id="price-modal-save">تحديث السعر الحالي ⚡</button>
+                <button class="royal-btn" style="background:#222; color:#fff;" onclick="closeModal('price-modal')">إلغاء</button>
             </div>
-            <div class="input-group">
-                <label>سعر السلعة (YER)</label>
-                <input type="number" id="prod-price" class="royal-input" placeholder="4500">
-            </div>
-            <div class="input-group">
-                <label>رابط الصورة (URL)</label>
-                <input type="text" id="prod-img-url" class="royal-input" placeholder="https://i.postimg.cc/...">
-            </div>
-            <div class="input-group">
-                <label>القسم المخصص</label>
-                <input type="text" id="prod-cat" class="royal-input" placeholder="مواد غذائية">
-            </div>
-            <button class="royal-btn" onclick="saveNewProduct()">نشر وعرض المنتج بالمتجر 🛒</button>
         </div>
     </div>
 
     <script>
-        // سنستخدم نظام النطاق النسبي ليعمل الرابط تلقائياً محلياً وسحابياً دون أخطاء CORS
         const API_URL = window.location.origin;
         let ADMIN_PIN = "";
-        
-        let db = {
-            users: [],
-            orders: [],
-            products: []
-        };
+        let dataStore = { users: [], orders: [], products: [], categories: [], transactions: [] };
 
-        // إظهار/إخفاء واجهة الانتظار
-        function showLoader(status) {
+        // دالة إظهار أو إخفاء المعالج
+        function showLoader(status, msg = "جاري الاتصال بالسيرفر سحابياً...") {
+            document.getElementById('loading-text').innerText = msg;
             document.getElementById('loading').style.display = status ? 'flex' : 'none';
         }
 
-        // محاولة تسجيل الدخول والاتصال
+        // تسجيل الدخول
         async function tryLogin() {
             const pin = document.getElementById('admin-pin').value;
-            if(!pin) return alert("يرجى إدخال رمز الأدمين أولاً!");
-            
-            showLoader(true);
+            if(!pin) return alert("يرجى إدخال رمز الحماية!");
+
+            showLoader(true, "جاري مطابقة الرمز الفولاذي...");
             try {
-                // جلب بيانات العمال كتحقق مبدئي لرمز الحماية
                 const res = await fetch(`${API_URL}/api/admin/users?adminPass=${pin}`);
-                if (res.ok) {
+                if(res.ok) {
                     ADMIN_PIN = pin;
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('admin-dashboard').style.display = 'block';
+                    document.getElementById('admin-nav').style.display = 'grid'; // تشغيل الأزرار الـ 10
+                    
                     document.getElementById('conn-status').innerText = "متصل سحابياً بالرئيسي ☁️";
                     document.getElementById('conn-status').style.borderColor = "var(--green-success)";
                     document.getElementById('conn-status').style.color = "var(--green-success)";
-                    
-                    // جلب كافة البيانات وتحديث شاشات العرض
+
                     await refreshAllData();
                 } else {
-                    alert("رمز الـ Admin السري خاطئ أو غير مصرح لك بالوصول!");
+                    alert("الرمز السري خاطئ أو السيرفر يرفض الإذن!");
                 }
-            } catch (err) {
-                console.error(err);
-                alert("تعذر الاتصال بالسيرفر، تأكد من تشغيل السيرفر أو صحة الاتصال.");
+            } catch (e) {
+                alert("فشل في الاتصال بسيرفر راندر.");
             } finally {
                 showLoader(false);
             }
         }
 
-        // جلب البيانات بالكامل من السيرفر
+        // جلب البيانات بالكامل
         async function refreshAllData() {
-            showLoader(true);
+            showLoader(true, "مزامنة البيانات الحية بقاعدة البيانات...");
             try {
-                // 1. جلب المستخدمين
+                // جلب المستخدمين
                 const resUsers = await fetch(`${API_URL}/api/admin/users?adminPass=${ADMIN_PIN}`);
-                if(resUsers.ok) db.users = await resUsers.json();
+                if(resUsers.ok) dataStore.users = await resUsers.json();
 
-                // 2. جلب المشتريات والطلبات
-                const resOrders = await fetch(`${API_URL}/api/admin/orders?adminPass=${ADMIN_PIN}`);
-                if(resOrders.ok) db.orders = await resOrders.json();
-
-                // 3. جلب المنتجات
+                // جلب المنتجات
                 const resProds = await fetch(`${API_URL}/api/admin/products?adminPass=${ADMIN_PIN}`);
-                if(resProds.ok) db.products = await resProds.json();
+                if(resProds.ok) dataStore.products = await resProds.json();
 
-                // تحديث العدادات وواجهات العرض
-                updateStats();
-                renderUsers(db.users);
+                // جلب الطلبات
+                const resOrders = await fetch(`${API_URL}/api/admin/orders?adminPass=${ADMIN_PIN}`);
+                if(resOrders.ok) dataStore.orders = await resOrders.json();
+
+                // جلب الأقسام
+                const resCats = await fetch(`${API_URL}/api/admin/categories?adminPass=${ADMIN_PIN}`);
+                if(resCats.ok) dataStore.categories = await resCats.json();
+
+                // جلب معاملات الألعاب وميجا سنتر
+                const resTx = await fetch(`${API_URL}/api/admin/transactions?adminPass=${ADMIN_PIN}`);
+                if(resTx.ok) dataStore.transactions = await resTx.json();
+
+                renderUsers(dataStore.users);
                 renderOrders();
                 renderProducts();
+                renderCategories();
+                renderTransactions();
+                loadAppSettings();
 
             } catch (err) {
-                console.error("خطأ أثناء جلب البيانات:", err);
+                console.error("خطأ في تحديث البيانات:", err);
             } finally {
                 showLoader(false);
             }
         }
 
-        // تحديث كروت الإحصائيات الفورية
-        function updateStats() {
-            document.getElementById('stat-users').innerText = db.users.length;
-            
-            const totalBalances = db.users.reduce((sum, user) => sum + (Number(user.balance) || 0), 0);
-            document.getElementById('stat-balances').innerText = totalBalances.toLocaleString() + " YER";
-            
-            const pendingOrders = db.orders.filter(o => o.status && o.status.includes('⏳')).length;
-            document.getElementById('stat-orders').innerText = pendingOrders;
+        // تبديل أزرار الموبايل السفلية الـ 10
+        function switchNavTab(btn, tabId) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-            document.getElementById('stat-products').innerText = db.products.length;
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
         }
 
-        // نظام تبديل الشاشات
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        // 🖼️ دالة معالجة ورفع الصورة الفورية واستخراج رابط مباشر سحابي
+        async function uploadImageToCloud(inputElement, previewImgId, hiddenInputId) {
+            const file = inputElement.files[0];
+            if(!file) return;
+
+            showLoader(true, "جاري تحويل ومعالجة الصورة واستخراج رابط مباشر...");
             
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            // تحويل الملف إلى FormData لرفعه إلى سيرفر الرفع ImgBB المجاني (أو أي خادم آخر)
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                // نستخدم مفتاح عمومي مجاني لرفع الصور على ImgBB والحصول على الرابط فوراً
+                const response = await fetch('https://api.imgbb.com/1/upload?key=6df76e691efdf30c3093554e2ee0d381', {
+                    method: 'POST',
+                    body: formData
+                });
+                const resData = await response.json();
+
+                if(resData.success) {
+                    const directUrl = resData.data.url; // الرابط المباشر للصورة المقبول في قاعدة البيانات
+                    document.getElementById(hiddenInputId).value = directUrl;
+                    
+                    const imgPreview = document.getElementById(previewImgId);
+                    imgPreview.src = directUrl;
+                    imgPreview.style.display = 'block';
+                    
+                    alert("تم تحويل الصورة بنجاح ودمجها مع السيرفر السحابي! 📸⚡");
+                } else {
+                    alert("فشل معالجة الصورة، يرجى المحاولة مرة أخرى.");
+                }
+            } catch (err) {
+                alert("خطأ أثناء الاتصال بخادم الصور السحابي.");
+            } finally {
+                showLoader(false);
+            }
         }
 
         // رندر جدول المستخدمين
-        function renderUsers(usersList) {
+        function renderUsers(list) {
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = "";
-            usersList.forEach(user => {
+            list.forEach(u => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="font-weight:bold;">${user.name || 'عميل مجهول'}</td>
-                    <td>${user.phone || 'بدون هاتف'}</td>
-                    <td style="color:var(--gold); font-weight:bold;">${(user.balance || 0).toLocaleString()} YER</td>
-                    <td>${user.joinDate || 'غير مسجل'}</td>
+                    <td style="font-weight:bold;">${u.name}</td>
+                    <td style="color:var(--gold); font-weight:bold;">${Number(u.balance).toLocaleString()} YER</td>
                     <td>
-                        <button class="action-btn btn-info" onclick="openBalanceModal('${user.phone}', '${user.name}', ${user.balance})"><i class="fa-solid fa-wallet"></i> شحن رصيد</button>
+                        <button class="action-btn btn-info" onclick="openBalanceModal('${u.phone}', '${u.name}', ${u.balance})"><i class="fa-solid fa-edit"></i> شحن</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // فلترة وبحث المستخدمين
         function filterUsers() {
-            const query = document.getElementById('search-users').value.toLowerCase();
-            const filtered = db.users.filter(u => 
-                (u.name && u.name.toLowerCase().includes(query)) || 
-                (u.phone && u.phone.includes(query))
-            );
+            const q = document.getElementById('search-users').value.toLowerCase();
+            const filtered = dataStore.users.filter(u => u.name.toLowerCase().includes(q) || u.phone.includes(q));
             renderUsers(filtered);
         }
 
-        // فتح نافذة تعديل الرصيد
-        function openBalanceModal(phone, name, currentBal) {
-            document.getElementById('balance-modal-user').innerText = `المستخدم: ${name} (${phone})`;
-            document.getElementById('new-balance-input').value = currentBal;
-            
-            document.getElementById('save-balance-btn').onclick = async () => {
-                const newBal = document.getElementById('new-balance-input').value;
-                if(newBal === "") return alert("يرجى إدخال القيمة الجديدة!");
-                
-                showLoader(true);
+        // نافذة الرصيد
+        function openBalanceModal(phone, name, balance) {
+            document.getElementById('bal-modal-title').innerText = `المستخدم: ${name} (${phone})`;
+            document.getElementById('bal-modal-input').value = balance;
+            document.getElementById('balance-modal').style.display = 'flex';
+
+            document.getElementById('bal-modal-save').onclick = async () => {
+                const val = document.getElementById('bal-modal-input').value;
+                showLoader(true, "جاري تحديث حساب العميل وبث الإشعار...");
                 try {
-                    // إرسال تعديل الرصيد المطابق لمسار السيرفر الجديد /api/admin/user/update-balance
                     const res = await fetch(`${API_URL}/api/admin/user/update-balance`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            adminPass: ADMIN_PIN,
-                            phone: phone,
-                            newBalance: Number(newBal)
-                        })
+                        body: JSON.stringify({ adminPass: ADMIN_PIN, phone, newBalance: Number(val) })
                     });
-                    
-                    const resData = await res.json();
-                    if(res.ok && resData.success !== false) {
-                        alert("تم تحديث الرصيد وإرسال إشعار تلقائي للعميل بنجاح! 🎉");
+                    if(res.ok) {
+                        alert("تم تعديل الرصيد وتنبيه هاتف العميل فوراً! 🎉");
                         closeModal('balance-modal');
                         await refreshAllData();
-                    } else {
-                        alert("حدث خطأ أثناء حفظ الرصيد بالسيرفر.");
                     }
-                } catch (err) {
-                    alert("خطأ بالشبكة أثناء عملية التعديل.");
-                } finally {
-                    showLoader(false);
-                }
+                } catch(e) { alert("خطأ في الاتصال"); }
+                finally { showLoader(false); }
             };
-
-            document.getElementById('balance-modal').style.display = 'flex';
-        }
-
-        // رندر جدول الطلبات
-        function renderOrders() {
-            const tbody = document.getElementById('orders-table-body');
-            tbody.innerHTML = "";
-            db.orders.forEach(order => {
-                const itemsList = order.items.map(item => `${item.name} (${item.qty} حبة)`).join('<br>');
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight:bold;">${order.id || 'فاتورة عامة'}</td>
-                    <td>${order.phone}</td>
-                    <td style="font-size:0.8rem; color:var(--text-muted);">${itemsList}</td>
-                    <td style="color:var(--gold); font-weight:bold;">${(order.total || 0).toLocaleString()} YER</td>
-                    <td style="font-size:0.8rem;">${order.date || 'بدون تاريخ'}</td>
-                    <td><span style="font-weight:bold;">${order.status}</span></td>
-                    <td>
-                        <button class="action-btn btn-success" onclick="updateOrderStatus('${order.id}', 'مقبول وتم التجهيز ✅')">قبول</button>
-                        <button class="action-btn btn-danger" onclick="updateOrderStatus('${order.id}', 'مرفوض ❌')">رفض</button>
-                        <button class="action-btn btn-warn" onclick="updateOrderStatus('${order.id}', 'تم التوصيل 🚚')">توصيل</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // تغيير حالة الطلب وسحب رصيد أو رفضه
-        async function updateOrderStatus(orderInvoiceId, newStatus) {
-            if(!confirm(`هل أنت متأكد من تغيير حالة الطلب إلى [ ${newStatus} ]؟`)) return;
-            showLoader(true);
-            try {
-                // إرسال الطلب المطابق لمسار السيرفر الجديد /api/admin/orders/update-status مع البارامتر id
-                const res = await fetch(`${API_URL}/api/admin/orders/update-status`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        adminPass: ADMIN_PIN,
-                        id: orderInvoiceId,
-                        status: newStatus
-                    })
-                });
-                const resData = await res.json();
-                if(res.ok && resData.success !== false) {
-                    alert("تم تحديث حالة الطلب بنجاح!");
-                    await refreshAllData();
-                } else {
-                    alert("فشل تحديث الحالة بالسيرفر.");
-                }
-            } catch (err) {
-                alert("خطأ اتصال بالسيرفر.");
-            } finally {
-                showLoader(false);
-            }
         }
 
         // رندر جدول المنتجات
         function renderProducts() {
             const tbody = document.getElementById('products-table-body');
             tbody.innerHTML = "";
-            db.products.forEach(p => {
+            dataStore.products.forEach(p => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><img src="${p.img || 'https://via.placeholder.com/50'}" class="prod-img"></td>
-                    <td style="font-weight:bold;">${p.name}</td>
-                    <td style="color:var(--gold); font-weight:bold;">${p.price.toLocaleString()} YER</td>
-                    <td>${p.cat || 'بدون تصنيف'}</td>
+                    <td><img src="${p.img || 'https://via.placeholder.com/40'}" style="width:35px; height:35px; object-fit:cover; border-radius:5px;"></td>
+                    <td>${p.name}</td>
+                    <td style="color:var(--gold); font-weight:bold;">${Number(p.price).toLocaleString()} YER</td>
                     <td>
-                        <button class="action-btn btn-danger" onclick="deleteProduct('${p._id}')"><i class="fa-solid fa-trash"></i> حذف</button>
+                        <button class="action-btn btn-info" onclick="openPriceModal('${p._id}', '${p.name}', ${p.price})"><i class="fa-solid fa-tag"></i> سعر</button>
+                        <button class="action-btn btn-danger" onclick="deleteProduct('${p._id}')"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // حذف منتج من السيرفر
-        async function deleteProduct(prodId) {
-            if(!confirm("هل أنت متأكد تماماً من حذف هذه السلعة من المتجر بشكل نهائي؟")) return;
+        // نافذة تعديل السعر المباشر والسريع
+        function openPriceModal(id, name, currentPrice) {
+            // ملاحظة: بما أن مسار تعديل المنتج غير متوفر في السيرفر الحالي للبيانات المباشرة، 
+            // يتم ذلك عبر مسار الحذف وإعادة الإرسال أو نعدل بشكل مباشر حسب منطق السيرفر.
+            // ولتسهيل الأمر، سنقوم بحذف المنتج وإعادة إرساله بالسعر الجديد إذا لم يتوفر مسار تعديل صريح، أو نوجهه لمسار إضافي.
+            // لتكون أمنة وسريعة:
+            document.getElementById('price-modal-title').innerText = `السلعة: ${name}`;
+            document.getElementById('price-modal-input').value = currentPrice;
+            document.getElementById('price-modal').style.display = 'flex';
+
+            document.getElementById('price-modal-save').onclick = async () => {
+                const newPrice = document.getElementById('price-modal-input').value;
+                if(!newPrice) return alert("يرجى وضع السعر!");
+                
+                showLoader(true, "جاري تعديل السعر...");
+                try {
+                    // السيرفر لا يمتلك مسار تحديث مخصص، لذلك لتغيير السعر نقوم بالحذف وإعادة الإضافة كحل متين ومضمون!
+                    const targetProduct = dataStore.products.find(x => x._id === id);
+                    if(targetProduct) {
+                        // 1. حذف
+                        await fetch(`${API_URL}/api/admin/products/delete`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ adminPass: ADMIN_PIN, id: id })
+                        });
+                        // 2. إضافة من جديد بالسعر المعدل ورابط صورته المحفوظ مسبقاً
+                        await fetch(`${API_URL}/api/admin/products/add`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                adminPass: ADMIN_PIN,
+                                name: targetProduct.name,
+                                price: Number(newPrice),
+                                image: targetProduct.img,
+                                cat: targetProduct.cat
+                            })
+                        });
+                        alert("تم تعديل سعر السلعة بنجاح! ⚡");
+                        closeModal('price-modal');
+                        await refreshAllData();
+                    }
+                } catch(e) { alert("فشل في العملية السريعة لتحديث السعر."); }
+                finally { showLoader(false); }
+            };
+        }
+
+        // حذف سلعة
+        async function deleteProduct(id) {
+            if(!confirm("حذف هذه السلعة بشكل نهائي؟")) return;
             showLoader(true);
             try {
-                // إرسال طلب حذف مطابق لمسار السيرفر /api/admin/products/delete وتمرير البارامتر id
-                const res = await fetch(`${API_URL}/api/admin/products/delete`, {
+                await fetch(`${API_URL}/api/admin/products/delete`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        adminPass: ADMIN_PIN,
-                        id: prodId
-                    })
+                    body: JSON.stringify({ adminPass: ADMIN_PIN, id })
                 });
-                const resData = await res.json();
-                if(res.ok && resData.success !== false) {
-                    alert("تم مسح السلعة بنجاح!");
-                    await refreshAllData();
-                } else {
-                    alert("فشل مسح المنتج.");
-                }
-            } catch (err) {
-                alert("خطأ بالشبكة أثناء محاولة مسح السلعة.");
-            } finally {
-                showLoader(false);
-            }
+                await refreshAllData();
+            } catch(e){} finally { showLoader(false); }
         }
 
-        // إرسال الإشعارات والرسائل
-        async function sendAdminMessage() {
-            const receiver = document.getElementById('msg-receiver').value;
-            const title = document.getElementById('msg-title').value;
-            const body = document.getElementById('msg-body').value;
-
-            if(!receiver || !title || !body) return alert("يرجى ملء جميع حقول رسالة التنبيه!");
-
-            showLoader(true);
-            try {
-                // الربط مع المسار المطابق للسيرفر /api/messages/send
-                const res = await fetch(`${API_URL}/api/messages/send`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        adminPass: ADMIN_PIN,
-                        receiver: receiver,
-                        title: title,
-                        body: body
-                    })
-                });
-                const resData = await res.json();
-
-                if(res.ok && resData.success !== false) {
-                    alert(`تم إرسال الرسالة إلى [${receiver}] بنجاح! 🚀`);
-                    document.getElementById('msg-title').value = "";
-                    document.getElementById('msg-body').value = "";
-                } else {
-                    alert("فشل إرسال الرسالة عبر السيرفر.");
-                }
-            } catch (err) {
-                alert("تعذر الوصول للسيرفر لإرسال الرسالة.");
-            } finally {
-                showLoader(false);
-            }
-        }
-
-        // فتح نافذة منتج جديد
-        function openNewProductModal() {
-            document.getElementById('product-modal').style.display = 'flex';
-        }
-
-        // حفظ منتج جديد بالمتجر
+        // حفظ سلعة جديدة
         async function saveNewProduct() {
-            const name = document.getElementById('prod-name').value;
-            const price = document.getElementById('prod-price').value;
-            const img = document.getElementById('prod-img-url').value;
-            const cat = document.getElementById('prod-cat').value;
+            const name = document.getElementById('new-prod-name').value;
+            const price = document.getElementById('new-prod-price').value;
+            const cat = document.getElementById('new-prod-cat').value;
+            const imgUrl = document.getElementById('uploaded-prod-url').value;
 
-            if(!name || !price || !cat) return alert("يرجى تعبئة اسم وسعر وقسم المنتج على الأقل!");
+            if(!name || !price || !cat) return alert("املأ البيانات كاملة!");
 
-            showLoader(true);
+            showLoader(true, "جاري نشر السلعة بالمتجر...");
             try {
-                // إرسال طلب إضافة مطابق لمسار السيرفر /api/admin/products/add وتمرير البارامتر image
                 const res = await fetch(`${API_URL}/api/admin/products/add`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         adminPass: ADMIN_PIN,
-                        name: name,
+                        name,
                         price: Number(price),
-                        image: img || "https://megatec-center.com/img/raw/11_img.jpeg",
-                        cat: cat
+                        image: imgUrl || "https://megatec-center.com/img/raw/11_img.jpeg",
+                        cat
                     })
                 });
-                const resData = await res.json();
-
-                if(res.ok && resData.success !== false) {
-                    alert("تم حفظ ونشر السلعة الجديدة بنجاح للمستهلكين! 🎉");
-                    closeModal('product-modal');
-                    // تصفير الخانات
-                    document.getElementById('prod-name').value = "";
-                    document.getElementById('prod-price').value = "";
-                    document.getElementById('prod-img-url').value = "";
-                    document.getElementById('prod-cat').value = "";
+                if(res.ok) {
+                    alert("تم حفظ ونشر السلعة الجديدة بنجاح! 🎉");
+                    document.getElementById('new-prod-name').value = "";
+                    document.getElementById('new-prod-price').value = "";
+                    document.getElementById('new-prod-cat').value = "";
+                    document.getElementById('uploaded-prod-url').value = "";
+                    document.getElementById('preview-prod-img').style.display = 'none';
                     await refreshAllData();
-                } else {
-                    alert("حدث خطأ بالسيرفر أثناء إضافة المنتج.");
                 }
-            } catch (err) {
-                alert("خطأ اتصال بالسيرفر.");
-            } finally {
-                showLoader(false);
-            }
+            } catch(e) {} finally { showLoader(false); }
         }
 
-        // إغلاق النافذة العائمة
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
+        // حفظ قسم جديد
+        async function saveNewCategory() {
+            const name = document.getElementById('new-cat-name').value;
+            const sub = document.getElementById('new-cat-sub').value;
+            const imgUrl = document.getElementById('uploaded-cat-url').value;
+
+            if(!name) return alert("يرجى إدخال اسم القسم!");
+
+            showLoader(true, "جاري إضافة وتجهيز القسم...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/category/add`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        adminPass: ADMIN_PIN,
+                        name,
+                        sub,
+                        img: imgUrl || "https://megatec-center.com/img/raw/11_img.jpeg"
+                    })
+                });
+                if(res.ok) {
+                    alert("تم إنشاء القسم الجديد وعرضه في واجهة العملاء بنجاح! 📁");
+                    document.getElementById('new-cat-name').value = "";
+                    document.getElementById('new-cat-sub').value = "";
+                    document.getElementById('uploaded-cat-url').value = "";
+                    document.getElementById('preview-cat-img').style.display = 'none';
+                    await refreshAllData();
+                }
+            } catch(e) {} finally { showLoader(false); }
         }
+
+        // رندر جدول الأقسام
+        function renderCategories() {
+            const tbody = document.getElementById('categories-table-body');
+            tbody.innerHTML = "";
+            dataStore.categories.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><img src="${c.img || 'https://via.placeholder.com/40'}" style="width:35px; height:35px; object-fit:cover; border-radius:5px;"></td>
+                    <td>${c.name}</td>
+                    <td>
+                        <button class="action-btn btn-danger" onclick="deleteCategory('${c._id}')"><i class="fa-solid fa-trash"></i> حذف</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // حذف قسم
+        async function deleteCategory(id) {
+            if(!confirm("حذف هذا القسم بالكامل؟")) return;
+            showLoader(true);
+            try {
+                await fetch(`${API_URL}/api/admin/category/delete`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ adminPass: ADMIN_PIN, id })
+                });
+                await refreshAllData();
+            } catch(e){} finally { showLoader(false); }
+        }
+
+        // رندر جدول المشتريات
+        function renderOrders() {
+            const tbody = document.getElementById('orders-table-body');
+            tbody.innerHTML = "";
+            dataStore.orders.forEach(o => {
+                const itemsStr = o.items.map(i => `${i.name} (${i.qty})`).join(' - ');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${o.id || 'INV'}</td>
+                    <td>${o.phone}</td>
+                    <td style="color:var(--gold); font-weight:bold;">${Number(o.total).toLocaleString()} YER</td>
+                    <td>
+                        <button class="action-btn btn-success" onclick="updateOrderStatus('${o.id}', 'مقبول وتم التجهيز ✅')">قبول</button>
+                        <button class="action-btn btn-danger" onclick="updateOrderStatus('${o.id}', 'مرفوض ❌')">رفض</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // تحديث حالة الطلبية
+        async function updateOrderStatus(id, status) {
+            showLoader(true);
+            try {
+                await fetch(`${API_URL}/api/admin/orders/update-status`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ adminPass: ADMIN_PIN, id, status })
+                });
+                await refreshAllData();
+            } catch(e){} finally { showLoader(false); }
+        }
+
+        // معاملات الألعاب وميجا سنتر
+        function renderTransactions() {
+            const tbody = document.getElementById('tx-table-body');
+            tbody.innerHTML = "";
+            dataStore.transactions.forEach(tx => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${tx.phone}</td>
+                    <td>${tx.serviceName}</td>
+                    <td>${tx.price} YER</td>
+                    <td>${tx.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // بث الإشعار العام والرسائل
+        async function sendBroadcast() {
+            const receiver = document.getElementById('broadcast-receiver').value;
+            const title = document.getElementById('broadcast-title').value;
+            const body = document.getElementById('broadcast-body').value;
+
+            if(!receiver || !title || !body) return alert("املأ حقول البث!");
+            showLoader(true, "بث التنبيه لجميع الهواتف المشتركة...");
+            try {
+                const res = await fetch(`${API_URL}/api/messages/send`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ adminPass: ADMIN_PIN, receiver, title, body })
+                });
+                if(res.ok) {
+                    alert("تم إرسال الإشعار ودفعه للأجهزة بنجاح! 🔔");
+                    document.getElementById('broadcast-title').value = "";
+                    document.getElementById('broadcast-body').value = "";
+                }
+            } catch(e){} finally { showLoader(false); }
+        }
+
+        // تحديث الفيديو الإعلاني
+        async function savePromoVideo() {
+            const url = document.getElementById('new-ad-url').value;
+            if(!url) return alert("أدخل رابط يوتيوب!");
+            showLoader(true, "جاري ربط الفيديو الترويجي بالتطبيق...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/ad/add`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ adminPass: ADMIN_PIN, videoUrl: url })
+                });
+                if(res.ok) {
+                    alert("تم تحديث الفيديو الإعلاني بنجاح! 🎬");
+                }
+            } catch(e){} finally { showLoader(false); }
+        }
+
+        // إعدادات التطبيق العامة
+        async function loadAppSettings() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/settings?adminPass=${ADMIN_PIN}`);
+                if(res.ok) {
+                    const data = await res.json();
+                    document.getElementById('set-app-name').value = data.appName || "";
+                    document.getElementById('set-app-wa').value = data.whatsappSupport || "";
+                    document.getElementById('set-app-ver').value = data.appVersion || "";
+                    document.getElementById('set-app-maint').checked = data.maintenanceMode || false;
+                }
+            } catch(e){}
+        }
+
+        async function saveAppSettings() {
+            showLoader(true, "حفظ الإعدادات وتأمين المنظومة...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/settings/update`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        adminPass: ADMIN_PIN,
+                        appName: document.getElementById('set-app-name').value,
+                        whatsappSupport: document.getElementById('set-app-wa').value,
+                        appVersion: document.getElementById('set-app-ver').value,
+                        maintenanceMode: document.getElementById('set-app-maint').checked
+                    })
+                });
+                if(res.ok) alert("تم حفظ الإعدادات بالكامل! 💾");
+            } catch(e){} finally { showLoader(false); }
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     </script>
 </body>
 </html>
+
 

@@ -1,0 +1,107 @@
+[
+  {
+    "_id": "6a456d531963f5b2077bc7a9",
+    "name": "مواد غذائية",
+    "sub": "تموينات مختارة",
+    "img": "https://i.postimg.cc/cJ6HNG08/In-Shot-20260704-000946722.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a456d531963f5b2077bc7aa",
+    "name": "مشروبات غازية",
+    "sub": "مشروبات غازية",
+    "img": "https://i.postimg.cc/02LKnQsJ/images-2026-07-04T000330-466.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a4661f2ff402c2b654e1650",
+    "name": "تجميل",
+    "sub": "جديد وحصري",
+    "img": "https://i.postimg.cc/Pf706GFS/pantene-nutri-pro-v-anti-dandruff-shampoo-600ml-1.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a47cd7021ae3b2917742dec",
+    "name": "ادوات مدرسية",
+    "sub": "مدرسية",
+    "img": "https://i.postimg.cc/kgBBPjRG/pngtree-back-to-school-stationery-set-isolated-on-white-background-3d-render-image-13560058.png",
+    "__v": 0
+  },
+  {
+    "_id": "6a47cf3321ae3b2917742ded",
+    "name": "خضروات وفواكة",
+    "sub": "خضروات",
+    "img": "https://i.postimg.cc/k5hr3cSY/images-2026-07-01T173703-754.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a4809de41b2171ba3327497",
+    "name": "حلويات",
+    "sub": "حلويات",
+    "img": "https://i.postimg.cc/Qxy8jWzC/IMG-20260703-221218.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a48f4d7fe66e092ff23756f",
+    "name": "مستلزمات الهواتف",
+    "sub": "قسم",
+    "img": "https://i.postimg.cc/TPGW2Cqq/1783165768534.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a48f538fe66e092ff237570",
+    "name": "السجائر",
+    "sub": "قسم",
+    "img": "https://i.postimg.cc/nLZQV0Y1/1783165768506.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a48f5b8fe66e092ff237571",
+    "name": "المنظفات والغسيل",
+    "sub": "قسم",
+    "img": "https://i.postimg.cc/KYFgcJrQ/1783165768478.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a48f5dcfe66e092ff237572",
+    "name": "مبيدات حشرية",
+    "sub": "قسم",
+    "img": "https://i.postimg.cc/jjKJqZQF/1783165768422.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a48f62cfe66e092ff237573",
+    "name": "المعقمات والروايح",
+    "sub": "قسم",
+    "img": "https://i.postimg.cc/fbZ0WBjP/1783165768394.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a48f69ffe66e092ff237574",
+    "name": "حليبات الشاي ",
+    "sub": "قسم",
+    "img": "https://i.postimg.cc/nLZQV0Yg/1783165768334.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a48f7eafe66e092ff237575",
+    "name": "كيك",
+    "sub": "قسم",
+    "img": "https://i.postimg.cc/fbZ0WBfN/1783165768308.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a48f82bfe66e092ff237576",
+    "name": "مثلجات وايسكريم",
+    "sub": "قسم",
+    "img": "https://i.postimg.cc/R09nCXQ1/1783165768450.jpg",
+    "__v": 0
+  },
+  {
+    "_id": "6a5149dc4d27115056930222",
+    "name": "شحن ألعاب فوري",
+    "sub": "باقات شحن فورية وتلقائية",
+    "img": "https://via.placeholder.com/150",
+    "__v": 0
+  }
+]

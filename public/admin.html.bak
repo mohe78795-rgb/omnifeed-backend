@@ -33,10 +33,9 @@
             background-color: var(--bg-dark);
             color: var(--text-light);
             direction: rtl;
-            padding-bottom: 90px; /* لترك مساحة للشريط السفلي الثابت */
+            padding-bottom: 90px; /* مساحة للشريط السفلي الثابت */
         }
 
-        /* هيدر اللوحة */
         header {
             background: #0d0f11;
             border-bottom: 2px solid var(--border-color);
@@ -65,7 +64,6 @@
             font-weight: bold;
         }
 
-        /* شاشة قفل الدخول */
         .login-container {
             max-width: 400px;
             margin: 80px auto;
@@ -107,7 +105,7 @@
             transition: all 0.3s;
         }
 
-        /* 📱 شريط الأزرار العشرة السفلي الثابت */
+        /* 📱 شريط الأزرار العشرة السفلي الثابت للتحكم الكامل */
         .admin-nav {
             position: fixed;
             bottom: 0;
@@ -116,7 +114,7 @@
             background: #0d0f11;
             border-top: 1px solid rgba(197, 168, 98, 0.2);
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* صفين، كل صف فيه 5 أزرار يظهر باللمس والتحريك */
+            grid-template-columns: repeat(5, 1fr);
             gap: 2px;
             padding: 5px;
             z-index: 1000;
@@ -147,7 +145,6 @@
             background: rgba(197, 168, 98, 0.08);
         }
 
-        /* الحاويات */
         .admin-dashboard {
             display: none;
             padding: 1rem;
@@ -172,7 +169,6 @@
             gap: 8px;
         }
 
-        /* الجداول والقوائم المتجاوبة للهواتف */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -192,7 +188,6 @@
             font-size: 0.85rem;
         }
 
-        /* منتقي الصور السحري */
         .image-uploader {
             border: 2px dashed var(--border-color);
             border-radius: 0.75rem;
@@ -220,7 +215,6 @@
             margin-top: 0.5rem;
         }
 
-        /* الأزرار الصغيرة */
         .action-btn {
             padding: 0.35rem 0.7rem;
             border-radius: 0.4rem;
@@ -234,7 +228,6 @@
 
         .btn-success { background: rgba(46, 204, 113, 0.15); color: var(--green-success); }
         .btn-danger { background: rgba(231, 76, 60, 0.15); color: var(--red-danger); }
-        .btn-warn { background: rgba(243, 156, 18, 0.15); color: var(--orange-warn); }
         .btn-info { background: rgba(197, 168, 98, 0.15); color: var(--gold); }
 
         .tab-content {
@@ -245,7 +238,6 @@
             display: block;
         }
 
-        /* النوافذ المودال العائمة */
         .modal {
             display: none;
             position: fixed;
@@ -268,7 +260,6 @@
             overflow-y: auto;
         }
 
-        /* دائرة الانتظار */
         .loading-overlay {
             position: fixed;
             inset: 0;
@@ -294,24 +285,29 @@
 </head>
 <body>
 
+    <!-- واجهة التحميل الذكية -->
     <div id="loading" class="loading-overlay" style="display: none;">
         <div class="spinner"></div>
         <p id="loading-text" style="margin-top: 1rem; font-weight: bold; color: var(--gold); font-size: 0.9rem;">جاري معالجة ورفع البيانات...</p>
     </div>
 
+    <!-- هيدر اللوحة -->
     <header>
         <h1>تموينات أبو حسين 👑</h1>
         <div class="status-badge" id="conn-status">غير متصل 🔒</div>
     </header>
 
+    <!-- تسجيل الدخول -->
     <div class="login-container" id="login-screen">
         <h2 style="color:var(--gold); margin-bottom: 1rem; font-weight: 900;">بوابة التحكم الأمنية</h2>
         <input type="password" id="admin-pin" class="royal-input" placeholder="أدخل رمز الـ PIN هنا..." style="margin-bottom: 1.5rem;">
         <button class="royal-btn" onclick="tryLogin()">تحقق وتأكيد الهوية ⚡</button>
     </div>
 
+    <!-- لوحة التحكم الرئيسية الشاملة لجميع التبويبات -->
     <div class="admin-dashboard" id="admin-dashboard">
 
+        <!-- 1. تبويب العملاء -->
         <div id="tab-users" class="tab-content active">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-users"></i> إدارة رصيد العملاء</div>
@@ -329,6 +325,7 @@
             </div>
         </div>
 
+        <!-- 2. تبويب الطلبات -->
         <div id="tab-orders" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-receipt"></i> الفواتير والطلبيات</div>
@@ -346,6 +343,7 @@
             </div>
         </div>
 
+        <!-- 3. تبويب المنتجات السلعية (مع تعديل السعر السريع) -->
         <div id="tab-products" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-box-open"></i> تعديل وحذف السلع</div>
@@ -363,6 +361,7 @@
             </div>
         </div>
 
+        <!-- 4. تبويب إضافة منتج جديد (مع ميزة الرفع الذكي للصورة) -->
         <div id="tab-add-product" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-plus-circle"></i> إضافة سلعة جديدة</div>
@@ -394,6 +393,7 @@
             </div>
         </div>
 
+        <!-- 5. تبويب إضافة قسم جديد -->
         <div id="tab-add-category" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-folder-plus"></i> إضافة قسم للمتجر</div>
@@ -421,6 +421,7 @@
             </div>
         </div>
 
+        <!-- 6. تبويب بث الرسائل والإشعارات -->
         <div id="tab-broadcast" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-paper-plane"></i> إرسال إشعارات الهاتف</div>
@@ -442,6 +443,7 @@
             </div>
         </div>
 
+        <!-- 7. تبويب الإعلانات ومقاطع الفيديو اليوتيوب -->
         <div id="tab-ads" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-video"></i> الإعلانات والفيديو الترويجي</div>
@@ -455,9 +457,10 @@
             </div>
         </div>
 
+        <!-- 8. تبويب الإعدادات العامة للمنظومة -->
         <div id="tab-settings" class="tab-content">
             <div class="card-container">
-                <div class="section-title"><i class="fa-solid fa-gears"></i> إعدادات التطبيق</div>
+                <div class="section-title"><i class="fa-solid fa-gears"></i> إعدداات التطبيق</div>
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">اسم التطبيق</label>
@@ -480,6 +483,7 @@
             </div>
         </div>
 
+        <!-- 9. تبويب حركة سجل العمليات المنجزة وميجا سنتر -->
         <div id="tab-transactions" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-bolt"></i> عمليات شحن الألعاب الفورية</div>
@@ -497,6 +501,7 @@
             </div>
         </div>
 
+        <!-- 10. تبويب الأقسام الحالية (تعديل وحذف الأقسام) -->
         <div id="tab-categories-list" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-list"></i> إدارة وتعديل أقسام المتجر</div>
@@ -515,13 +520,16 @@
 
     </div>
 
+    <!-- 📱 شريط الأزرار العشرة السفلي الثابت باللمس المباشر للموبايل -->
     <div class="admin-nav" id="admin-nav" style="display: none;">
+        <!-- الصف الأول -->
         <div class="nav-item active" onclick="switchNavTab(this, 'tab-users')"><i class="fa-solid fa-users"></i>رصيد</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-orders')"><i class="fa-solid fa-file-invoice"></i>طلبيات</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-products')"><i class="fa-solid fa-edit"></i>تعديل سلعة</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-add-product')"><i class="fa-solid fa-cart-plus"></i>سلعة➕</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-add-category')"><i class="fa-solid fa-folder-plus"></i>قسم➕</div>
         
+        <!-- الصف الثاني -->
         <div class="nav-item" onclick="switchNavTab(this, 'tab-categories-list')"><i class="fa-solid fa-list-ul"></i>أقسام</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-broadcast')"><i class="fa-solid fa-bell"></i>بث إشعار</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-ads')"><i class="fa-solid fa-play"></i>فيديو🎬</div>
@@ -529,6 +537,7 @@
         <div class="nav-item" onclick="switchNavTab(this, 'tab-settings')"><i class="fa-solid fa-cog"></i>إعدادات</div>
     </div>
 
+    <!-- نافذة تعديل الرصيد للعميل -->
     <div id="balance-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:var(--gold); margin-bottom:1rem;"><i class="fa-solid fa-wallet"></i> تعديل رصيد حساب العميل</h3>
@@ -541,6 +550,7 @@
         </div>
     </div>
 
+    <!-- نافذة تعديل سعر سلعة سريعاً -->
     <div id="price-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:var(--gold); margin-bottom:1rem;"><i class="fa-solid fa-tag"></i> تعديل سعر السلعة</h3>
@@ -558,13 +568,11 @@
         let ADMIN_PIN = "";
         let dataStore = { users: [], orders: [], products: [], categories: [], transactions: [] };
 
-        // دالة إظهار أو إخفاء المعالج
         function showLoader(status, msg = "جاري الاتصال بالسيرفر سحابياً...") {
             document.getElementById('loading-text').innerText = msg;
             document.getElementById('loading').style.display = status ? 'flex' : 'none';
         }
 
-        // تسجيل الدخول
         async function tryLogin() {
             const pin = document.getElementById('admin-pin').value;
             if(!pin) return alert("يرجى إدخال رمز الحماية!");
@@ -576,7 +584,7 @@
                     ADMIN_PIN = pin;
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('admin-dashboard').style.display = 'block';
-                    document.getElementById('admin-nav').style.display = 'grid'; // تشغيل الأزرار الـ 10
+                    document.getElementById('admin-nav').style.display = 'grid';
                     
                     document.getElementById('conn-status').innerText = "متصل سحابياً بالرئيسي ☁️";
                     document.getElementById('conn-status').style.borderColor = "var(--green-success)";
@@ -593,27 +601,21 @@
             }
         }
 
-        // جلب البيانات بالكامل
         async function refreshAllData() {
             showLoader(true, "مزامنة البيانات الحية بقاعدة البيانات...");
             try {
-                // جلب المستخدمين
                 const resUsers = await fetch(`${API_URL}/api/admin/users?adminPass=${ADMIN_PIN}`);
                 if(resUsers.ok) dataStore.users = await resUsers.json();
 
-                // جلب المنتجات
                 const resProds = await fetch(`${API_URL}/api/admin/products?adminPass=${ADMIN_PIN}`);
                 if(resProds.ok) dataStore.products = await resProds.json();
 
-                // جلب الطلبات
                 const resOrders = await fetch(`${API_URL}/api/admin/orders?adminPass=${ADMIN_PIN}`);
                 if(resOrders.ok) dataStore.orders = await resOrders.json();
 
-                // جلب الأقسام
                 const resCats = await fetch(`${API_URL}/api/admin/categories?adminPass=${ADMIN_PIN}`);
                 if(resCats.ok) dataStore.categories = await resCats.json();
 
-                // جلب معاملات الألعاب وميجا سنتر
                 const resTx = await fetch(`${API_URL}/api/admin/transactions?adminPass=${ADMIN_PIN}`);
                 if(resTx.ok) dataStore.transactions = await resTx.json();
 
@@ -631,7 +633,6 @@
             }
         }
 
-        // تبديل أزرار الموبايل السفلية الـ 10
         function switchNavTab(btn, tabId) {
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -640,27 +641,26 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        // 🖼️ دالة معالجة ورفع الصورة الفورية واستخراج رابط مباشر سحابي
+        // 🖼️ دالة معالجة ورفع الصورة التلقائية باستخدام مفتاح ImgBB الجديد الخاص بك
         async function uploadImageToCloud(inputElement, previewImgId, hiddenInputId) {
             const file = inputElement.files[0];
             if(!file) return;
 
             showLoader(true, "جاري تحويل ومعالجة الصورة واستخراج رابط مباشر...");
             
-            // تحويل الملف إلى FormData لرفعه إلى سيرفر الرفع ImgBB المجاني (أو أي خادم آخر)
             const formData = new FormData();
             formData.append('image', file);
 
             try {
-                // نستخدم مفتاح عمومي مجاني لرفع الصور على ImgBB والحصول على الرابط فوراً
-                const response = await fetch('https://api.imgbb.com/1/upload?key=6df76e691efdf30c3093554e2ee0d381', {
+                // دمج مفتاحك السري هنا مباشرة ليعمل الرفع بنجاح وحرية تامة
+                const response = await fetch('https://api.imgbb.com/1/upload?key=e56f7dca95ebd01e877966299ebb03c3', {
                     method: 'POST',
                     body: formData
                 });
                 const resData = await response.json();
 
                 if(resData.success) {
-                    const directUrl = resData.data.url; // الرابط المباشر للصورة المقبول في قاعدة البيانات
+                    const directUrl = resData.data.url;
                     document.getElementById(hiddenInputId).value = directUrl;
                     
                     const imgPreview = document.getElementById(previewImgId);
@@ -669,7 +669,7 @@
                     
                     alert("تم تحويل الصورة بنجاح ودمجها مع السيرفر السحابي! 📸⚡");
                 } else {
-                    alert("فشل معالجة الصورة، يرجى المحاولة مرة أخرى.");
+                    alert("فشل معالجة الصورة، قد يكون الحجم كبيراً جداً.");
                 }
             } catch (err) {
                 alert("خطأ أثناء الاتصال بخادم الصور السحابي.");
@@ -678,7 +678,6 @@
             }
         }
 
-        // رندر جدول المستخدمين
         function renderUsers(list) {
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = "";
@@ -701,7 +700,6 @@
             renderUsers(filtered);
         }
 
-        // نافذة الرصيد
         function openBalanceModal(phone, name, balance) {
             document.getElementById('bal-modal-title').innerText = `المستخدم: ${name} (${phone})`;
             document.getElementById('bal-modal-input').value = balance;
@@ -726,7 +724,6 @@
             };
         }
 
-        // رندر جدول المنتجات
         function renderProducts() {
             const tbody = document.getElementById('products-table-body');
             tbody.innerHTML = "";
@@ -745,12 +742,7 @@
             });
         }
 
-        // نافذة تعديل السعر المباشر والسريع
         function openPriceModal(id, name, currentPrice) {
-            // ملاحظة: بما أن مسار تعديل المنتج غير متوفر في السيرفر الحالي للبيانات المباشرة، 
-            // يتم ذلك عبر مسار الحذف وإعادة الإرسال أو نعدل بشكل مباشر حسب منطق السيرفر.
-            // ولتسهيل الأمر، سنقوم بحذف المنتج وإعادة إرساله بالسعر الجديد إذا لم يتوفر مسار تعديل صريح، أو نوجهه لمسار إضافي.
-            // لتكون أمنة وسريعة:
             document.getElementById('price-modal-title').innerText = `السلعة: ${name}`;
             document.getElementById('price-modal-input').value = currentPrice;
             document.getElementById('price-modal').style.display = 'flex';
@@ -761,16 +753,13 @@
                 
                 showLoader(true, "جاري تعديل السعر...");
                 try {
-                    // السيرفر لا يمتلك مسار تحديث مخصص، لذلك لتغيير السعر نقوم بالحذف وإعادة الإضافة كحل متين ومضمون!
                     const targetProduct = dataStore.products.find(x => x._id === id);
                     if(targetProduct) {
-                        // 1. حذف
                         await fetch(`${API_URL}/api/admin/products/delete`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ adminPass: ADMIN_PIN, id: id })
                         });
-                        // 2. إضافة من جديد بالسعر المعدل ورابط صورته المحفوظ مسبقاً
                         await fetch(`${API_URL}/api/admin/products/add`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -791,7 +780,6 @@
             };
         }
 
-        // حذف سلعة
         async function deleteProduct(id) {
             if(!confirm("حذف هذه السلعة بشكل نهائي؟")) return;
             showLoader(true);
@@ -805,7 +793,6 @@
             } catch(e){} finally { showLoader(false); }
         }
 
-        // حفظ سلعة جديدة
         async function saveNewProduct() {
             const name = document.getElementById('new-prod-name').value;
             const price = document.getElementById('new-prod-price').value;
@@ -839,7 +826,6 @@
             } catch(e) {} finally { showLoader(false); }
         }
 
-        // حفظ قسم جديد
         async function saveNewCategory() {
             const name = document.getElementById('new-cat-name').value;
             const sub = document.getElementById('new-cat-sub').value;
@@ -870,7 +856,6 @@
             } catch(e) {} finally { showLoader(false); }
         }
 
-        // رندر جدول الأقسام
         function renderCategories() {
             const tbody = document.getElementById('categories-table-body');
             tbody.innerHTML = "";
@@ -887,7 +872,6 @@
             });
         }
 
-        // حذف قسم
         async function deleteCategory(id) {
             if(!confirm("حذف هذا القسم بالكامل؟")) return;
             showLoader(true);
@@ -901,7 +885,6 @@
             } catch(e){} finally { showLoader(false); }
         }
 
-        // رندر جدول المشتريات
         function renderOrders() {
             const tbody = document.getElementById('orders-table-body');
             tbody.innerHTML = "";
@@ -921,7 +904,6 @@
             });
         }
 
-        // تحديث حالة الطلبية
         async function updateOrderStatus(id, status) {
             showLoader(true);
             try {
@@ -934,7 +916,6 @@
             } catch(e){} finally { showLoader(false); }
         }
 
-        // معاملات الألعاب وميجا سنتر
         function renderTransactions() {
             const tbody = document.getElementById('tx-table-body');
             tbody.innerHTML = "";
@@ -950,7 +931,6 @@
             });
         }
 
-        // بث الإشعار العام والرسائل
         async function sendBroadcast() {
             const receiver = document.getElementById('broadcast-receiver').value;
             const title = document.getElementById('broadcast-title').value;
@@ -972,7 +952,6 @@
             } catch(e){} finally { showLoader(false); }
         }
 
-        // تحديث الفيديو الإعلاني
         async function savePromoVideo() {
             const url = document.getElementById('new-ad-url').value;
             if(!url) return alert("أدخل رابط يوتيوب!");
@@ -989,7 +968,6 @@
             } catch(e){} finally { showLoader(false); }
         }
 
-        // إعدادات التطبيق العامة
         async function loadAppSettings() {
             try {
                 const res = await fetch(`${API_URL}/api/admin/settings?adminPass=${ADMIN_PIN}`);
@@ -1025,5 +1003,4 @@
     </script>
 </body>
 </html>
-
 

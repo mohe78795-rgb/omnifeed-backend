@@ -4,295 +4,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم تموينات أبو حسين</title>
-    <!-- استيراد خط Tajawal ليتناسب مع هوية التطبيق العربي -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <!-- مكتبة FontAwesome للأيقونات الفخمة -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* تعريف الألوان الأساسية الخاصة بـ تموينات أبو حسين */
         :root {
-            --bg-color: #0b0c10;       /* الخلفية الداكنة جداً للمتجر */
-            --card-bg: #1f2833;        /* لون كروت العرض الداكنة */
-            --gold-primary: #c5a880;   /* اللون الذهبي الأساسي للنصوص والعناوين */
-            --gold-hover: #e5c59e;     /* ذهبي أفتح عند التمرير */
-            --white-text: #ffffff;     /* نصوص بيضاء واضحة */
-            --gray-text: #c5a88099;    /* نصوص ذهبية شبه شفافة للتفاصيل */
+            --bg-color: #0b0c10;
+            --card-bg: #1f2833;
+            --gold-primary: #c5a880;
+            --gold-hover: #e5c59e;
+            --white-text: #ffffff;
+            --gray-text: #c5a88099;
+            --green-success: #2ecc71;
+            --red-danger: #e74c3c;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--white-text); min-height: 100vh; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { width: 100%; max-width: 600px; text-align: center; margin-bottom: 25px; padding: 15px; border-bottom: 1px solid rgba(197, 168, 128, 0.2); }
+        .header .logo-container { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .header .logo-icon { background-color: var(--gold-primary); color: var(--bg-color); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; }
+        .header h1 { font-size: 1.6rem; font-weight: 700; }
+        .header p { color: var(--gold-primary); font-size: 0.75rem; font-weight: 800; letter-spacing: 1.5px; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--white-text);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        /* [الخيار 4] صندوق الرمز السري */
+        .auth-box { width: 100%; max-width: 500px; background: var(--card-bg); border: 1px solid rgba(197, 168, 128, 0.3); border-radius: 15px; padding: 15px 20px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .auth-box input { background: rgba(11, 12, 16, 0.8); border: 1px solid rgba(197, 168, 128, 0.4); border-radius: 10px; padding: 8px 12px; color: var(--white-text); text-align: center; width: 150px; outline: none; }
+        .auth-box input.success { border-color: var(--green-success); box-shadow: 0 0 8px var(--green-success); }
 
-        /* رأس الصفحة (الهيدر) بنفس أسلوب المتجر */
-        .header {
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 15px;
-            border-bottom: 1px solid rgba(197, 168, 128, 0.2);
-        }
+        /* [الخيار 2] أزرار الإجراءات السريعة */
+        .quick-actions { width: 100%; max-width: 500px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; display: none; }
+        .btn-action { background: transparent; border: 1px solid var(--gold-primary); color: var(--gold-primary); padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s; }
+        .btn-action:hover { background: var(--gold-primary); color: var(--bg-color); transform: translateY(-2px); }
 
-        .header .logo-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 5px;
-        }
+        /* [الخيار 1] الكروت التفاعلية */
+        .dashboard-grid { width: 100%; max-width: 500px; display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .dashboard-card { background: var(--card-bg); border-radius: 18px; padding: 20px; display: flex; align-items: center; justify-content: space-between; position: relative; border: 1px solid rgba(197, 168, 128, 0.15); transition: all 0.3s ease; cursor: pointer; }
+        .dashboard-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--gold-primary); border-radius: 0 18px 18px 0; }
+        .dashboard-card:hover { transform: translateY(-3px); border-color: var(--gold-primary); box-shadow: 0 8px 25px rgba(197, 168, 128, 0.15); }
+        .card-details { display: flex; flex-direction: column; gap: 5px; }
+        .card-title { font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); }
+        .card-value { font-size: 2rem; font-weight: 800; color: var(--gold-primary); }
+        .card-icon { width: 50px; height: 50px; background: rgba(197, 168, 128, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gold-primary); font-size: 1.4rem; border: 1px solid rgba(197, 168, 128, 0.2); }
+        .dashboard-card:hover .card-icon { background: var(--gold-primary); color: var(--bg-color); }
+        
+        .blur-data { filter: blur(5px); user-select: none; }
 
-        .header .logo-icon {
-            background-color: var(--gold-primary);
-            color: var(--bg-color);
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 1.2rem;
-            box-shadow: 0 0 10px rgba(197, 168, 128, 0.4);
-        }
+        /* [الخيار 3] منطقة عرض الجداول التفصيلية */
+        .details-section { width: 100%; max-width: 500px; margin-top: 25px; background: var(--card-bg); border-radius: 18px; border: 1px solid rgba(197, 168, 128, 0.2); padding: 20px; display: none; }
+        .details-section h3 { color: var(--gold-primary); margin-bottom: 15px; font-size: 1.2rem; border-bottom: 1px solid rgba(197, 168, 128, 0.2); padding-bottom: 8px; }
+        
+        .data-item { background: rgba(11, 12, 16, 0.6); padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .data-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 0.95rem; margin-bottom: 5px; }
+        .data-body { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+        
+        .actions-row { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-status { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+        .btn-accept { background: var(--green-success); color: #fff; }
+        .btn-cancel { background: var(--red-danger); color: #fff; }
 
-        .header h1 {
-            color: var(--white-text);
-            font-size: 1.6rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .header p {
-            color: var(--gold-primary);
-            font-size: 0.75rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-top: 2px;
-        }
-
-        /* حقل حماية الرمز السري */
-        .auth-box {
-            width: 100%;
-            max-width: 500px;
-            background: var(--card-bg);
-            border: 1px solid rgba(197, 168, 128, 0.3);
-            border-radius: 15px;
-            padding: 15px 20px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .auth-box label {
-            color: var(--white-text);
-            font-weight: 500;
-            font-size: 0.95rem;
-        }
-
-        .auth-box input {
-            background: rgba(11, 12, 16, 0.8);
-            border: 1px solid rgba(197, 168, 128, 0.4);
-            border-radius: 10px;
-            padding: 8px 12px;
-            color: var(--white-text);
-            text-align: center;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s ease;
-            width: 150px;
-        }
-
-        .auth-box input:focus {
-            border-color: var(--gold-primary);
-            box-shadow: 0 0 8px rgba(197, 168, 128, 0.5);
-        }
-
-        /* شبكة كروت البيانات */
-        .dashboard-grid {
-            width: 100%;
-            max-width: 500px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-
-        /* تصميم الكرت الفخم */
-        .dashboard-card {
-            background: var(--card-bg);
-            border-radius: 18px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(197, 168, 128, 0.15);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-        }
-
-        /* شريط ذهبي جانبي ناعم لإعطاء لمسة جمالية */
-        .dashboard-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--gold-primary);
-            border-radius: 0 18px 18px 0;
-            transition: background 0.3s ease;
-        }
-
-        .dashboard-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(197, 168, 128, 0.15);
-            border-color: var(--gold-primary);
-        }
-
-        .dashboard-card:hover::before {
-            background: var(--gold-hover);
-        }
-
-        /* تفاصيل الكرت اليسرى (النص والعدد) */
-        .card-details {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .card-title {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            font-weight: 500;
-        }
-
-        .card-value {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--gold-primary);
-            line-height: 1;
-        }
-
-        /* الأيقونات الدائرية في الجهة اليمنى للكرت */
-        .card-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(197, 168, 128, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gold-primary);
-            font-size: 1.4rem;
-            border: 1px solid rgba(197, 168, 128, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .dashboard-card:hover .card-icon {
-            background: var(--gold-primary);
-            color: var(--bg-color);
-            transform: scale(1.1);
-            box-shadow: 0 0 12px rgba(197, 168, 128, 0.4);
-        }
-
-        /* تأثيرات شريط التنقل السفلي اللطيف للمظهر الاحترافي */
-        .footer-note {
-            margin-top: 40px;
-            font-size: 0.75rem;
-            color: var(--gray-text);
-            text-align: center;
-        }
+        .footer-note { margin-top: 40px; font-size: 0.75rem; color: var(--gray-text); }
     </style>
 </head>
 <body>
 
-    <!-- رأس الصفحة بهوية تموينات أبو حسين -->
     <div class="header">
-        <div class="logo-container">
-            <div class="logo-icon">T</div>
-            <h1>تموينات أبو حسين</h1>
-        </div>
+        <div class="logo-container"><div class="logo-icon">T</div><h1>تموينات أبو حسين</h1></div>
         <p>PREMIUM PLATFORM</p>
     </div>
 
-    <!-- صندوق تأكيد رمز الإدارة السري المطور -->
+    <!-- [الخيار 4] التحقق من الرمز -->
     <div class="auth-box">
-        <label for="admin-pin">رمز الإدارة السري:</label>
-        <input type="password" id="admin-pin" placeholder="••••••" maxlength="6">
+        <label>رمز الإدارة السري:</label>
+        <input type="password" id="admin-pin" placeholder="••••••" maxlength="6" oninput="checkPin(this.value)">
     </div>
 
-    <!-- شبكة بطاقات لوحة التحكم -->
+    <!-- [الخيار 2] أزرار الإجراءات السريعة -->
+    <div class="quick-actions" id="actionsPanel">
+        <button class="btn-action" onclick="alert('فتح نافذة إضافة منتج جديد')"><i class="fa-solid fa-plus"></i> إضافة منتج</button>
+        <button class="btn-action" onclick="alert('فتح نافذة إضافة قسم جديد')"><i class="fa-solid fa-folder-plus"></i> إضافة قسم</button>
+    </div>
+
+    <!-- شبكة الكروت التفاعلية -->
     <div class="dashboard-grid">
-        
-        <!-- كرت المنتجات -->
-        <div class="dashboard-card">
-            <div class="card-details">
-                <span class="card-title">إجمالي المنتجات</span>
-                <span class="card-value">37</span>
-            </div>
-            <div class="card-icon">
-                <i class="fa-solid fa-box-open"></i>
-            </div>
+        <div class="dashboard-card" onclick="showDetails('products')">
+            <div class="card-details"><span class="card-title">إجمالي المنتجات</span><span class="card-value blur-data" id="val-prod">37</span></div>
+            <div class="card-icon"><i class="fa-solid fa-box-open"></i></div>
         </div>
 
-        <!-- كرت الطلبات المعلقة -->
-        <div class="dashboard-card">
-            <div class="card-details">
-                <span class="card-title">الطلبات المعلقة</span>
-                <span class="card-value">15</span>
-            </div>
-            <div class="card-icon">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-            </div>
+        <!-- [الخيار 1] كرت الطلبات المعلقة القابل للضغط -->
+        <div class="dashboard-card" onclick="showDetails('orders')">
+            <div class="card-details"><span class="card-title">الطلبات المعلقة</span><span class="card-value blur-data" id="val-ord">15</span></div>
+            <div class="card-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
         </div>
 
-        <!-- كرت إجمالي المستخدمين -->
-        <div class="dashboard-card">
-            <div class="card-details">
-                <span class="card-title">إجمالي المستخدمين</span>
-                <span class="card-value">5</span>
-            </div>
-            <div class="card-icon">
-                <i class="fa-solid fa-users"></i>
-            </div>
+        <div class="dashboard-card" onclick="showDetails('users')">
+            <div class="card-details"><span class="card-title">إجمالي المستخدمين</span><span class="card-value blur-data" id="val-user">5</span></div>
+            <div class="card-icon"><i class="fa-solid fa-users"></i></div>
         </div>
-
-        <!-- كرت الأقسام -->
-        <div class="dashboard-card">
-            <div class="card-details">
-                <span class="card-title">إجمالي الأقسام</span>
-                <span class="card-value">15</span>
-            </div>
-            <div class="card-icon">
-                <i class="fa-solid fa-layer-group"></i>
-            </div>
-        </div>
-
     </div>
 
-    <div class="footer-note">
-        نظام إدارة تموينات أبو حسين السحابي © 2026
+    <!-- [الخيار 3] نافذة تفاصيل البيانات ومعالجة الطلبات المعلقة -->
+    <div class="details-section" id="detailsPanel">
+        <h3 id="detailsTitle">تفاصيل البيانات</h3>
+        <div id="detailsContent"></div>
     </div>
 
+    <div class="footer-note">نظام إدارة تموينات أبو حسين السحابي © 2026</div>
+
+    <script>
+        // الرمز السري للإدارة (يمكنك تغييره أو جعله يتحقق من السيرفر عبر API)
+        const CORRECT_PIN = "737465"; 
+
+        // [الخيار 4] دالة فك الحجب والتحقق من الرمز
+        function checkPin(value) {
+            const pinInput = document.getElementById('admin-pin');
+            if(value === CORRECT_PIN) {
+                pinInput.classList.add('success');
+                document.getElementById('actionsPanel').style.display = 'grid';
+                document.querySelectorAll('.card-value').forEach(el => el.classList.remove('blur-data'));
+            } else {
+                pinInput.classList.remove('success');
+                document.getElementById('actionsPanel').style.display = 'none';
+                document.getElementById('detailsPanel').style.display = 'none';
+                document.querySelectorAll('.card-value').forEach(el => el.classList.add('blur-data'));
+            }
+        }
+
+        // [الخيار 1 & 3] دالة عرض التفاصيل أسفل الكروت عند الضغط
+        function showDetails(type) {
+            // التحقق أولاً إذا كان الرمز السري مكتوباً بشكل صحيح
+            if(document.getElementById('admin-pin').value !== CORRECT_PIN) {
+                alert("الرجاء إدخال رمز الإدارة السري أولاً!");
+                return;
+            }
+
+            const panel = document.getElementById('detailsPanel');
+            const title = document.getElementById('detailsTitle');
+            const content = document.getElementById('detailsContent');
+            
+            panel.style.display = 'block';
+            content.innerHTML = ''; 
+
+            if(type === 'orders') {
+                title.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> إدارة الطلبات المعلقة';
+                // مثال لبيانات حية قادمة من السيرفر لطلبين من الـ 15 طلب
+                content.innerHTML = `
+                    <div class="data-item" id="order-101">
+                        <div class="data-header"><span>العميل: محمد معجم</span><span style="color:var(--gold-primary)">YER 15,500</span></div>
+                        <div class="data-body">المنتجات: 2x كرتون حليب مدهش، 1x كيس أرز بسمتي 5 كيلو.</div>
+                        <div class="actions-row">
+                            <button class="btn-status btn-accept" onclick="processOrder('101', 'قبول')">✅ قبول وشحن</button>
+                            <button class="btn-status btn-cancel" onclick="processOrder('101', 'إلغاء')">❌ إلغاء</button>
+                        </div>
+                    </div>
+                    <div class="data-item" id="order-102">
+                        <div class="data-header"><span>العميل: أبو حسين</span><span style="color:var(--gold-primary)">YER 4,200</span></div>
+                        <div class="data-body">المنتجات: 4x مشروب غازي عائلي، 2x بطاطس ديمة عائلي.</div>
+                        <div class="actions-row">
+                            <button class="btn-status btn-accept" onclick="processOrder('102', 'قبول')">✅ قبول وشحن</button>
+                            <button class="btn-status btn-cancel" onclick="processOrder('102', 'إلغاء')">❌ إلغاء</button>
+                        </div>
+                    </div>
+                `;
+            } else if(type === 'products') {
+                title.innerHTML = '<i class="fa-solid fa-box-open"></i> قائمة المنتجات السريعة';
+                content.innerHTML = `
+                    <div class="data-item"><strong>بيبسي علب</strong> - القسم: مشروبات غازية - السعر: YER 500</div>
+                    <div class="data-item"><strong>حليب مدهش بودرة</strong> - القسم: مواد غذائية - السعر: YER 7,500</div>
+                `;
+            } else if(type === 'users') {
+                title.innerHTML = '<i class="fa-solid fa-users"></i> إدارة المستخدمين المسجلين';
+                content.innerHTML = `
+                    <div class="data-item"><strong>محمد معجم</strong> - هاتف: 737465252</div>
+                    <div class="data-item"><strong>أحمد العولقي</strong> - هاتف: 777xxxxxx</div>
+                `;
+            }
+            
+            // سحب الشاشة تلقائياً للأسفل لرؤية الجدول بوضوح
+            panel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // [الخيار 3] دالة معالجة الطلبات وإخفائها بعد اتخاذ إجراء
+        function processOrder(orderId, action) {
+            alert(`تم إرسال أمر [${action}] للطلب رقم ${orderId} إلى السيرفر السحابي.`);
+            
+            // إخفاء الكرت الخاص بالطلب المحذوف أو المقبول فوراً بحركة ناعمة
+            const orderItem = document.getElementById(`order-${orderId}`);
+            orderItem.style.transition = 'all 0.4s ease';
+            orderItem.style.opacity = '0';
+            setTimeout(() => {
+                orderItem.remove();
+                
+                // تحديث العداد المعلق في الكرت بالأعلى افتراضياً
+                const ordVal = document.getElementById('val-ord');
+                let currentCount = parseInt(ordVal.innerText);
+                if(currentCount > 0) ordVal.innerText = currentCount - 1;
+            }, 400);
+        }
+    </script>
 </body>
 </html>
 

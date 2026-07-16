@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>إدارة تموينات أبو حسين | Ultra Control V2</title>
+    <title>إدارة تموينات أبو حسين | Ultra Control V2.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -33,7 +33,7 @@
             background-color: var(--bg-dark);
             color: var(--text-light);
             direction: rtl;
-            padding-bottom: 120px; /* مساحة كافية للشريط السفلي المزدوج */
+            padding-bottom: 120px;
         }
 
         header {
@@ -64,7 +64,6 @@
             font-weight: bold;
         }
 
-        /* لوحة الإحصائيات الذكية */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -86,10 +85,6 @@
             text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: transform 0.2s;
-        }
-
-        .stat-card:active {
-            transform: scale(0.97);
         }
 
         .stat-card i {
@@ -161,7 +156,6 @@
             transform: scale(0.98);
         }
 
-        /* 📱 شريط التحكم السفلي الثابت والمقسم */
         .admin-nav {
             position: fixed;
             bottom: 0;
@@ -244,33 +238,6 @@
             font-size: 0.85rem;
         }
 
-        .image-uploader {
-            border: 2px dashed var(--border-color);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: #050607;
-            position: relative;
-        }
-
-        .image-uploader:hover {
-            border-color: var(--gold);
-        }
-
-        .image-uploader i {
-            font-size: 2rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .image-uploader img {
-            max-height: 120px;
-            border-radius: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
         .action-btn {
             padding: 0.35rem 0.7rem;
             border-radius: 0.4rem;
@@ -341,24 +308,29 @@
 </head>
 <body>
 
+    <!-- واجهة التحميل الذكية -->
     <div id="loading" class="loading-overlay" style="display: none;">
         <div class="spinner"></div>
         <p id="loading-text" style="margin-top: 1rem; font-weight: bold; color: var(--gold); font-size: 0.9rem;">جاري مزامنة المنظومة سحابياً...</p>
     </div>
 
+    <!-- هيدر اللوحة -->
     <header>
         <h1>تموينات أبو حسين 👑</h1>
         <div class="status-badge" id="conn-status">غير متصل 🔒</div>
     </header>
 
+    <!-- تسجيل الدخول -->
     <div class="login-container" id="login-screen">
         <h2 style="color:var(--gold); margin-bottom: 1rem; font-weight: 900;">بوابة التحكم الأمنية</h2>
         <input type="password" id="admin-pin" class="royal-input" placeholder="أدخل رمز الـ PIN هنا..." style="margin-bottom: 1.5rem;">
         <button class="royal-btn" onclick="tryLogin()">تحقق وتأكيد الهوية ⚡</button>
     </div>
 
+    <!-- لوحة التحكم الرئيسية -->
     <div class="admin-dashboard" id="admin-dashboard">
 
+        <!-- الإحصائيات الفورية المطور -->
         <div class="stats-grid">
             <div class="stat-card">
                 <i class="fa-solid fa-scale-balanced"></i>
@@ -382,6 +354,7 @@
             </div>
         </div>
 
+        <!-- 1. تبويب العملاء -->
         <div id="tab-users" class="tab-content active">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-users"></i> إدارة أرصدة العملاء</div>
@@ -399,6 +372,7 @@
             </div>
         </div>
 
+        <!-- 2. تبويب الطلبات -->
         <div id="tab-orders" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-receipt"></i> الفواتير والطلبيات الحالية</div>
@@ -416,6 +390,7 @@
             </div>
         </div>
 
+        <!-- 3. تبويب المنتجات السلعية -->
         <div id="tab-products" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-box-open"></i> تعديل وحذف السلع</div>
@@ -433,6 +408,7 @@
             </div>
         </div>
 
+        <!-- 4. تبويب إضافة منتج جديد -->
         <div id="tab-add-product" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-plus-circle"></i> إضافة سلعة جديدة للمتجر</div>
@@ -446,15 +422,14 @@
                         <input type="number" id="new-prod-price" class="royal-input" placeholder="12000" style="text-align: right;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">اختر قسم السلعة (زر ثابت حركي)</label>
-                        <select id="new-prod-cat-select">
-                            </select>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">اختر قسم السلعة</label>
+                        <select id="new-prod-cat-select"></select>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">صورة السلعة (رفع مباشر سحابي)</label>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">صورة السلعة</label>
                         <div class="image-uploader" onclick="document.getElementById('file-product-img').click()">
                             <i class="fa-solid fa-image"></i>
-                            <p style="font-size:0.75rem; color:var(--text-muted);">اضغط هنا لاختيار صورة من الاستوديو</p>
+                            <p style="font-size:0.75rem; color:var(--text-muted);">اضغط هنا لاختيار صورة</p>
                             <img id="preview-prod-img" style="display: none;">
                             <input type="hidden" id="uploaded-prod-url">
                         </div>
@@ -465,23 +440,24 @@
             </div>
         </div>
 
+        <!-- 5. تبويب إضافة قسم جديد -->
         <div id="tab-add-category" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-folder-plus"></i> إضافة قسم رئيسي جديد</div>
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">اسم القسم الجديد</label>
-                        <input type="text" id="new-cat-name" class="royal-input" placeholder="أجبان، معلبات، مشروبات..." style="text-align: right;">
+                        <input type="text" id="new-cat-name" class="royal-input" placeholder="أجبان، معلبات..." style="text-align: right;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted);">وصف فرعي (توضيحي للزبائن)</label>
-                        <input type="text" id="new-cat-sub" class="royal-input" placeholder="أجود أنواع الأجبان الطازجة" style="text-align: right;">
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">وصف فرعي</label>
+                        <input type="text" id="new-cat-sub" class="royal-input" placeholder="أجود الأنواع الطازجة" style="text-align: right;">
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">صورة القسم</label>
                         <div class="image-uploader" onclick="document.getElementById('file-category-img').click()">
                             <i class="fa-solid fa-folder-open"></i>
-                            <p style="font-size:0.75rem; color:var(--text-muted);">اضغط هنا لاختيار صورة للقسم</p>
+                            <p style="font-size:0.75rem; color:var(--text-muted);">اضغط هنا لاختيار صورة</p>
                             <img id="preview-cat-img" style="display: none;">
                             <input type="hidden" id="uploaded-cat-url">
                         </div>
@@ -492,29 +468,57 @@
             </div>
         </div>
 
+        <!-- 6. تبويب بث الرسائل ومسحها وإدارتها (محدث بالكامل مع خيار المسح المباشر والفرز) -->
         <div id="tab-broadcast" class="tab-content">
             <div class="card-container">
-                <div class="section-title"><i class="fa-solid fa-paper-plane"></i> بث إشعار منبثق للهواتف</div>
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="section-title"><i class="fa-solid fa-paper-plane"></i> بث إرسال وتنبيه جديد للزبائن</div>
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">المستلم (اختر عميل ثابت أو ALL للجميع)</label>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">المستلم (ALL للجميع أو زبون محدد)</label>
                         <select id="broadcast-receiver-select">
                             <option value="ALL">جميع العملاء المشتركين (ALL)</option>
-                            </select>
+                        </select>
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">عنوان التنبيه</label>
-                        <input type="text" id="broadcast-title" class="royal-input" placeholder="تم إضافة رصيد لحسابك..." style="text-align: right;">
+                        <input type="text" id="broadcast-title" class="royal-input" placeholder="عنوان التنبيه..." style="text-align: right;">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted);">نص الإشعار</label>
-                        <textarea id="broadcast-body" class="royal-input" placeholder="اكتب تفاصيل الإشعار بدقة هنا..." style="height: 100px; resize: none; text-align: right;"></textarea>
+                        <label style="font-size: 0.8rem; color: var(--text-muted);">نص الرسالة</label>
+                        <textarea id="broadcast-body" class="royal-input" placeholder="اكتب نص الرسالة هنا..." style="height: 80px; resize: none; text-align: right;"></textarea>
                     </div>
-                    <button class="royal-btn" onclick="sendBroadcast()">إرسال الإشعار لجميع الأجهزة 🔔</button>
+                    <button class="royal-btn" onclick="sendBroadcast()">بث التنبيه للهواتف فوراً 🔔</button>
+                </div>
+
+                <!-- جدول إدارة وعرض الرسائل السابقة ومسحها -->
+                <div class="section-title" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                    <i class="fa-solid fa-comments"></i> سجل الرسائل والاشعارات المرسلة
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">فرز الرسائل حسب المستخدم:</label>
+                    <select id="filter-messages-select" onchange="filterMessagesByReceiver()">
+                        <option value="SHOW_ALL">عرض كل الرسائل المرسلة (الجميع والخاص)</option>
+                        <option value="ALL">رسائل الجميع فقط (ALL)</option>
+                    </select>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المستلم</th>
+                                <th>العنوان والرسالة</th>
+                                <th>التحكم</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messages-table-body">
+                            <!-- تعرض هنا الرسائل مع خيار الحذف -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
+        <!-- 7. تبويب الإعلانات -->
         <div id="tab-ads" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-video"></i> الإعلانات والفيديو الترويجي بالتطبيق</div>
@@ -528,6 +532,7 @@
             </div>
         </div>
 
+        <!-- 8. تبويب الإعدادات العامة -->
         <div id="tab-settings" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-gears"></i> إعدادات التطبيق العامة</div>
@@ -553,6 +558,7 @@
             </div>
         </div>
 
+        <!-- 9. تبويب سجل الألعاب -->
         <div id="tab-transactions" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-bolt"></i> سجل عمليات شحن الألعاب</div>
@@ -570,6 +576,7 @@
             </div>
         </div>
 
+        <!-- 10. تبويب الأقسام الحالية -->
         <div id="tab-categories-list" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-list"></i> إدارة وتعديل أقسام المتجر</div>
@@ -589,6 +596,7 @@
 
     </div>
 
+    <!-- شريط الأزرار السفلي الثابت -->
     <div class="admin-nav" id="admin-nav" style="display: none;">
         <div class="nav-item active" onclick="switchNavTab(this, 'tab-users')"><i class="fa-solid fa-users"></i>رصيد</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-orders')"><i class="fa-solid fa-file-invoice"></i>طلبات</div>
@@ -597,12 +605,13 @@
         <div class="nav-item" onclick="switchNavTab(this, 'tab-add-category')"><i class="fa-solid fa-folder-plus"></i>قسم➕</div>
         
         <div class="nav-item" onclick="switchNavTab(this, 'tab-categories-list')"><i class="fa-solid fa-list-ul"></i>أقسام</div>
-        <div class="nav-item" onclick="switchNavTab(this, 'tab-broadcast')"><i class="fa-solid fa-bell"></i>تنبيهات</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-broadcast')"><i class="fa-solid fa-bell"></i>رسائل</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-ads')"><i class="fa-solid fa-play"></i>يوتيوب</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-transactions')"><i class="fa-solid fa-shuffle"></i>ألعاب</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-settings')"><i class="fa-solid fa-cog"></i>إعدادات</div>
     </div>
 
+    <!-- نافذة تعديل الرصيد -->
     <div id="balance-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:var(--gold); margin-bottom:1rem;"><i class="fa-solid fa-wallet"></i> إدارة رصيد حساب العميل</h3>
@@ -625,6 +634,7 @@
         </div>
     </div>
 
+    <!-- نافذة تعديل سعر سلعة سريعاً -->
     <div id="price-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:var(--gold); margin-bottom:1rem;"><i class="fa-solid fa-tag"></i> تعديل سعر السلعة</h3>
@@ -640,7 +650,7 @@
     <script>
         const API_URL = window.location.origin;
         let ADMIN_PIN = "";
-        let dataStore = { users: [], orders: [], products: [], categories: [], transactions: [] };
+        let dataStore = { users: [], orders: [], products: [], categories: [], transactions: [], messages: [] };
 
         function showLoader(status, msg = "جاري الاتصال بالسيرفر سحابياً...") {
             document.getElementById('loading-text').innerText = msg;
@@ -666,7 +676,7 @@
 
                     await refreshAllData();
                 } else {
-                    alert("الرمز السري خاطئ أو السيرفر يرفض الإذن!");
+                    alert("الرمز السري خاطئ!");
                 }
             } catch (e) {
                 alert("فشل في الاتصال بسيرفر راندر.");
@@ -693,15 +703,18 @@
                 const resTx = await fetch(`${API_URL}/api/admin/transactions?adminPass=${ADMIN_PIN}`);
                 if(resTx.ok) dataStore.transactions = await resTx.json();
 
-                // تحديث واجهة التحكم بجميع البيانات
+                // سحب الرسائل والاشعارات من السيرفر
+                const resMsgs = await fetch(`${API_URL}/api/admin/messages?adminPass=${ADMIN_PIN}`);
+                if(resMsgs.ok) dataStore.messages = await resMsgs.json();
+
                 renderUsers(dataStore.users);
                 renderOrders();
                 renderProducts();
                 renderCategories();
                 renderTransactions();
+                renderMessages(dataStore.messages);
                 loadAppSettings();
 
-                // تحديث الإحصائيات الفورية والواجهات المتفاعلة
                 updateStatistics();
                 populateDropdowns();
 
@@ -712,9 +725,7 @@
             }
         }
 
-        // 📊 حساب وتحديث لوحة الإحصائيات فورياً
         function updateStatistics() {
-            // 1. حساب إجمالي المبيعات من الطلبات المقبولة
             let totalSales = 0;
             dataStore.orders.forEach(o => {
                 if(o.status && o.status.includes("مقبول")) {
@@ -728,9 +739,7 @@
             document.getElementById('stat-cats').innerText = dataStore.categories.length;
         }
 
-        // 🔗 تعبئة وتحديث أزرار وخيارات التحديد الثابتة للأقسام والعملاء
         function populateDropdowns() {
-            // 1. تعبئة قائمة أقسام السلع عند إضافة سلعة جديدة
             const catSelect = document.getElementById('new-prod-cat-select');
             catSelect.innerHTML = "";
             if (dataStore.categories.length === 0) {
@@ -747,14 +756,28 @@
                 });
             }
 
-            // 2. تعبئة قائمة المستلمين في تبويب البث لسهولة الاختيار بضغطة زر
+            // تعبئة المستلمين في صفحة البث والرسائل
             const broadcastSelect = document.getElementById('broadcast-receiver-select');
+            const filterSelect = document.getElementById('filter-messages-select');
+            
             broadcastSelect.innerHTML = '<option value="ALL">جميع العملاء المشتركين (ALL)</option>';
+            filterSelect.innerHTML = `
+                <option value="SHOW_ALL">عرض كل الرسائل المرسلة (الجميع والخاص)</option>
+                <option value="ALL">رسائل الجميع فقط (ALL)</option>
+            `;
+
             dataStore.users.forEach(u => {
+                // للمستقبلين
                 const opt = document.createElement('option');
                 opt.value = u.phone;
                 opt.innerText = `${u.name} (${u.phone})`;
                 broadcastSelect.appendChild(opt);
+
+                // للفلتر الخاص بالرسائل
+                const optFilter = document.createElement('option');
+                optFilter.value = u.phone;
+                optFilter.innerText = `الرسائل الخاصة بـ: ${u.name}`;
+                filterSelect.appendChild(optFilter);
             });
         }
 
@@ -766,18 +789,15 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        // 🖼️ دالة معالجة ورفع الصورة التلقائية باستخدام مفتاح ImgBB الجديد الخاص بك
         async function uploadImageToCloud(inputElement, previewImgId, hiddenInputId) {
             const file = inputElement.files[0];
             if(!file) return;
 
-            showLoader(true, "جاري تحويل ومعالجة الصورة واستخراج رابط مباشر...");
-            
+            showLoader(true, "جاري رفع الصورة سحابياً...");
             const formData = new FormData();
             formData.append('image', file);
 
             try {
-                // استخدام مفتاحك الحصري والمجاني المحدث
                 const response = await fetch('https://api.imgbb.com/1/upload?key=e56f7dca95ebd01e877966299ebb03c3', {
                     method: 'POST',
                     body: formData
@@ -792,12 +812,12 @@
                     imgPreview.src = directUrl;
                     imgPreview.style.display = 'block';
                     
-                    alert("تم تحويل الصورة بنجاح ودمجها مع السيرفر السحابي! 📸⚡");
+                    alert("تم حفظ الصورة بنجاح! 📸⚡");
                 } else {
-                    alert("فشل معالجة الصورة، قد يكون الحجم كبيراً جداً.");
+                    alert("فشل الرفع.");
                 }
             } catch (err) {
-                alert("خطأ أثناء الاتصال بخادم الصور السحابي.");
+                alert("خطأ أثناء الاتصال بخدمة الصور.");
             } finally {
                 showLoader(false);
             }
@@ -825,21 +845,19 @@
             renderUsers(filtered);
         }
 
-        // 💰 فتح نافذة تعديل الرصيد (محدث كلياً للحفاظ على الرصيد القديم وزيادته)
         function openBalanceModal(phone, name, currentBalance) {
             document.getElementById('bal-modal-title').innerText = `المستخدم: ${name} (${phone})`;
             document.getElementById('current-balance-preview').innerText = currentBalance.toLocaleString() + " YER";
-            document.getElementById('bal-modal-input').value = ""; // تفريغ الخانة لكتابة مبلغ الشحن الجديد فقط
+            document.getElementById('bal-modal-input').value = "";
             document.getElementById('balance-modal').style.display = 'flex';
 
             document.getElementById('bal-modal-save').onclick = async () => {
                 const addedAmount = Number(document.getElementById('bal-modal-input').value);
-                if(!addedAmount || addedAmount <= 0) return alert("يرجى كتابة مبلغ شحن صحيح أكبر من الصفر!");
+                if(!addedAmount || addedAmount <= 0) return alert("يرجى كتابة مبلغ شحن صحيح!");
 
-                // الحساب الرياضي الذكي التراكمي
                 const finalNewBalance = currentBalance + addedAmount;
 
-                showLoader(true, "جاري تحديث حساب العميل وبث الإشعار...");
+                showLoader(true, "جاري إضافة الرصيد...");
                 try {
                     const res = await fetch(`${API_URL}/api/admin/user/update-balance`, {
                         method: "POST",
@@ -851,7 +869,7 @@
                         })
                     });
                     if(res.ok) {
-                        alert(`تمت العملية بنجاح! تم إضافة ${addedAmount.toLocaleString()} YER للعميل. الرصيد الجديد الآن: ${finalNewBalance.toLocaleString()} YER 🎉`);
+                        alert(`تمت الإضافة بنجاح! الرصيد الجديد: ${finalNewBalance.toLocaleString()} YER 🎉`);
                         closeModal('balance-modal');
                         await refreshAllData();
                     }
@@ -860,6 +878,95 @@
             };
         }
 
+        // 💬 عرض الرسائل مع إمكانية الفرز والمسح
+        function renderMessages(messagesList) {
+            const tbody = document.getElementById('messages-table-body');
+            tbody.innerHTML = "";
+
+            if (!messagesList || messagesList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">لا توجد رسائل مرسلة بعد.</td></tr>`;
+                return;
+            }
+
+            messagesList.forEach(msg => {
+                const tr = document.createElement('tr');
+                const receiverLabel = msg.receiver === 'ALL' ? '<span style="color:var(--gold); font-weight:bold;">الجميع (ALL)</span>' : msg.receiver;
+                
+                tr.innerHTML = `
+                    <td style="font-size:0.8rem;">${receiverLabel}</td>
+                    <td>
+                        <strong style="font-size:0.85rem; display:block; color:#fff;">${msg.title}</strong>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">${msg.body}</span>
+                    </td>
+                    <td>
+                        <button class="action-btn btn-danger" onclick="deleteMessage('${msg._id}')"><i class="fa-solid fa-trash-can"></i> مسح</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // دالة الفرز للرسائل
+        function filterMessagesByReceiver() {
+            const selectedVal = document.getElementById('filter-messages-select').value;
+            if (selectedVal === 'SHOW_ALL') {
+                renderMessages(dataStore.messages);
+            } else {
+                const filtered = dataStore.messages.filter(m => m.receiver === selectedVal);
+                renderMessages(filtered);
+            }
+        }
+
+        // دالة حذف رسالة أو إشعار نهائياً من السيرفر
+        async function deleteMessage(messageId) {
+            if(!confirm("هل أنت متأكد من رغبتك في مسح هذه الرسالة نهائياً من السيرفر وهواتف المستخدمين؟")) return;
+            
+            showLoader(true, "جاري مسح الرسالة...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/messages/delete`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        adminPass: ADMIN_PIN,
+                        id: messageId
+                    })
+                });
+                if(res.ok) {
+                    alert("تم حذف الرسالة بنجاح وبشكل فوري! 🗑️");
+                    await refreshAllData();
+                } else {
+                    alert("فشل مسح الرسالة من السيرفر.");
+                }
+            } catch(e) {
+                alert("خطأ أثناء محاولة الاتصال بالسيرفر للحذف.");
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        async function sendBroadcast() {
+            const receiver = document.getElementById('broadcast-receiver-select').value;
+            const title = document.getElementById('broadcast-title').value;
+            const body = document.getElementById('broadcast-body').value;
+
+            if(!receiver || !title || !body) return alert("يرجى ملئ جميع الحقول لبث الرسالة!");
+            showLoader(true, "بث وتخزين التنبيه الجديد...");
+            try {
+                const res = await fetch(`${API_URL}/api/messages/send`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ adminPass: ADMIN_PIN, receiver, title, body })
+                });
+                if(res.ok) {
+                    alert("تم بث الإرسال بنجاح وحفظها في الأرشيف! 🔔");
+                    document.getElementById('broadcast-title').value = "";
+                    document.getElementById('broadcast-body').value = "";
+                    await refreshAllData();
+                }
+            } catch(e){} finally { showLoader(false); }
+        }
+
+        // السلع والمنتجات
         function renderProducts() {
             const tbody = document.getElementById('products-table-body');
             tbody.innerHTML = "";
@@ -907,11 +1014,11 @@
                                 cat: targetProduct.cat
                             })
                         });
-                        alert("تم تعديل سعر السلعة بنجاح! ⚡");
+                        alert("تم تعديل السعر بنجاح!");
                         closeModal('price-modal');
                         await refreshAllData();
                     }
-                } catch(e) { alert("فشل في العملية السريعة لتحديث السعر."); }
+                } catch(e) { alert("فشل التعديل السريع للسعر."); }
                 finally { showLoader(false); }
             };
         }
@@ -935,9 +1042,9 @@
             const cat = document.getElementById('new-prod-cat-select').value;
             const imgUrl = document.getElementById('uploaded-prod-url').value;
 
-            if(!name || !price || !cat) return alert("يرجى إكمال الحقول واختيار القسم الصحيح!");
+            if(!name || !price || !cat) return alert("يرجى إكمال البيانات واختيار القسم!");
 
-            showLoader(true, "جاري نشر السلعة بالمتجر...");
+            showLoader(true, "جاري نشر السلعة...");
             try {
                 const res = await fetch(`${API_URL}/api/admin/products/add`, {
                     method: "POST",
@@ -951,7 +1058,7 @@
                     })
                 });
                 if(res.ok) {
-                    alert("تم حفظ ونشر السلعة الجديدة بنجاح! 🎉");
+                    alert("تم حفظ ونشر السلعة بنجاح! 🎉");
                     document.getElementById('new-prod-name').value = "";
                     document.getElementById('new-prod-price').value = "";
                     document.getElementById('uploaded-prod-url').value = "";
@@ -966,9 +1073,9 @@
             const sub = document.getElementById('new-cat-sub').value;
             const imgUrl = document.getElementById('uploaded-cat-url').value;
 
-            if(!name) return alert("يرجى إدخال اسم القسم الجديد!");
+            if(!name) return alert("يرجى إدخال اسم القسم!");
 
-            showLoader(true, "جاري إضافة وتجهيز القسم...");
+            showLoader(true, "جاري إضافة القسم...");
             try {
                 const res = await fetch(`${API_URL}/api/admin/category/add`, {
                     method: "POST",
@@ -981,7 +1088,7 @@
                     })
                 });
                 if(res.ok) {
-                    alert("تم إنشاء القسم الجديد وعرضه في واجهة العملاء بنجاح! 📁");
+                    alert("تم إنشاء القسم بنجاح! 📁");
                     document.getElementById('new-cat-name').value = "";
                     document.getElementById('new-cat-sub').value = "";
                     document.getElementById('uploaded-cat-url').value = "";
@@ -1009,7 +1116,7 @@
         }
 
         async function deleteCategory(id) {
-            if(!confirm("حذف هذا القسم بالكامل؟ سيتم إخفاء القسم لجميع العملاء.")) return;
+            if(!confirm("حذف هذا القسم بالكامل؟")) return;
             showLoader(true);
             try {
                 await fetch(`${API_URL}/api/admin/category/delete`, {
@@ -1066,40 +1173,17 @@
             });
         }
 
-        async function sendBroadcast() {
-            const receiver = document.getElementById('broadcast-receiver-select').value;
-            const title = document.getElementById('broadcast-title').value;
-            const body = document.getElementById('broadcast-body').value;
-
-            if(!receiver || !title || !body) return alert("يرجى ملئ جميع تفاصيل البث!");
-            showLoader(true, "بث التنبيه المباشر للهواتف المستهدفة...");
-            try {
-                const res = await fetch(`${API_URL}/api/messages/send`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ adminPass: ADMIN_PIN, receiver, title, body })
-                });
-                if(res.ok) {
-                    alert("تم بث الإرسال وتنبيه الهواتف بنجاح! 🔔");
-                    document.getElementById('broadcast-title').value = "";
-                    document.getElementById('broadcast-body').value = "";
-                }
-            } catch(e){} finally { showLoader(false); }
-        }
-
         async function savePromoVideo() {
             const url = document.getElementById('new-ad-url').value;
             if(!url) return alert("يرجى إدخال رابط يوتيوب!");
-            showLoader(true, "جاري ربط وتحديث الفيديو الإعلاني بالتطبيق...");
+            showLoader(true, "تحديث الفيديو الترويجي...");
             try {
                 const res = await fetch(`${API_URL}/api/admin/ad/add`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ adminPass: ADMIN_PIN, videoUrl: url })
                 });
-                if(res.ok) {
-                    alert("تم تحديث وعرض الفيديو الإعلاني داخل التطبيق بنجاح! 🎬");
-                }
+                if(res.ok) alert("تم تحديث الفيديو الإعلاني بنجاح! 🎬");
             } catch(e){} finally { showLoader(false); }
         }
 
@@ -1117,7 +1201,7 @@
         }
 
         async function saveAppSettings() {
-            showLoader(true, "حفظ وتأمين إعدادات المنظومة سحابياً...");
+            showLoader(true, "حفظ الإعدادات...");
             try {
                 const res = await fetch(`${API_URL}/api/admin/settings/update`, {
                     method: "POST",
@@ -1130,7 +1214,7 @@
                         maintenanceMode: document.getElementById('set-app-maint').checked
                     })
                 });
-                if(res.ok) alert("تم حفظ وتطبيق التعديلات الجديدة بالكامل! 💾");
+                if(res.ok) alert("تم تطبيق الإعدادات بنجاح! 💾");
             } catch(e){} finally { showLoader(false); }
         }
 
@@ -1138,5 +1222,4 @@
     </script>
 </body>
 </html>
-
 

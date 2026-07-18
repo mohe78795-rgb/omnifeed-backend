@@ -57,15 +57,6 @@ mongoose.connect(MONGO_URI)
 // ==========================================
 // 🗃️ تعريف موديلات قاعدة البيانات (Schemas & Models)
 // ==========================================
-// موديل التحقق من الهاتف
-const Verification = mongoose.model('Verification', new mongoose.Schema({
-    phone: { type: String, required: true },
-    code: { type: String, required: true },
-    status: { type: String, enum: ['pending', 'verified'], default: 'pending' },
-    attempts: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now, expires: 300 } // حذف تلقائي بعد 5 دقائق (300 ثانية)
-}));
-
 const DeviceToken = mongoose.model('DeviceToken', new mongoose.Schema({
     phone: { type: String, required: true },
     token: { type: String, required: true, unique: true },
@@ -287,78 +278,6 @@ app.get('/api/messages/:phone', async (req, res) => {
         const messages = await Message.find({ $or: [{ receiver: req.params.phone }, { receiver: 'ALL' }] }).sort({ _id: -1 });
         res.json(messages);
     } catch (e) { res.status(500).json([]); }
-});
-
-// ==========================================
-// 🛡️ مسارات التحقق (Verification APIs)
-// ==========================================
-
-// طلب إرسال رمز التحقق
-app.post('/api/auth/send-code', async (req, res) => {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ success: false, message: "رقم الهاتف مطلوب" });
-
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-
-    try {
-        await Verification.deleteMany({ phone });
-        await new Verification({ phone, code }).save();
-
-        const tunnelUrl = 'https://iocsp-185-80-45-24.free.pinggy.net';
-
-        // استخدام try/catch داخل الطلب لضمان استمرار السيرفر حتى لو تأخر الهاتف
-        axios.post(tunnelUrl, {
-            phone: phone,
-            code: code,
-            timestamp: new Date().toISOString()
-        }, {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: 5000 // تقليل وقت الانتظار ليغلق السيرفر الاتصال سريعاً
-        }).then(() => {
-            console.log("✅ تم توصيل الكود للهاتف بنجاح.");
-        }).catch(err => {
-            console.error("⚠️ فشل في إرسال الكود (تجاهل إذا وصل للهاتف):", err.message);
-        });
-
-        console.log(`[تحقق] الرمز للرقم ${phone} هو: ${code}`);
-        res.json({ success: true, message: "تم إرسال رمز التحقق بنجاح" });
-    } catch (e) {
-        console.error("خطأ في إرسال الرمز:", e);
-        res.status(500).json({ success: false, message: "خطأ في السيرفر أثناء إرسال الرمز" });
-    }
-});
-
-// التحقق من الرمز المدخل
-app.post('/api/auth/verify-code', async (req, res) => {
-    const { phone, code } = req.body;
-    
-    try {
-        const record = await Verification.findOne({ phone, status: 'pending' });
-
-        if (!record) {
-            return res.json({ success: false, message: "الرمز غير موجود أو منتهي الصلاحية، يرجى طلب رمز جديد" });
-        }
-
-        // التحقق من عدد المحاولات (حد أقصى 3 محاولات)
-        if (record.attempts >= 3) {
-            return res.json({ success: false, message: "تم تجاوز عدد المحاولات المسموح بها، اطلب رمزاً جديداً" });
-        }
-
-        // مطابقة الرمز المدخل مع الرمز المخزن
-        if (record.code !== code) {
-            record.attempts += 1;
-            await record.save();
-            return res.json({ success: false, message: `رمز خاطئ، المتبقي: ${3 - record.attempts} محاولات` });
-        }
-
-        // في حال نجاح المطابقة
-        record.status = 'verified';
-        await record.save();
-        res.json({ success: true, message: "تم التحقق من الرقم بنجاح" });
-    } catch (e) { 
-        console.error("خطأ في التحقق:", e);
-        res.status(500).json({ success: false, message: "خطأ تقني أثناء التحقق" }); 
-    }
 });
 
 // ==========================================

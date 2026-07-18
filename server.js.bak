@@ -43,7 +43,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); // مفقود سابقاً لتقديم ملفات الإدارة الساكنة
+app.use(express.static(path.join(__dirname, 'public'))); // تقديم ملفات الإدارة الساكنة
 
 // ==========================================
 // 🗄️ الاتصال بقاعدة البيانات (MongoDB)
@@ -81,7 +81,7 @@ const Product = mongoose.model('Product', new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
     img: { type: String, default: "" },
-    cat: { type: String, required: true } // تعديل ليكون الحقل مطلوباً ومطابقاً للكود النموذجي
+    cat: { type: String, required: true } 
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
@@ -98,6 +98,7 @@ const Message = mongoose.model('Message', new mongoose.Schema({
     receiver: { type: String, required: true },
     title: { type: String, required: true },
     body: { type: String, required: true },
+    imageUrl: { type: String, default: "" }, // إضافة دعم حقل الصورة في الرسالة المحفوظة
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }));
 
@@ -130,22 +131,44 @@ const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
 }));
 
 // ==========================================
-// 📣 دالة إرسال الإشعارات الفورية (FCM)
+// 📣 دالة إرسال الإشعارات الفورية (FCM) المحدثة بالكامل
 // ==========================================
-async function sendPushNotification(targetPhone, title, body) {
+async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
     try {
         const devices = await DeviceToken.find({ phone: targetPhone });
         if (!devices || devices.length === 0) return;
         const tokens = devices.map(d => d.token);
+
+        // بناء الحزمة المدمجة والمتوافقة كلياً مع كود الجافا للتطبيق
         const message = {
-            notification: { title, body },
-            android: { notification: { channelId: "messages_channel", sound: "default" } },
+            // أولاً: حزمة الإشعار الافتراضية
+            notification: { 
+                title: title, 
+                body: body,
+                ...(imageUrl && { imageUrl: imageUrl }) // يتم تضمينها فقط إذا كانت متوفرة
+            },
+            // ثانياً: حزمة البيانات المخصصة (Data Payload) لتطبيق الأندرويد
+            data: {
+                title: title,
+                body: body,
+                imageUrl: imageUrl || ""
+            },
+            // إعدادات نظام أندرويد لضمان الصوت والأولية العالية والقناة
+            android: { 
+                priority: 'high',
+                notification: { 
+                    channelId: "messages_channel", 
+                    sound: "default",
+                    clickAction: 'OPEN_ACTIVITY_1'
+                } 
+            },
             tokens: tokens
         };
+
         const response = await admin.messaging().sendEachForMulticast(message);
-        console.log(`🔔 [إشعار] تم دفع الإشعار بنجاح إلى (${response.successCount}) جهاز.`);
+        console.log(`🔔 [إشعار] تم دفع الإشعار المحدث بنجاح إلى (${response.successCount}) جهاز.`);
     } catch (error) {
-        console.error("❌ خطأ إرسال الإشعار:", error.message);
+        console.error("❌ خطأ إرسال الإشعار المحدث:", error.message);
     }
 }
 
@@ -161,13 +184,13 @@ const getMegaAuthHeader = () => {
 
 const getMegaErrorMessage = (code) => {
     const errors = {
-        '400': 'طلب غير مكتمل أو مفقود', 
-        '401': 'خطأ في التوثيق - يرجى مراجعة مفاتيح الربط', 
+        '400': 'طلب غير مكتمل أو مفقود',
+        '401': 'خطأ في التوثيق - يرجى مراجعة مفاتيح الربط',
         '404': 'الخدمة غير موجودة حالياً',
-        '405': 'رصيد الوكيل في ميجا سنتر لا يكفي', 
-        '410': 'رقم المعرف (ID) غير صحيح أو الخدمة متوقفة عليه', 
+        '405': 'رصيد الوكي  لا يكفي',
+        '410': 'رقم المعرف (ID) غير صحيح أو الخدمة متوقفة عليه',
         '412': 'رقم المرجع (Reference) مستخدم مسبقاً',
-        '413': 'السعر المرسل لا يطابق السعر الحالي (Price Check Error)', 
+        '413': 'السعر المرسل لا يطابق السعر الحالي (Price Check Error)',
         '429': 'طلبات كثيرة جداً - يرجى المحاولة بعد قليل',
         '500': 'خطأ داخلي في سيرفر المزود'
     };
@@ -246,12 +269,10 @@ app.post('/api/orders/add', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// ─── [مفقود سابقاً] مسار جلب طلبات العميل ───
 app.get('/api/orders/:phone', async (req, res) => {
     try { res.json(await Order.find({ phone: req.params.phone }).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
-// ─── [مفقود سابقاً] مسار جلب رسائل وإشعارات العميل ───
 app.get('/api/messages/:phone', async (req, res) => {
     try {
         const messages = await Message.find({ $or: [{ receiver: req.params.phone }, { receiver: 'ALL' }] }).sort({ _id: -1 });
@@ -266,7 +287,6 @@ app.get('/api/messages/:phone', async (req, res) => {
 let cachedServices = null;
 let lastFetchTime = 0;
 
-// ─── [مفقود سابقاً] مسار استيراد قائمة الخدمات من ميجا سنتر ───
 app.get('/api/games', async (req, res) => {
     const currentTime = Date.now();
     if (cachedServices && (currentTime - lastFetchTime < 15 * 60 * 1000)) {
@@ -326,7 +346,7 @@ app.post('/api/games/topup', async (req, res) => {
 
             const nTitle = "نجاح الشحن الفوري ⚡";
             const nBody = `تم تنفيذ طلب ${serviceName} للرقم ${user_id} بنجاح.`;
-            await new Message({ receiver: phone, title: nTitle, body: nBody }).save(); // تعديل: حفظ الرسالة
+            await new Message({ receiver: phone, title: nTitle, body: nBody }).save(); 
             sendPushNotification(phone, nTitle, nBody);
 
             return res.json({ success: true, currentBal: user.bal, orderId: data.orderid });
@@ -346,7 +366,6 @@ app.post('/api/games/topup', async (req, res) => {
     }
 });
 
-// ─── [مفقود سابقاً] مسار الويب هوك لاستلام التحديثات الفورية من ميجا سنتر ───
 app.post('/api/mega-webhook', async (req, res) => {
     const { reference, orderid, status, result } = req.body;
     console.log(`📥 تحديث ويب هوك مستلم للعملية المرجعية: ${reference}, الحالة: ${status}`);
@@ -428,7 +447,7 @@ app.post('/api/admin/user/update-balance', async (req, res) => {
         if (user) {
             const nTitle = "تحديث الرصيد 💰";
             const nBody = `تم تعديل رصيد حسابك. رصيدك الحالي: ${newBalance} YER`;
-            await new Message({ receiver: phone, title: nTitle, body: nBody }).save(); // تعديل: حفظ الرسالة بسجل العميل
+            await new Message({ receiver: phone, title: nTitle, body: nBody }).save(); 
             sendPushNotification(phone, nTitle, nBody);
         }
         res.json({ success: true });
@@ -505,22 +524,44 @@ app.post('/api/admin/ad/delete', async (req, res) => {
     res.json({ success: true });
 });
 
+// المسار المحدث لإرسال الرسائل الفردية والجماعية مع دعم الصورة المباشرة (imageUrl)
 app.post('/api/messages/send', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    const { receiver, title, body } = req.body;
-    await new Message({ receiver, title, body }).save();
+    const { receiver, title, body, imageUrl } = req.body; // استقبال imageUrl بشكل اختياري
+    
+    // حفظ الرسالة في سجل العميل ضمن قاعدة البيانات
+    await new Message({ receiver, title, body, imageUrl: imageUrl || "" }).save();
+    
     if (receiver === 'ALL') {
         const devices = await DeviceToken.find({});
         const tokens = devices.map(d => d.token);
         if (tokens.length > 0) {
+            // الإرسال الجماعي المحدث المتوافق مع الجافا
             await admin.messaging().sendEachForMulticast({
-                notification: { title, body },
-                android: { notification: { channelId: "messages_channel", sound: "default" } },
+                notification: { 
+                    title, 
+                    body,
+                    ...(imageUrl && { imageUrl: imageUrl })
+                },
+                data: {
+                    title,
+                    body,
+                    imageUrl: imageUrl || ""
+                },
+                android: { 
+                    priority: 'high',
+                    notification: { 
+                        channelId: "messages_channel", 
+                        sound: "default",
+                        clickAction: 'OPEN_ACTIVITY_1'
+                    } 
+                },
                 tokens
             });
         }
     } else {
-        sendPushNotification(receiver, title, body);
+        // الإرسال الفردي المحدث من خلال الدالة الأساسية
+        await sendPushNotification(receiver, title, body, imageUrl);
     }
     res.json({ success: true });
 });
@@ -549,7 +590,6 @@ app.post('/api/admin/settings/update', async (req, res) => {
     res.json({ success: true });
 });
 
-// ─── [مفقود سابقاً] مسار عرض واجهة التحكم للأدمن ───
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
@@ -561,4 +601,5 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     console.log(`🔗 الربط الحالي: Mega Center API V1.3`);
 });
+
 

@@ -304,18 +304,20 @@ app.post('/api/auth/send-code', async (req, res) => {
         await Verification.deleteMany({ phone });
         await new Verification({ phone, code }).save();
 
-        // [تعديل] إرسال الرمز تلقائياً إلى تطبيق Automate عبر Tunnel (Pinggy)
-        // استبدل الرابط أدناه بالرابط الحالي الذي يظهر في التيرمكس
-        const tunnelUrl = 'https://iocsp-185-80-45-24.free.pinggy.net'; 
-        
-        await axios.post(tunnelUrl, {
+        const tunnelUrl = 'https://iocsp-185-80-45-24.free.pinggy.net';
+
+        // استخدام try/catch داخل الطلب لضمان استمرار السيرفر حتى لو تأخر الهاتف
+        axios.post(tunnelUrl, {
             phone: phone,
             code: code,
             timestamp: new Date().toISOString()
         }, {
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 5000 // تقليل وقت الانتظار ليغلق السيرفر الاتصال سريعاً
+        }).then(() => {
+            console.log("✅ تم توصيل الكود للهاتف بنجاح.");
         }).catch(err => {
-            console.error("⚠️ فشل إرسال الكود للهاتف (Automate):", err.message);
+            console.error("⚠️ فشل في إرسال الكود (تجاهل إذا وصل للهاتف):", err.message);
         });
 
         console.log(`[تحقق] الرمز للرقم ${phone} هو: ${code}`);

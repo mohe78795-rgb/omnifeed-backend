@@ -297,23 +297,32 @@ app.get('/api/messages/:phone', async (req, res) => {
 app.post('/api/auth/send-code', async (req, res) => {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ success: false, message: "رقم الهاتف مطلوب" });
-    
-    // توليد رمز مكون من 4 أرقام
+
     const code = Math.floor(1000 + Math.random() * 9000).toString();
-    
+
     try {
-        // حذف أي طلبات تحقق سابقة لنفس الرقم لضمان آخر كود فقط
         await Verification.deleteMany({ phone });
-        
-        // حفظ الرمز الجديد في قاعدة البيانات
         await new Verification({ phone, code }).save();
+
+        // [تعديل] إرسال الرمز تلقائياً إلى تطبيق Automate عبر Tunnel (Pinggy)
+        // استبدل الرابط أدناه بالرابط الحالي الذي يظهر في التيرمكس
+        const tunnelUrl = 'https://iocsp-185-80-45-24.free.pinggy.net'; 
         
-        // هنا يمكنك إضافة كود إرسال الـ SMS الفعلي لاحقاً (عبر مزود خدمة)
-        console.log(`[تحقق] الرمز للرقم ${phone} هو: ${code}`); 
+        await axios.post(tunnelUrl, {
+            phone: phone,
+            code: code,
+            timestamp: new Date().toISOString()
+        }, {
+            headers: { 'Content-Type': 'application/json' }
+        }).catch(err => {
+            console.error("⚠️ فشل إرسال الكود للهاتف (Automate):", err.message);
+        });
+
+        console.log(`[تحقق] الرمز للرقم ${phone} هو: ${code}`);
         res.json({ success: true, message: "تم إرسال رمز التحقق بنجاح" });
-    } catch (e) { 
+    } catch (e) {
         console.error("خطأ في إرسال الرمز:", e);
-        res.status(500).json({ success: false, message: "خطأ في السيرفر أثناء إرسال الرمز" }); 
+        res.status(500).json({ success: false, message: "خطأ في السيرفر أثناء إرسال الرمز" });
     }
 });
 

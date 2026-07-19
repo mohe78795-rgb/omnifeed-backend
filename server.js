@@ -442,6 +442,60 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
+// 📋 مسار جلب خدمات وباقات أم دراهم (MDarahim Get Services)
+// ==========================================
+let cachedMdarahimServices = null;
+let lastMdarahimFetchTime = 0;
+
+app.get('/api/mdarahim/services', async (req, res) => {
+    const currentTime = Date.now();
+    
+    // 1. إذا كانت البيانات متوفرة في الذاكرة المؤقتة ولم يمر عليها 30 دقيقة، نرسلها فوراً لتسريع التطبيق وتوفير البيانات
+    if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
+        return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
+    }
+
+    // 2. التحقق من وجود التوكن الخاص بالسيرفر
+    if (!cachedMdarahimToken) {
+        if (cachedMdarahimServices) {
+            return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة - السيرفر جاري تحديث اتصاله" });
+        }
+        return res.status(500).json({ success: false, message: "جاري تهيئة الاتصال بمزود الخدمة، يرجى المحاولة بعد قليل" });
+    }
+
+    // 3. جلب البيانات برمجياً من سيرفر أم دراهم
+    try {
+        const response = await axios.get('https://www.mdarahim.net/api/ac/v1/getservices', {
+            headers: {
+                'Authorization': `Bearer ${cachedMdarahimToken}`,
+                'Accept': 'application/json'
+            },
+            timeout: 20000 // مهلة الاتصال 20 ثانية
+        });
+
+        if (response.data) {
+            // تخزين البيانات في الذاكرة وتحديث وقت الجلب
+            cachedMdarahimServices = response.data;
+            lastMdarahimFetchTime = currentTime;
+            
+            return res.json({ success: true, services_list: cachedMdarahimServices });
+        }
+
+        if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
+        res.json({ success: false, message: "فشل تحديث قائمة الخدمات من المزود" });
+
+    } catch (error) {
+        console.error('❌ [أم دراهم] خطأ في جلب البيانات:', error.message);
+        
+        // في حال حدوث خطأ في الشبكة، إذا كان لدينا نسخة قديمة مخزنة نرسلها للعميل بدلاً من إظهار شاشة بيضاء
+        if (cachedMdarahimServices) {
+            return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة بسبب خطأ اتصال بالشبكة" });
+        }
+        res.status(500).json({ success: false, message: "خطأ في الاتصال بسيرفر أم دراهم" });
+    }
+});
+
+// ==========================================
 // 💸 مسار تفعيل باقات أم دراهم (MDarahim Packages API)
 // ==========================================
 app.post('/api/mdarahim/packages', async (req, res) => {

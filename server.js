@@ -98,7 +98,7 @@ const Message = mongoose.model('Message', new mongoose.Schema({
     receiver: { type: String, required: true },
     title: { type: String, required: true },
     body: { type: String, required: true },
-    imageUrl: { type: String, default: "" }, // إضافة دعم حقل الصورة في الرسالة المحفوظة
+    imageUrl: { type: String, default: "" }, 
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }));
 
@@ -111,7 +111,7 @@ const Ad = mongoose.model('Ad', new mongoose.Schema({
 const Transaction = mongoose.model('Transaction', new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     phone: String,
-    type: { type: String, default: 'game' },
+    type: { type: String, default: 'game' }, // 'game' أو 'package'
     targetId: { type: String, required: true },
     serviceId: { type: String, required: true },
     serviceName: { type: String, required: true },
@@ -131,7 +131,7 @@ const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
 }));
 
 // ==========================================
-// 📣 دالة إرسال الإشعارات الفورية (FCM) المحدثة بالكامل
+// 📣 دالة إرسال الإشعارات الفورية (FCM) المحدثة
 // ==========================================
 async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
     try {
@@ -139,21 +139,17 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
         if (!devices || devices.length === 0) return;
         const tokens = devices.map(d => d.token);
 
-        // بناء الحزمة المدمجة والمتوافقة كلياً مع كود الجافا للتطبيق
         const message = {
-            // أولاً: حزمة الإشعار الافتراضية
             notification: {
                 title: title,
                 body: body,
-                ...(imageUrl && { imageUrl: imageUrl }) // يتم تضمينها فقط إذا كانت متوفرة
+                ...(imageUrl && { imageUrl: imageUrl }) 
             },
-            // ثانياً: حزمة البيانات المخصصة (Data Payload) لتطبيق الأندرويد
             data: {
                 title: title,
                 body: body,
                 imageUrl: imageUrl || ""
             },
-            // إعدادات نظام أندرويد لضمان الصوت والأولية العالية والقناة
             android: {
                 priority: 'high',
                 notification: {
@@ -172,6 +168,9 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
     }
 }
 
+// ==========================================
+// 🗝️ إعدادات ومتغيرات نظام Mega Center
+// ==========================================
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
 const MEGA_USERNAME = 'u_4082361957';
 const MEGA_API_KEY = 'trrC6caLfhvod3HPxTE5ND9Ld6wvdsa5jm1Nlq2GrNdD7';
@@ -187,7 +186,7 @@ const getMegaErrorMessage = (code) => {
         '400': 'طلب غير مكتمل أو مفقود',
         '401': 'خطأ في التوثيق - يرجى مراجعة مفاتيح الربط',
         '404': 'الخدمة غير موجودة حالياً',
-        '405': 'رصيد الوكي  لا يكفي',
+        '405': 'رصيد الوكيل لا يكفي',
         '410': 'رقم المعرف (ID) غير صحيح أو الخدمة متوقفة عليه',
         '412': 'رقم المرجع (Reference) مستخدم مسبقاً',
         '413': 'السعر المرسل لا يطابق السعر الحالي (Price Check Error)',
@@ -203,6 +202,39 @@ function makeEmbedUrl(url) {
     let match = url.match(regExp);
     return (match && match[2].length == 11) ? "https://www.youtube.com/embed/" + match[2] : url;
 }
+
+// ==========================================
+// 💳 إعدادات ودوال نظام أم دراهم (MDarahim API)
+// ==========================================
+let cachedMdarahimToken = null;
+
+// دالة الدخول التلقائي لتحديث توكن أم دراهم وتخزينه في الذاكرة
+async function initializeMdarahimAuth() {
+    const url = 'https://www.mdarahim.net/logins';
+    const params = new URLSearchParams();
+    params.append('username', '780425632');
+    params.append('password', '737465252');
+    params.append('grant_type', 'password');
+
+    try {
+        const response = await axios.post(url, params, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            timeout: 15000
+        });
+        if (response.data && response.data.access_token) {
+            cachedMdarahimToken = response.data.access_token;
+            console.log('✅ [أم دراهم] تم تحديث توكن الوصول التلقائي بنجاح.');
+        }
+    } catch (error) {
+        console.error('❌ [أم دراهم] خطأ في تحديث توكن الدخول التلقائي:', error.response ? error.response.data : error.message);
+        // إعادة المحاولة بعد دقيقة إذا فشل الاتصال الأول بالسيرفر
+        setTimeout(initializeMdarahimAuth, 60000);
+    }
+}
+
+// جدولة تجديد التوكن تلقائياً كل 23 ساعة بالخلفية
+setInterval(initializeMdarahimAuth, 23 * 60 * 60 * 1000);
+
 
 // ==========================================
 // 🌐 مسارات العميل والربط (APIs)
@@ -283,7 +315,6 @@ app.get('/api/messages/:phone', async (req, res) => {
 // ==========================================
 // 🕹️ مسارات ميجا سنتر والويب هوك
 // ==========================================
-
 let cachedServices = null;
 let lastFetchTime = 0;
 
@@ -411,6 +442,102 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
+// 💸 مسار تفعيل باقات أم دراهم (MDarahim Packages API)
+// ==========================================
+app.post('/api/mdarahim/packages', async (req, res) => {
+    const { phone, price, serviceId, offerId, actionType, mobileNumber, serviceName } = req.body;
+    
+    if (!phone || !price || !serviceId || !offerId || !mobileNumber) {
+        return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
+    }
+
+    // 1. التحقق من رصيد العميل داخل تطبيقك أولاً
+    const user = await User.findOne({ phone });
+    if (!user || user.bal < Number(price)) {
+        return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لتفعيل هذه الباقة" });
+    }
+
+    // 2. خصم المبلغ مبدئياً وتوليد المعاملة لحفظ السجل
+    user.bal -= Number(price);
+    await user.save();
+
+    const referenceId = 'MD-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+    const newTxn = new Transaction({
+        userId: user._id,
+        phone,
+        type: 'package', 
+        targetId: mobileNumber, 
+        serviceId: String(serviceId),
+        serviceName: serviceName || 'باقات ومزايا',
+        price: Number(price),
+        referenceId: referenceId
+    });
+    await newTxn.save();
+
+    // 3. التحقق من جاهزية توكن الاتصال بأم دراهم
+    if (!cachedMdarahimToken) {
+        user.bal += Number(price); // إعادة المبلغ للعميل
+        await user.save();
+        newTxn.status = 'فاشلة ❌';
+        newTxn.errorCode = 'TOKEN_MISSING';
+        await newTxn.save();
+        return res.json({ success: false, message: "جاري تهيئة الاتصال بالمزود، يرجى المحاولة بعد قليل." });
+    }
+
+    // 4. إرسال الطلب البرمجي إلى أم دراهم
+    try {
+        const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', {
+            "AC": 4,                    // كود إجراء الباقات
+            "ACT": Number(actionType) || 1, // 1 لإضافة باقة جديدة، 2 للتجديد
+            "PSI": Number(serviceId),
+            "OFFER_ID": String(offerId),
+            "NUM": String(mobileNumber),
+            "TRANID": referenceId       // إرسال الرقم المرجعي الفريد لحماية الطلب
+        }, {
+            headers: {
+                'Authorization': `Bearer ${cachedMdarahimToken}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 35000
+        });
+
+        const result = response.data;
+
+        if (result && result.RC === 1) { // نجاح العملية بنجاح كامل
+            newTxn.status = 'ناجحة ✅';
+            await newTxn.save();
+
+            const nTitle = "نجاح تفعيل الباقة ⚡";
+            const nBody = `تم تفعيل ${serviceName || 'الباقة المطلوبة'} للرقم ${mobileNumber} بنجاح.`;
+            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
+            sendPushNotification(phone, nTitle, nBody);
+
+            return res.json({ success: true, currentBal: user.bal });
+
+        } else if (result && (result.RC === 2 || result.RC === -1)) { // العملية معلقة في السيرفر
+            newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
+            await newTxn.save();
+            return res.json({ success: false, message: "العملية معلقة لدى المزود، سيتم تحديثها تلقائياً." });
+
+        } else { // فشل الطلب من المزود (مثل رقم غلط أو خدمة متوقفة)، نعيد الرصيد للمستخدم
+            user.bal += Number(price);
+            await user.save();
+            newTxn.status = 'فاشلة ❌';
+            newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
+            await newTxn.save();
+            return res.json({ success: false, message: result ? result.RD : "تم رفض الطلب من قبل نظام المزود." });
+        }
+
+    } catch (error) { // في حالة انقطاع الاتصال أو التايم آوت، نضعها معلقة للمراجعة والتدقيق
+        newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
+        newTxn.errorCode = 'TIMEOUT_ERROR';
+        await newTxn.save();
+        return res.json({ success: false, message: "العملية قيد المعالجة الآن، يرجى مراجعة سجل العمليات بعد قليل." });
+    }
+});
+
+
+// ==========================================
 // 💼 مسارات الإدارة (Admin APIs) لخدمة الواجهة المنفصلة
 // ==========================================
 app.get('/api/admin/stats', async (req, res) => {
@@ -524,19 +651,16 @@ app.post('/api/admin/ad/delete', async (req, res) => {
     res.json({ success: true });
 });
 
-// المسار المحدث لإرسال الرسائل الفردية والجماعية مع دعم الصورة المباشرة (imageUrl)
 app.post('/api/messages/send', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    const { receiver, title, body, imageUrl } = req.body; // استقبال imageUrl بشكل اختياري
+    const { receiver, title, body, imageUrl } = req.body; 
 
-    // حفظ الرسالة في سجل العميل ضمن قاعدة البيانات
     await new Message({ receiver, title, body, imageUrl: imageUrl || "" }).save();
 
     if (receiver === 'ALL') {
         const devices = await DeviceToken.find({});
         const tokens = devices.map(d => d.token);
         if (tokens.length > 0) {
-            // الإرسال الجماعي المحدث المتوافق مع الجافا
             await admin.messaging().sendEachForMulticast({
                 notification: {
                     title,
@@ -560,7 +684,6 @@ app.post('/api/messages/send', async (req, res) => {
             });
         }
     } else {
-        // الإرسال الفردي المحدث من خلال الدالة الأساسية
         await sendPushNotification(receiver, title, body, imageUrl);
     }
     res.json({ success: true });
@@ -595,11 +718,12 @@ app.get('/admin', (req, res) => {
 });
 
 // ==========================================
-// 🚀 بدء التشغيل
+// 🚀 بدء تشغيل السيرفر وتفعيل الاتصال التلقائي
 // ==========================================
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
-    console.log(`🔗 الربط الحالي: Mega Center API V1.3`);
+    console.log(`🔗 الربط الحالي: Mega Center V1.3 & MDarahim API V1.0`);
+    
+    // تفعيل التحديث التلقائي للتوكن الخاص بأم دراهم فور إقلاع السيرفر
+    initializeMdarahimAuth();
 });
-
-

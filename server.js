@@ -867,6 +867,33 @@ app.get('/admin', (req, res) => {
 // ==========================================
 // 🚀 بدء تشغيل السيرفر
 // ==========================================
+// ==========================================
+// 🛠️ مسار أدمن لإضافة وتحديث باقات أم دراهم يدوياً في القاعدة
+// ==========================================
+app.post('/api/admin/mdarahim/save-packages', async (req, res) => {
+    const { adminPass, packages } = req.body;
+
+    if (adminPass !== ADMIN_SECRET_KEY) {
+        return res.status(401).json({ success: false, message: "كلمة مرور الأدمن غير صحيحة" });
+    }
+
+    if (!Array.isArray(packages) || packages.length === 0) {
+        return res.status(400).json({ success: false, message: "يجب إرسال مصفوفة باقات صحيحة" });
+    }
+
+    try {
+        // تفريغ الباقات القديمة وإدخال الجديدة لتحديث القائمة فوراً
+        await MdarahimPackage.deleteMany({});
+        await MdarahimPackage.insertMany(packages);
+
+        console.log(`📌 [أم دراهم] تم تحديث وحفظ (${packages.length}) باقة في قاعدة البيانات بنجاح.`);
+        return res.json({ success: true, message: `تم حفظ ${packages.length} باقة بنجاح في النظام!` });
+    } catch (error) {
+        console.error("❌ خطأ في حفظ الباقات:", error.message);
+        return res.status(500).json({ success: false, message: "حدث خطأ أثناء حفظ الباقات في قاعدة البيانات", error: error.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();

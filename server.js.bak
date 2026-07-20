@@ -140,23 +140,11 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
         const tokens = devices.map(d => d.token);
 
         const message = {
-            notification: {
-                title: title,
-                body: body,
-                ...(imageUrl && { imageUrl: imageUrl })
-            },
-            data: {
-                title: title,
-                body: body,
-                imageUrl: imageUrl || ""
-            },
+            notification: { title, body, ...(imageUrl && { imageUrl }) },
+            data: { title, body, imageUrl: imageUrl || "" },
             android: {
                 priority: 'high',
-                notification: {
-                    channelId: "messages_channel",
-                    sound: "default",
-                    clickAction: 'OPEN_ACTIVITY_1'
-                }
+                notification: { channelId: "messages_channel", sound: "default", clickAction: 'OPEN_ACTIVITY_1' }
             },
             tokens: tokens
         };
@@ -208,7 +196,6 @@ function makeEmbedUrl(url) {
 // ==========================================
 let cachedMdarahimToken = null;
 
-// دالة الدخول التلقائي لتحديث توكن أم دراهم وتخزينه في الذاكرة
 async function initializeMdarahimAuth() {
     const url = 'https://www.mdarahim.net/logins';
     const params = new URLSearchParams();
@@ -227,22 +214,17 @@ async function initializeMdarahimAuth() {
         }
     } catch (error) {
         console.error('❌ [أم دراهم] خطأ في تحديث توكن الدخول التلقائي:', error.response ? error.response.data : error.message);
-        // إعادة المحاولة بعد دقيقة إذا فشل الاتصال الأول بالسيرفر
         setTimeout(initializeMdarahimAuth, 60000);
     }
 }
 
-// جدولة تجديد التوكن تلقائياً كل 23 ساعة بالخلفية
+// تجديد التوكن تلقائياً كل 23 ساعة
 setInterval(initializeMdarahimAuth, 23 * 60 * 60 * 1000);
 
-
 // ==========================================
-// 🚀 المسارات المحدثة والنهائية لنظام أم دراهم
+// 🚀 المسارات الخاصة بنظام أم دراهم
 // ==========================================
 
-/**
- * 1️⃣ مسار الشحن والتسديد المباشر للباقات والخدمات (AC: 1)
- */
 app.post('/api/mdarahim/packages', async (req, res) => {
     const { phone, price, serviceId, offerId, mobileNumber, serviceName } = req.body;
 
@@ -251,13 +233,11 @@ app.post('/api/mdarahim/packages', async (req, res) => {
     }
 
     try {
-        // التحقق من رصيد العميل داخل تطبيقك أولاً
         const user = await User.findOne({ phone });
         if (!user || user.bal < Number(price)) {
             return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لتفعيل هذه الباقة" });
         }
 
-        // خصم المبلغ مبدئياً وتوليد المعاملة لحفظ السجل
         user.bal -= Number(price);
         await user.save();
 
@@ -274,14 +254,13 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         });
         await newTxn.save();
 
-        // حماية ضد الـ null: إذا استيقظ السيرفر وكان التوكن فارغاً
         if (!cachedMdarahimToken) {
             console.log("⚠️ التوكن غير موجود، جاري محاولة جلب توكن سريع...");
             await initializeMdarahimAuth();
         }
 
         if (!cachedMdarahimToken) {
-            user.bal += Number(price); // إعادة المبلغ للعميل
+            user.bal += Number(price);
             await user.save();
             newTxn.status = 'فاشلة ❌';
             newTxn.errorCode = 'TOKEN_MISSING';
@@ -289,10 +268,9 @@ app.post('/api/mdarahim/packages', async (req, res) => {
             return res.json({ success: false, message: "جاري تهيئة الاتصال بالمزود، يرجى المحاولة بعد قليل." });
         }
 
-        // إرسال طلب الشحن المباشر والتسديد (AC: 1) إلى أم دراهم
         try {
             const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', {
-                "AC": 1,                        // كود إجراء التسديد والشحن المباشر
+                "AC": 1,
                 "PSI": Number(serviceId),       
                 "AMT": Number(price),           
                 "OFFER_ID": String(offerId),    
@@ -309,7 +287,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
 
             const result = response.data;
 
-            if (result && result.RC === 1) { // نجاح العملية بالكامل
+            if (result && result.RC === 1) {
                 newTxn.status = 'ناجحة ✅';
                 await newTxn.save();
 
@@ -320,12 +298,12 @@ app.post('/api/mdarahim/packages', async (req, res) => {
 
                 return res.json({ success: true, currentBal: user.bal });
 
-            } else if (result && (result.RC === 2 || result.RC === -1)) { // العملية معلقة في سيرفر المزود
+            } else if (result && (result.RC === 2 || result.RC === -1)) {
                 newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
                 await newTxn.save();
                 return res.json({ success: false, message: "العملية معلقة لدى المزود، سيتم مراجعتها وتحديثها." });
 
-            } else { // فشل الطلب من المزود (رصيدك غير كافي أو رقم غير صحيح)، نعيد الرصيد للمستخدم داخل التطبيق
+            } else {
                 user.bal += Number(price);
                 await user.save();
                 newTxn.status = 'فاشلة ❌';
@@ -334,9 +312,10 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 return res.json({ success: false, message: result ? result.RD : "تم رفض الطلب من قبل نظام المزود." });
             }
 
-        } catch (error) { // في حالة انقطاع الاتصال أو التايم آوت
+        } catch (error) {
             if (error.response && error.response.status === 401) {
-                cachedMdarahimToken = null; // تصفير التوكن الميت ليعاد جلب توكن جديد في العملية التالية
+                cachedMdarahimToken = null;
+                initializeMdarahimAuth(); // طلب توكن جديد فوراً في الخلفية
             }
             newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
             newTxn.errorCode = 'TIMEOUT_ERROR';
@@ -350,18 +329,13 @@ app.post('/api/mdarahim/packages', async (req, res) => {
     }
 });
 
-/**
- * 2️⃣ مسار موحد ومرن لعمليات استعلام العروض والرصيد (AC: 3 و AC: 8)
- */
 app.post('/api/mdarahim/action', async (req, res) => {
     const requestBody = req.body;
-
     if (!requestBody || !requestBody.AC) {
         return res.status(400).json({ success: false, message: "بيانات الطلب غير مكتملة، يجب إرسال AC" });
     }
 
     if (!cachedMdarahimToken) {
-        console.log("⚠️ التوكن غير موجود، جاري محاولة جلب توكن سريع...");
         await initializeMdarahimAuth();
     }
 
@@ -378,31 +352,24 @@ app.post('/api/mdarahim/action', async (req, res) => {
             },
             timeout: 25000
         });
-
         return res.json({ success: true, result: response.data });
-
     } catch (error) {
         if (error.response && error.response.status === 401) {
             cachedMdarahimToken = null;
+            initializeMdarahimAuth();
         }
-        return res.status(500).json({ 
-            success: false, 
-            message: "حدث خطأ أثناء الاتصال بسيرفر أم دراهم الموحد",
-            error: error.message 
-        });
+        return res.status(500).json({ success: false, message: "حدث خطأ أثناء الاتصال بسيرفر أم دراهم الموحد", error: error.message });
     }
 });
 
-
 // ==========================================
-// 🌐 مسارات العميل والربط (APIs)
+// 🌐 مسارات العميل الأساسية
 // ==========================================
 app.post('/api/register-token', async (req, res) => {
     const { token, user_id } = req.body;
     if (!token || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
     try {
         await DeviceToken.findOneAndUpdate({ token }, { phone: user_id, token }, { upsert: true, new: true });
-        console.log(`📱 [نظام] تم تسجيل رمز جهاز جديد للهاتف: ${user_id}`);
         res.json({ success: true, message: "تم تسجيل جهازك في نظام الإشعارات" });
     } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
@@ -561,7 +528,6 @@ app.post('/api/games/topup', async (req, res) => {
 
 app.post('/api/mega-webhook', async (req, res) => {
     const { reference, orderid, status, result } = req.body;
-    console.log(`📥 تحديث ويب هوك مستلم للعملية المرجعية: ${reference}, الحالة: ${status}`);
     try {
         const txn = await Transaction.findOne({ referenceId: reference });
         if (!txn) return res.status(404).json({ success: false, message: "العملية غير موجودة" });
@@ -604,80 +570,72 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📋 مسار جلب خدمات وباقات أم دراهم (MDarahim Get Services)
+// 📋 مسار جلب باقات أم دراهم
 // ==========================================
 let cachedMdarahimServices = null;
 let lastMdarahimFetchTime = 0;
 
 app.get('/api/mdarahim/services', async (req, res) => {
     const currentTime = Date.now();
-
     if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
         return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
     }
 
     if (!cachedMdarahimToken) {
-        if (cachedMdarahimServices) {
-            return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة - السيرفر جاري تحديث اتصاله" });
-        }
-        return res.status(500).json({ success: false, message: "جاري تهيئة الاتصال بمزود الخدمة، يرجى المحاولة بعد قليل" });
+        if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
+        return res.status(500).json({ success: false, message: "جاري تهيئة الاتصال بمزود الخدمة..." });
     }
 
     try {
         const response = await axios.get('https://www.mdarahim.net/api/ac/v1/getservices', {
-            headers: {
-                'Authorization': `Bearer ${cachedMdarahimToken}`,
-                'Accept': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${cachedMdarahimToken}`, 'Accept': 'application/json' },
             timeout: 20000 
         });
-
         if (response.data) {
             cachedMdarahimServices = response.data;
             lastMdarahimFetchTime = currentTime;
             return res.json({ success: true, services_list: cachedMdarahimServices });
         }
-
-        if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
         res.json({ success: false, message: "فشل تحديث قائمة الخدمات من المزود" });
-
     } catch (error) {
-        console.error('❌ [أم دراهم] خطأ في جلب البيانات:', error.message);
-        if (cachedMdarahimServices) {
-            return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة بسبب خطأ اتصال بالشبكة" });
-        }
+        if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
         res.status(500).json({ success: false, message: "خطأ في الاتصال بسيرفر أم دراهم" });
     }
 });
 
-
 // ==========================================
-// 💼 مسارات الإدارة (Admin APIs) لخدمة الواجهة المنفصلة
+// 💼 مسارات لوحة التحكم والإدارة (Admin APIs)
 // ==========================================
 app.get('/api/admin/stats', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    res.json({
-        productsCount: await Product.countDocuments(),
-        usersCount: await User.countDocuments(),
-        pendingOrders: await Order.countDocuments({ status: 'قيد المراجعة ⏳' }),
-        categoriesCount: await Category.countDocuments()
-    });
+    try {
+        res.json({
+            productsCount: await Product.countDocuments(),
+            usersCount: await User.countDocuments(),
+            pendingOrders: await Order.countDocuments({ status: 'قيد المراجعة ⏳' }),
+            categoriesCount: await Category.countDocuments()
+        });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/admin/users', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    const users = await User.find({}).sort({ _id: -1 });
-    const result = await Promise.all(users.map(async u => {
-        const t = await DeviceToken.findOne({ phone: u.phone });
-        return { id: u._id, name: u.name, phone: u.phone, balance: u.bal, joinDate: u.joinDate, token: t ? t.token : null };
-    }));
-    res.json(result);
+    try {
+        const users = await User.find({}).sort({ _id: -1 });
+        const result = await Promise.all(users.map(async u => {
+            const t = await DeviceToken.findOne({ phone: u.phone });
+            return { id: u._id, name: u.name, phone: u.phone, balance: u.bal, joinDate: u.joinDate, token: t ? t.token : null };
+        }));
+        res.json(result);
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/admin/users/delete', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    await User.findByIdAndDelete(req.body.id);
-    res.json({ success: true });
+    try {
+        await User.findByIdAndDelete(req.body.id);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/admin/user/update-balance', async (req, res) => {
@@ -697,134 +655,149 @@ app.post('/api/admin/user/update-balance', async (req, res) => {
 
 app.get('/api/admin/categories', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    res.json(await Category.find({}).sort({ _id: -1 }));
+    try { res.json(await Category.find({}).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/admin/category/add', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    await new Category({ name: req.body.name, sub: req.body.sub, img: req.body.img }).save();
-    res.json({ success: true });
+    try {
+        await new Category({ name: req.body.name, sub: req.body.sub, img: req.body.img }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/admin/category/delete', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    await Category.findByIdAndDelete(req.body.id);
-    res.json({ success: true });
+    try {
+        await Category.findByIdAndDelete(req.body.id);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/admin/products', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    res.json(await Product.find({}).sort({ _id: -1 }));
+    try { res.json(await Product.find({}).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/admin/products/add', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    await new Product({ name: req.body.name, price: Number(req.body.price), img: req.body.image, cat: req.body.cat }).save();
-    res.json({ success: true });
+    try {
+        await new Product({ name: req.body.name, price: Number(req.body.price), img: req.body.image, cat: req.body.cat }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/admin/products/delete', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    await Product.findByIdAndDelete(req.body.id);
-    res.json({ success: true });
+    try {
+        await Product.findByIdAndDelete(req.body.id);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/admin/orders', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    res.json(await Order.find({}).sort({ _id: -1 }));
+    try { res.json(await Order.find({}).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/admin/orders/update-status', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    const order = await Order.findOneAndUpdate({ id: req.body.id }, { status: req.body.status }, { new: true });
-    if (order) sendPushNotification(order.phone, "تحديث حالة الطلب 📦", `طلبك رقم ${req.body.id} أصبح: ${req.body.status}`);
-    res.json({ success: true });
+    try {
+        const order = await Order.findOneAndUpdate({ id: req.body.id }, { status: req.body.status }, { new: true });
+        if (order) sendPushNotification(order.phone, "تحديث حالة الطلب 📦", `طلبك رقم ${req.body.id} أصبح: ${req.body.status}`);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/admin/transactions', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    res.json(await Transaction.find({}).sort({ _id: -1 }));
+    try { res.json(await Transaction.find({}).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/admin/ads', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    res.json(await Ad.find({}).sort({ _id: -1 }));
+    try { res.json(await Ad.find({}).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/admin/ad/add', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    const embed = makeEmbedUrl(req.body.videoUrl);
-    await Ad.updateMany({}, { active: false });
-    await new Ad({ videoUrl: embed, active: true }).save();
-    res.json({ success: true });
+    try {
+        const embed = makeEmbedUrl(req.body.videoUrl);
+        await Ad.updateMany({}, { active: false });
+        await new Ad({ videoUrl: embed, active: true }).save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/admin/ad/delete', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    await Ad.findByIdAndDelete(req.body.id);
-    res.json({ success: true });
+    try {
+        await Ad.findByIdAndDelete(req.body.id);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/messages/send', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     const { receiver, title, body, imageUrl } = req.body;
 
-    await new Message({ receiver, title, body, imageUrl: imageUrl || "" }).save();
+    try {
+        await new Message({ receiver, title, body, imageUrl: imageUrl || "" }).save();
 
-    if (receiver === 'ALL') {
-        const devices = await DeviceToken.find({});
-        const tokens = devices.map(d => d.token);
-        if (tokens.length > 0) {
-            await admin.messaging().sendEachForMulticast({
-                notification: {
-                    title,
-                    body,
-                    ...(imageUrl && { imageUrl: imageUrl })
-                },
-                data: {
-                    title,
-                    body,
-                    imageUrl: imageUrl || ""
-                },
-                android: {
-                    priority: 'high',
-                    notification: {
-                        channelId: "messages_channel",
-                        sound: "default",
-                        clickAction: 'OPEN_ACTIVITY_1'
-                    }
-                },
-                tokens
-            });
+        if (receiver === 'ALL') {
+            const devices = await DeviceToken.find({});
+            const tokens = devices.map(d => d.token);
+            
+            // حل مشكلة الـ 500 تيكت الأقصى لـ Firebase بتقسيم المصفوفة
+            const chunkSize = 500;
+            for (let i = 0; i < tokens.length; i += chunkSize) {
+                const chunk = tokens.slice(i, i + chunkSize);
+                await admin.messaging().sendEachForMulticast({
+                    notification: { title, body, ...(imageUrl && { imageUrl }) },
+                    data: { title, body, imageUrl: imageUrl || "" },
+                    android: {
+                        priority: 'high',
+                        notification: { channelId: "messages_channel", sound: "default", clickAction: 'OPEN_ACTIVITY_1' }
+                    },
+                    tokens: chunk
+                });
+            }
+        } else {
+            await sendPushNotification(receiver, title, body, imageUrl);
         }
-    } else {
-        await sendPushNotification(receiver, title, body, imageUrl);
+        res.json({ success: true });
+    } catch (error) {
+        console.error("❌ خطأ إرسال الإشعارات من لوحة التحكم:", error.message);
+        res.status(500).json({ success: false, error: error.message });
     }
-    res.json({ success: true });
 });
 
 app.get('/api/admin/tokens', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    res.json(await DeviceToken.find({}).sort({ _id: -1 }));
+    try { res.json(await DeviceToken.find({}).sort({ _id: -1 })); } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/admin/settings', async (req, res) => {
     if (req.query.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ error: "غير مصرح به" });
-    let config = await AppSetting.findOne();
-    if (!config) { config = new AppSetting(); await config.save(); }
-    res.json(config);
+    try {
+        let config = await AppSetting.findOne();
+        if (!config) { config = new AppSetting(); await config.save(); }
+        res.json(config);
+    } catch (e) { res.status(500).json({}); }
 });
 
 app.post('/api/admin/settings/update', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    let config = await AppSetting.findOne();
-    if (!config) config = new AppSetting();
-    config.appName = req.body.appName;
-    config.whatsappSupport = req.body.whatsappSupport;
-    config.appVersion = req.body.appVersion;
-    config.maintenanceMode = req.body.maintenanceMode;
-    await config.save();
-    res.json({ success: true });
+    try {
+        let config = await AppSetting.findOne();
+        if (!config) config = new AppSetting();
+        config.appName = req.body.appName;
+        config.whatsappSupport = req.body.whatsappSupport;
+        config.appVersion = req.body.appVersion;
+        config.maintenanceMode = req.body.maintenanceMode;
+        await config.save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/admin', (req, res) => {
@@ -832,13 +805,11 @@ app.get('/admin', (req, res) => {
 });
 
 // ==========================================
-// 🚀 بدء تشغيل السيرفر وتفعيل الاتصال التلقائي
+// 🚀 بدء تشغيل السيرفر
 // ==========================================
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     console.log(`🔗 الربط الحالي: Mega Center V1.3 & MDarahim API V1.0`);
-
-    // تفعيل التحديث التلقائي للتوكن الخاص بأم دراهم فور إقلاع السيرفر
     initializeMdarahimAuth();
 });
 

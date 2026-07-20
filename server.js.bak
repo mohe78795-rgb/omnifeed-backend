@@ -98,7 +98,7 @@ const Message = mongoose.model('Message', new mongoose.Schema({
     receiver: { type: String, required: true },
     title: { type: String, required: true },
     body: { type: String, required: true },
-    imageUrl: { type: String, default: "" }, 
+    imageUrl: { type: String, default: "" },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }));
 
@@ -143,7 +143,7 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
             notification: {
                 title: title,
                 body: body,
-                ...(imageUrl && { imageUrl: imageUrl }) 
+                ...(imageUrl && { imageUrl: imageUrl })
             },
             data: {
                 title: title,
@@ -234,6 +234,158 @@ async function initializeMdarahimAuth() {
 
 // جدولة تجديد التوكن تلقائياً كل 23 ساعة بالخلفية
 setInterval(initializeMdarahimAuth, 23 * 60 * 60 * 1000);
+
+
+// ==========================================
+// 🚀 المسارات المحدثة والنهائية لنظام أم دراهم
+// ==========================================
+
+/**
+ * 1️⃣ مسار الشحن والتسديد المباشر للباقات والخدمات (AC: 1)
+ */
+app.post('/api/mdarahim/packages', async (req, res) => {
+    const { phone, price, serviceId, offerId, mobileNumber, serviceName } = req.body;
+
+    if (!phone || !price || !serviceId || !offerId || !mobileNumber) {
+        return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
+    }
+
+    // التحقق من رصيد العميل داخل تطبيقك أولاً
+    const user = await User.findOne({ phone });
+    if (!user || user.bal < Number(price)) {
+        return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لتفعيل هذه الباقة" });
+    }
+
+    // خصم المبلغ مبدئياً وتوليد المعاملة لحفظ السجل
+    user.bal -= Number(price);
+    await user.save();
+
+    const referenceId = 'MD-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+    const newTxn = new Transaction({
+        userId: user._id,
+        phone,
+        type: 'package',
+        targetId: mobileNumber,
+        serviceId: String(serviceId),
+        serviceName: serviceName || 'باقات ومزايا',
+        price: Number(price),
+        referenceId: referenceId
+    });
+    await newTxn.save();
+
+    // حماية ضد الـ null: إذا استيقظ السيرفر وكان التوكن فارغاً
+    if (!cachedMdarahimToken) {
+        console.log("⚠️ التوكن غير موجود، جاري محاولة جلب توكن سريع...");
+        await initializeMdarahimAuth();
+    }
+
+    if (!cachedMdarahimToken) {
+        user.bal += Number(price); // إعادة المبلغ للعميل
+        await user.save();
+        newTxn.status = 'فاشلة ❌';
+        newTxn.errorCode = 'TOKEN_MISSING';
+        await newTxn.save();
+        return res.json({ success: false, message: "جاري تهيئة الاتصال بالمزود، يرجى المحاولة بعد قليل." });
+    }
+
+    // إرسال طلب الشحن المباشر والتسديد (AC: 1) إلى أم دراهم
+    try {
+        const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', {
+            "AC": 1,                        // كود إجراء التسديد والشحن المباشر
+            "PSI": Number(serviceId),       
+            "AMT": Number(price),           
+            "OFFER_ID": String(offerId),    
+            "NUM": String(mobileNumber),    
+            "TRANID": referenceId           
+        }, {
+            headers: {
+                'Authorization': `Bearer ${cachedMdarahimToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            timeout: 35000
+        });
+
+        const result = response.data;
+
+        if (result && result.RC === 1) { // نجاح العملية بالكامل
+            newTxn.status = 'ناجحة ✅';
+            await newTxn.save();
+
+            const nTitle = "نجاح تفعيل الباقة ⚡";
+            const nBody = `تم شحن وتسديد ${serviceName || 'الباقة المطلوبة'} للرقم ${mobileNumber} بنجاح.`;
+            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
+            sendPushNotification(phone, nTitle, nBody);
+
+            return res.json({ success: true, currentBal: user.bal });
+
+        } else if (result && (result.RC === 2 || result.RC === -1)) { // العملية معلقة في سيرفر المزود
+            newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
+            await newTxn.save();
+            return res.json({ success: false, message: "العملية معلقة لدى المزود، سيتم مراجعتها وتحديثها." });
+
+        } else { // فشل الطلب من المزود (رصيدك غير كافي أو رقم غير صحيح)، نعيد الرصيد للمستخدم داخل التطبيق
+            user.bal += Number(price);
+            await user.save();
+            newTxn.status = 'فاشلة ❌';
+            newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
+            await newTxn.save();
+            return res.json({ success: false, message: result ? result.RD : "تم رفض الطلب من قبل نظام المزود." });
+        }
+
+    } catch (error) { // في حالة انقطاع الاتصال أو التايم آوت
+        if (error.response && error.response.status === 401) {
+            cachedMdarahimToken = null; // تصفير التوكن الميت ليعاد جلب توكن جديد في العملية التالية
+        }
+        newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
+        newTxn.errorCode = 'TIMEOUT_ERROR';
+        await newTxn.save();
+        return res.json({ success: false, message: "العملية قيد المعالجة الآن، يرجى عدم تكرار الطلب ومراجعة السجل بعد قليل." });
+    }
+});
+
+/**
+ * 2️⃣ مسار موحد ومرن لعمليات استعلام العروض والرصيد (AC: 3 و AC: 8)
+ */
+app.post('/api/mdarahim/action', async (req, res) => {
+    const requestBody = req.body;
+
+    if (!requestBody || !requestBody.AC) {
+        return res.status(400).json({ success: false, message: "بيانات الطلب غير مكتملة، يجب إرسال AC" });
+    }
+
+    if (!cachedMdarahimToken) {
+        console.log("⚠️ التوكن غير موجود، جاري محاولة جلب توكن سريع...");
+        await initializeMdarahimAuth();
+    }
+
+    if (!cachedMdarahimToken) {
+        return res.status(500).json({ success: false, message: "فشل تهيئة الاتصال بمزود الخدمة، التوكن غير متوفر حالياً." });
+    }
+
+    try {
+        const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', requestBody, {
+            headers: {
+                'Authorization': `Bearer ${cachedMdarahimToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            timeout: 25000
+        });
+
+        return res.json({ success: true, result: response.data });
+
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            cachedMdarahimToken = null;
+        }
+        return res.status(500).json({ 
+            success: false, 
+            message: "حدث خطأ أثناء الاتصال بسيرفر أم دراهم الموحد",
+            error: error.message 
+        });
+    }
+});
 
 
 // ==========================================
@@ -442,7 +594,7 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📋 مسار جلب خدمات وباقات أم دراهم المطور (المقاوم لوضع النوم)
+// 📋 مسار جلب خدمات وباقات أم دراهم (MDarahim Get Services)
 // ==========================================
 let cachedMdarahimServices = null;
 let lastMdarahimFetchTime = 0;
@@ -450,40 +602,29 @@ let lastMdarahimFetchTime = 0;
 app.get('/api/mdarahim/services', async (req, res) => {
     const currentTime = Date.now();
 
-    // 1. إذا كانت البيانات متوفرة في الذاكرة المؤقتة ولم يمر عليها 30 دقيقة، نرسلها فوراً
     if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
         return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
     }
 
-    // 2. حل مشكلة الـ null: إذا استيقظ السيرفر وكان التوكن فارغاً، نحاول جلب التوكن فوراً قبل إظهار الخطأ
-    if (!cachedMdarahimToken) {
-        console.log("⚠️ التوكن غير موجود (احتمال بسبب إقلاع السيرفر)، جاري محاولة جلب توكن سريع...");
-        await initializeMdarahimAuth(); // انتظر حتى ينتهي جلب التوكن أولاً
-    }
-
-    // 3. التحقق النهائي بعد محاولة التحديث الفورية
     if (!cachedMdarahimToken) {
         if (cachedMdarahimServices) {
-            return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة - السيرفر فشل في تحديث التوكن حالياً" });
+            return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة - السيرفر جاري تحديث اتصاله" });
         }
-        return res.status(500).json({ success: false, message: "فشل الاتصال بمزود الخدمة. يرجى التحقق من بيانات الحساب أو سجل العمليات (Logs)." });
+        return res.status(500).json({ success: false, message: "جاري تهيئة الاتصال بمزود الخدمة، يرجى المحاولة بعد قليل" });
     }
 
-    // 4. جلب البيانات برمجياً من سيرفر أم دراهم
     try {
         const response = await axios.get('https://www.mdarahim.net/api/ac/v1/getservices', {
             headers: {
                 'Authorization': `Bearer ${cachedMdarahimToken}`,
                 'Accept': 'application/json'
             },
-            timeout: 25000 // رفع المهلة لـ 25 ثانية لتفادي بطء الاستضافة المجانية
+            timeout: 20000 
         });
 
         if (response.data) {
-            // تخزين البيانات في الذاكرة وتحديث وقت الجلب
             cachedMdarahimServices = response.data;
             lastMdarahimFetchTime = currentTime;
-
             return res.json({ success: true, services_list: cachedMdarahimServices });
         }
 
@@ -492,110 +633,10 @@ app.get('/api/mdarahim/services', async (req, res) => {
 
     } catch (error) {
         console.error('❌ [أم دراهم] خطأ في جلب البيانات:', error.message);
-
-        // إذا انتهت صلاحية التوكن بشكل مفاجئ (Unauthorized)، نصفر التوكن ليعاد جلبه تلقائياً في الطلب القادم
-        if (error.response && error.response.status === 401) {
-            cachedMdarahimToken = null;
-        }
-
-        // في حال حدوث خطأ في الشبكة، إذا كان لدينا نسخة قديمة مخزنة نرسلها للعميل بدلاً من إظهار شاشة بيضاء
         if (cachedMdarahimServices) {
             return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة بسبب خطأ اتصال بالشبكة" });
         }
         res.status(500).json({ success: false, message: "خطأ في الاتصال بسيرفر أم دراهم" });
-    }
-});
-
-
-app.post('/api/mdarahim/packages', async (req, res) => {
-    const { phone, price, serviceId, offerId, actionType, mobileNumber, serviceName } = req.body;
-    
-    if (!phone || !price || !serviceId || !offerId || !mobileNumber) {
-        return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
-    }
-
-    // 1. التحقق من رصيد العميل داخل تطبيقك أولاً
-    const user = await User.findOne({ phone });
-    if (!user || user.bal < Number(price)) {
-        return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لتفعيل هذه الباقة" });
-    }
-
-    // 2. خصم المبلغ مبدئياً وتوليد المعاملة لحفظ السجل
-    user.bal -= Number(price);
-    await user.save();
-
-    const referenceId = 'MD-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-    const newTxn = new Transaction({
-        userId: user._id,
-        phone,
-        type: 'package', 
-        targetId: mobileNumber, 
-        serviceId: String(serviceId),
-        serviceName: serviceName || 'باقات ومزايا',
-        price: Number(price),
-        referenceId: referenceId
-    });
-    await newTxn.save();
-
-    // 3. التحقق من جاهزية توكن الاتصال بأم دراهم
-    if (!cachedMdarahimToken) {
-        user.bal += Number(price); // إعادة المبلغ للعميل
-        await user.save();
-        newTxn.status = 'فاشلة ❌';
-        newTxn.errorCode = 'TOKEN_MISSING';
-        await newTxn.save();
-        return res.json({ success: false, message: "جاري تهيئة الاتصال بالمزود، يرجى المحاولة بعد قليل." });
-    }
-
-    // 4. إرسال الطلب البرمجي إلى أم دراهم
-    try {
-        const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', {
-            "AC": 4,                    // كود إجراء الباقات
-            "ACT": Number(actionType) || 1, // 1 لإضافة باقة جديدة، 2 للتجديد
-            "PSI": Number(serviceId),
-            "OFFER_ID": String(offerId),
-            "NUM": String(mobileNumber),
-            "TRANID": referenceId       // إرسال الرقم المرجعي الفريد لحماية الطلب
-        }, {
-            headers: {
-                'Authorization': `Bearer ${cachedMdarahimToken}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: 35000
-        });
-
-        const result = response.data;
-
-        if (result && result.RC === 1) { // نجاح العملية بنجاح كامل
-            newTxn.status = 'ناجحة ✅';
-            await newTxn.save();
-
-            const nTitle = "نجاح تفعيل الباقة ⚡";
-            const nBody = `تم تفعيل ${serviceName || 'الباقة المطلوبة'} للرقم ${mobileNumber} بنجاح.`;
-            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
-            sendPushNotification(phone, nTitle, nBody);
-
-            return res.json({ success: true, currentBal: user.bal });
-
-        } else if (result && (result.RC === 2 || result.RC === -1)) { // العملية معلقة في السيرفر
-            newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
-            await newTxn.save();
-            return res.json({ success: false, message: "العملية معلقة لدى المزود، سيتم تحديثها تلقائياً." });
-
-        } else { // فشل الطلب من المزود (مثل رقم غلط أو خدمة متوقفة)، نعيد الرصيد للمستخدم
-            user.bal += Number(price);
-            await user.save();
-            newTxn.status = 'فاشلة ❌';
-            newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
-            await newTxn.save();
-            return res.json({ success: false, message: result ? result.RD : "تم رفض الطلب من قبل نظام المزود." });
-        }
-
-    } catch (error) { // في حالة انقطاع الاتصال أو التايم آوت، نضعها معلقة للمراجعة والتدقيق
-        newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
-        newTxn.errorCode = 'TIMEOUT_ERROR';
-        await newTxn.save();
-        return res.json({ success: false, message: "العملية قيد المعالجة الآن، يرجى مراجعة سجل العمليات بعد قليل." });
     }
 });
 
@@ -716,7 +757,7 @@ app.post('/api/admin/ad/delete', async (req, res) => {
 
 app.post('/api/messages/send', async (req, res) => {
     if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
-    const { receiver, title, body, imageUrl } = req.body; 
+    const { receiver, title, body, imageUrl } = req.body;
 
     await new Message({ receiver, title, body, imageUrl: imageUrl || "" }).save();
 
@@ -786,7 +827,9 @@ app.get('/admin', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     console.log(`🔗 الربط الحالي: Mega Center V1.3 & MDarahim API V1.0`);
-    
+
     // تفعيل التحديث التلقائي للتوكن الخاص بأم دراهم فور إقلاع السيرفر
     initializeMdarahimAuth();
 });
+
+

@@ -219,7 +219,6 @@ async function initializeMdarahimAuth() {
         const response = await axios.post(url, params, {
             headers: { 
                 'Content-Type': 'application/x-www-form-urlencoded',
-                // متصفح وهمي لتخطي حماية Cloudflare لمنع حظر خادمك
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
             timeout: 15000
@@ -228,12 +227,9 @@ async function initializeMdarahimAuth() {
         let responseData = response.data;
         let token = null;
 
-        // 1. إذا رجعت البيانات ككائن JSON جاهز
         if (typeof responseData === 'object' && responseData.access_token) {
             token = responseData.access_token;
-        } 
-        // 2. إذا رجعت البيانات كنص خام ملتصق (بسبب غياب سطر النهاية في السيرفر)
-        else if (typeof responseData === 'string') {
+        } else if (typeof responseData === 'string') {
             const match = responseData.match(/"access_token"\s*:\s*"([^"]+)"/);
             if (match && match[1]) {
                 token = match[1];
@@ -241,22 +237,41 @@ async function initializeMdarahimAuth() {
         }
 
         if (token) {
-            // تنظيف التوكن تماماً من المسافات وعلامة الـ ~ الملتصقة بالطرف
             cachedMdarahimToken = token.trim();
-            console.log('✅ [أم دراهم] تم الحصول على التوكن وتنظيفه بنجاح.');
+            console.log('✅ [أم دراهم] تم الحصول على التوكن وتنظيفه بنجاح تلقائياً.');
         } else {
-            console.error('❌ [أم دراهم] تعذر استخراج التوكن من الرد الحركي للسيرفر:', responseData);
+            console.error('❌ [أم دراهم] تعذر استخراج التوكن، يرجى تحديثه يدويًا.');
         }
 
     } catch (error) {
-        console.error('❌ [أم دراهم] خطأ في تحديث التوكن:', error.response ? error.response.data : error.message);
-        // المحاولة مرة أخرى بعد دقيقة في حال فشل السيرفر بالرد
-        setTimeout(initializeMdarahimAuth, 60000);
+        console.error('⚠️ [أم دراهم] السيرفر محظور مؤقتاً من كلويد فلير. يمكنك تحديث التوكن يدويًا عبر مسار الأدمن.');
+        // إعادة المحاولة بعد ساعة في الخلفية
+        setTimeout(initializeMdarahimAuth, 60 * 60 * 1000);
     }
 }
 
 // تشغيل التحديث التلقائي كل 23 ساعة
 setInterval(initializeMdarahimAuth, 23 * 60 * 60 * 1000);
+
+// ==========================================
+// 🛠️ مسار استقبال التوكن يدوياً (الحل الأضمن والأذكى)
+// ==========================================
+app.post('/api/admin/mdarahim/update-token', async (req, res) => {
+    const { adminPass, token } = req.body;
+    
+    if (adminPass !== ADMIN_SECRET_KEY) {
+        return res.status(401).json({ success: false, message: "كلمة مرور الأدمن غير صحيحة" });
+    }
+
+    if (!token) {
+        return res.status(400).json({ success: false, message: "يرجى إرسال التوكن" });
+    }
+
+    cachedMdarahimToken = token.trim();
+    console.log("📌 [أم دراهم] تم اعتماد التوكن الجديد وربطه بالسيرفر بنجاح بواسطة الأدمن.");
+    
+    return res.json({ success: true, message: "تم تحديث توكن أم دراهم بنجاح وسيرفرك جاهز للشحن الآن!" });
+});
 
 // ==========================================
 // 🚀 المسارات الخاصة بنظام أم دراهم

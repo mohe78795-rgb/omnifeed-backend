@@ -250,97 +250,103 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
     }
 
-    // التحقق من رصيد العميل داخل تطبيقك أولاً
-    const user = await User.findOne({ phone });
-    if (!user || user.bal < Number(price)) {
-        return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لتفعيل هذه الباقة" });
-    }
-
-    // خصم المبلغ مبدئياً وتوليد المعاملة لحفظ السجل
-    user.bal -= Number(price);
-    await user.save();
-
-    const referenceId = 'MD-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-    const newTxn = new Transaction({
-        userId: user._id,
-        phone,
-        type: 'package',
-        targetId: mobileNumber,
-        serviceId: String(serviceId),
-        serviceName: serviceName || 'باقات ومزايا',
-        price: Number(price),
-        referenceId: referenceId
-    });
-    await newTxn.save();
-
-    // حماية ضد الـ null: إذا استيقظ السيرفر وكان التوكن فارغاً
-    if (!cachedMdarahimToken) {
-        console.log("⚠️ التوكن غير موجود، جاري محاولة جلب توكن سريع...");
-        await initializeMdarahimAuth();
-    }
-
-    if (!cachedMdarahimToken) {
-        user.bal += Number(price); // إعادة المبلغ للعميل
-        await user.save();
-        newTxn.status = 'فاشلة ❌';
-        newTxn.errorCode = 'TOKEN_MISSING';
-        await newTxn.save();
-        return res.json({ success: false, message: "جاري تهيئة الاتصال بالمزود، يرجى المحاولة بعد قليل." });
-    }
-
-    // إرسال طلب الشحن المباشر والتسديد (AC: 1) إلى أم دراهم
     try {
-        const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', {
-            "AC": 1,                        // كود إجراء التسديد والشحن المباشر
-            "PSI": Number(serviceId),       
-            "AMT": Number(price),           
-            "OFFER_ID": String(offerId),    
-            "NUM": String(mobileNumber),    
-            "TRANID": referenceId           
-        }, {
-            headers: {
-                'Authorization': `Bearer ${cachedMdarahimToken}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            timeout: 35000
+        // التحقق من رصيد العميل داخل تطبيقك أولاً
+        const user = await User.findOne({ phone });
+        if (!user || user.bal < Number(price)) {
+            return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لتفعيل هذه الباقة" });
+        }
+
+        // خصم المبلغ مبدئياً وتوليد المعاملة لحفظ السجل
+        user.bal -= Number(price);
+        await user.save();
+
+        const referenceId = 'MD-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        const newTxn = new Transaction({
+            userId: user._id,
+            phone,
+            type: 'package',
+            targetId: mobileNumber,
+            serviceId: String(serviceId),
+            serviceName: serviceName || 'باقات ومزايا',
+            price: Number(price),
+            referenceId: referenceId
         });
+        await newTxn.save();
 
-        const result = response.data;
+        // حماية ضد الـ null: إذا استيقظ السيرفر وكان التوكن فارغاً
+        if (!cachedMdarahimToken) {
+            console.log("⚠️ التوكن غير موجود، جاري محاولة جلب توكن سريع...");
+            await initializeMdarahimAuth();
+        }
 
-        if (result && result.RC === 1) { // نجاح العملية بالكامل
-            newTxn.status = 'ناجحة ✅';
-            await newTxn.save();
-
-            const nTitle = "نجاح تفعيل الباقة ⚡";
-            const nBody = `تم شحن وتسديد ${serviceName || 'الباقة المطلوبة'} للرقم ${mobileNumber} بنجاح.`;
-            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
-            sendPushNotification(phone, nTitle, nBody);
-
-            return res.json({ success: true, currentBal: user.bal });
-
-        } else if (result && (result.RC === 2 || result.RC === -1)) { // العملية معلقة في سيرفر المزود
-            newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
-            await newTxn.save();
-            return res.json({ success: false, message: "العملية معلقة لدى المزود، سيتم مراجعتها وتحديثها." });
-
-        } else { // فشل الطلب من المزود (رصيدك غير كافي أو رقم غير صحيح)، نعيد الرصيد للمستخدم داخل التطبيق
-            user.bal += Number(price);
+        if (!cachedMdarahimToken) {
+            user.bal += Number(price); // إعادة المبلغ للعميل
             await user.save();
             newTxn.status = 'فاشلة ❌';
-            newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
+            newTxn.errorCode = 'TOKEN_MISSING';
             await newTxn.save();
-            return res.json({ success: false, message: result ? result.RD : "تم رفض الطلب من قبل نظام المزود." });
+            return res.json({ success: false, message: "جاري تهيئة الاتصال بالمزود، يرجى المحاولة بعد قليل." });
         }
 
-    } catch (error) { // في حالة انقطاع الاتصال أو التايم آوت
-        if (error.response && error.response.status === 401) {
-            cachedMdarahimToken = null; // تصفير التوكن الميت ليعاد جلب توكن جديد في العملية التالية
+        // إرسال طلب الشحن المباشر والتسديد (AC: 1) إلى أم دراهم
+        try {
+            const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', {
+                "AC": 1,                        // كود إجراء التسديد والشحن المباشر
+                "PSI": Number(serviceId),       
+                "AMT": Number(price),           
+                "OFFER_ID": String(offerId),    
+                "NUM": String(mobileNumber),    
+                "TRANID": referenceId           
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${cachedMdarahimToken}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                timeout: 35000
+            });
+
+            const result = response.data;
+
+            if (result && result.RC === 1) { // نجاح العملية بالكامل
+                newTxn.status = 'ناجحة ✅';
+                await newTxn.save();
+
+                const nTitle = "نجاح تفعيل الباقة ⚡";
+                const nBody = `تم شحن وتسديد ${serviceName || 'الباقة المطلوبة'} للرقم ${mobileNumber} بنجاح.`;
+                await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
+                sendPushNotification(phone, nTitle, nBody);
+
+                return res.json({ success: true, currentBal: user.bal });
+
+            } else if (result && (result.RC === 2 || result.RC === -1)) { // العملية معلقة في سيرفر المزود
+                newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
+                await newTxn.save();
+                return res.json({ success: false, message: "العملية معلقة لدى المزود، سيتم مراجعتها وتحديثها." });
+
+            } else { // فشل الطلب من المزود (رصيدك غير كافي أو رقم غير صحيح)، نعيد الرصيد للمستخدم داخل التطبيق
+                user.bal += Number(price);
+                await user.save();
+                newTxn.status = 'فاشلة ❌';
+                newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
+                await newTxn.save();
+                return res.json({ success: false, message: result ? result.RD : "تم رفض الطلب من قبل نظام المزود." });
+            }
+
+        } catch (error) { // في حالة انقطاع الاتصال أو التايم آوت
+            if (error.response && error.response.status === 401) {
+                cachedMdarahimToken = null; // تصفير التوكن الميت ليعاد جلب توكن جديد في العملية التالية
+            }
+            newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
+            newTxn.errorCode = 'TIMEOUT_ERROR';
+            await newTxn.save();
+            return res.json({ success: false, message: "العملية قيد المعالجة الآن، يرجى عدم تكرار الطلب ومراجعة السجل بعد قليل." });
         }
-        newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
-        newTxn.errorCode = 'TIMEOUT_ERROR';
-        await newTxn.save();
-        return res.json({ success: false, message: "العملية قيد المعالجة الآن، يرجى عدم تكرار الطلب ومراجعة السجل بعد قليل." });
+
+    } catch (dbError) {
+        console.error("❌ خطأ داخلي في معالجة طلب الباقة:", dbError.message);
+        return res.status(500).json({ success: false, message: "حدث خطأ داخلي في السيرفر أثناء معالجة طلبك" });
     }
 });
 
@@ -498,54 +504,58 @@ app.post('/api/games/topup', async (req, res) => {
     const { phone, price, serviceId, serviceName, user_id, type } = req.body;
     if (!phone || !price || !serviceId || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
 
-    const user = await User.findOne({ phone });
-    if (!user || user.bal < Number(price)) return res.json({ success: false, message: "رصيدك غير كافٍ" });
-
-    user.bal -= Number(price);
-    await user.save();
-
-    const referenceId = 'TMN-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-    const newTxn = new Transaction({
-        userId: user._id, phone, type: type || 'game', targetId: user_id, serviceId, serviceName, price: Number(price), referenceId
-    });
-    await newTxn.save();
-
-    const form = new FormData();
-    form.append('request', 'neworder');
-    form.append('service', String(serviceId));
-    form.append('reference', referenceId);
-    form.append('player_id', String(user_id));
-    form.append('price_check', String(price));
-
     try {
-        const response = await axios.post(MEGA_URL, form, {
-            headers: { ...form.getHeaders(), ...getMegaAuthHeader() }, timeout: 30000
+        const user = await User.findOne({ phone });
+        if (!user || user.bal < Number(price)) return res.json({ success: false, message: "رصيدك غير كافٍ" });
+
+        user.bal -= Number(price);
+        await user.save();
+
+        const referenceId = 'TMN-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        const newTxn = new Transaction({
+            userId: user._id, phone, type: type || 'game', targetId: user_id, serviceId, serviceName, price: Number(price), referenceId
         });
-        const data = response.data;
-        if (data && (data.status === true || data.status === "true")) {
-            newTxn.status = 'ناجحة ✅';
-            newTxn.megaOrderId = data.orderid;
-            await newTxn.save();
-
-            const nTitle = "نجاح الشحن الفوري ⚡";
-            const nBody = `تم تنفيذ طلب ${serviceName} للرقم ${user_id} بنجاح.`;
-            await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
-            sendPushNotification(phone, nTitle, nBody);
-
-            return res.json({ success: true, currentBal: user.bal, orderId: data.orderid });
-        } else {
-            user.bal += Number(price);
-            await user.save();
-            newTxn.status = 'فاشلة ❌';
-            newTxn.errorCode = data.code;
-            await newTxn.save();
-            return res.json({ success: false, message: getMegaErrorMessage(data.code) });
-        }
-    } catch (e) {
-        newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
-        newTxn.errorCode = 'TIMEOUT_ERROR';
         await newTxn.save();
-        return res.json({ success: false, message: "العملية قيد المعالجة، يرجى عدم تكرار الطلب ومراجعة السجل بعد دقائق." });
+
+        const form = new FormData();
+        form.append('request', 'neworder');
+        form.append('service', String(serviceId));
+        form.append('reference', referenceId);
+        form.append('player_id', String(user_id));
+        form.append('price_check', String(price));
+
+        try {
+            const response = await axios.post(MEGA_URL, form, {
+                headers: { ...form.getHeaders(), ...getMegaAuthHeader() }, timeout: 30000
+            });
+            const data = response.data;
+            if (data && (data.status === true || data.status === "true")) {
+                newTxn.status = 'ناجحة ✅';
+                newTxn.megaOrderId = data.orderid;
+                await newTxn.save();
+
+                const nTitle = "نجاح الشحن الفوري ⚡";
+                const nBody = `تم تنفيذ طلب ${serviceName} للرقم ${user_id} بنجاح.`;
+                await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
+                sendPushNotification(phone, nTitle, nBody);
+
+                return res.json({ success: true, currentBal: user.bal, orderId: data.orderid });
+            } else {
+                user.bal += Number(price);
+                await user.save();
+                newTxn.status = 'فاشلة ❌';
+                newTxn.errorCode = data.code;
+                await newTxn.save();
+                return res.json({ success: false, message: getMegaErrorMessage(data.code) });
+            }
+        } catch (e) {
+            newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
+            newTxn.errorCode = 'TIMEOUT_ERROR';
+            await newTxn.save();
+            return res.json({ success: false, message: "العملية قيد المعالجة، يرجى عدم تكرار الطلب ومراجعة السجل بعد دقائق." });
+        }
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "خطأ داخلي في النظام" });
     }
 });
 
@@ -831,5 +841,4 @@ app.listen(PORT, () => {
     // تفعيل التحديث التلقائي للتوكن الخاص بأم دراهم فور إقلاع السيرفر
     initializeMdarahimAuth();
 });
-
 

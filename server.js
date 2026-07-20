@@ -43,11 +43,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); // تقديم ملفات الإدارة الساكنة
+app.use(express.static(path.join(__dirname, 'public'))); 
 
 // ==========================================
 // 🗄️ الاتصال بقاعدة البيانات (MongoDB)
 // ==========================================
+// تأكد من ضبط اسم قاعدة البيانات النهائي في الرابط ليطابق المجلد الأب للكولكشنز الحالية
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohe78795_db_user:737465252@cluster0.qr9q8iv.mongodb.net/abu_hussein_db?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
@@ -55,13 +56,14 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
 
 // ==========================================
-// 🗃️ تعريف موديلات قاعدة البيانات (Schemas & Models)
+// 🗃️ تعريف الموديلات وتحديد أسماء الجداول بدقة (Explicit Collection Names)
 // ==========================================
+
 const DeviceToken = mongoose.model('DeviceToken', new mongoose.Schema({
     phone: { type: String, required: true },
     token: { type: String, required: true, unique: true },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}));
+}), 'devicetokens');
 
 const User = mongoose.model('User', new mongoose.Schema({
     name: { type: String, required: true },
@@ -69,20 +71,20 @@ const User = mongoose.model('User', new mongoose.Schema({
     pass: { type: String, required: true },
     bal: { type: Number, default: 0 },
     joinDate: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}));
+}), 'users');
 
 const Category = mongoose.model('Category', new mongoose.Schema({
     name: { type: String, required: true, unique: true },
     sub: String,
     img: String
-}));
+}), 'categories');
 
 const Product = mongoose.model('Product', new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
     img: { type: String, default: "" },
     cat: { type: String, required: true }
-}));
+}), 'products');
 
 const Order = mongoose.model('Order', new mongoose.Schema({
     id: { type: String, default: () => "INV-" + Math.floor(100000 + Math.random() * 900000) },
@@ -91,7 +93,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     total: Number,
     status: { type: String, default: 'قيد المراجعة ⏳' },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}));
+}), 'orders');
 
 const Message = mongoose.model('Message', new mongoose.Schema({
     sender: { type: String, default: "ADMIN" },
@@ -100,18 +102,18 @@ const Message = mongoose.model('Message', new mongoose.Schema({
     body: { type: String, required: true },
     imageUrl: { type: String, default: "" },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}));
+}), 'messages');
 
 const Ad = mongoose.model('Ad', new mongoose.Schema({
     videoUrl: { type: String, required: true },
     active: { type: Boolean, default: true },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}));
+}), 'ads');
 
 const Transaction = mongoose.model('Transaction', new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     phone: String,
-    type: { type: String, default: 'game' }, // 'game' أو 'package'
+    type: { type: String, default: 'game' }, 
     targetId: { type: String, required: true },
     serviceId: { type: String, required: true },
     serviceName: { type: String, required: true },
@@ -121,27 +123,27 @@ const Transaction = mongoose.model('Transaction', new mongoose.Schema({
     status: { type: String, default: 'قيد التنفيذ ⏳' },
     errorCode: String,
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}));
+}), 'transactions');
 
 const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
-    appName: { type: String, default: "تموينات أبو حسين" },
+    appName: { type: String, default: "تموينات أبو حين" },
     maintenanceMode: { type: Boolean, default: false },
     whatsappSupport: { type: String, default: "967737465252" },
     appVersion: { type: String, default: "1.0.0" }
-}));
+}), 'appsettings');
 
-// ✨ الموديل الجديد المضاف الخاص بباقات أم دراهم
+// ✨ تم توجيه الموديل بدقة لكولكشن mdarahimpackages الموضحة في قائمتك
 const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({
     name: { type: String, required: true },
     offerId: { type: String, required: true, unique: true },
     price: { type: Number, required: true },
-    type: { type: String },          // مثل: دفع مسبق / فوترة
-    internetType: { type: String },  // مثل: فورجي / ثريجي / الكل
+    type: { type: String },          
+    internetType: { type: String },  
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}));
+}), 'mdarahimpackages');
 
 // ==========================================
-// 📣 دالة إرسال الإشعارات الفورية (FCM) المحدثة
+// 📣 دالة إرسال الإشعارات الفورية (FCM) 
 // ==========================================
 async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
     try {
@@ -160,9 +162,9 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
         };
 
         const response = await admin.messaging().sendEachForMulticast(message);
-        console.log(`🔔 [إشعار] تم دفع الإشعار المحدث بنجاح إلى (${response.successCount}) جهاز.`);
+        console.log(`🔔 [إشعار] تم إرسال الإشعار بنجاح إلى (${response.successCount}) جهاز.`);
     } catch (error) {
-        console.error("❌ خطأ إرسال الإشعار المحدث:", error.message);
+        console.error("❌ خطأ إرسال الإشعار:", error.message);
     }
 }
 
@@ -187,7 +189,7 @@ const getMegaErrorMessage = (code) => {
         '405': 'رصيد الوكيل لا يكفي',
         '410': 'رقم المعرف (ID) غير صحيح أو الخدمة متوقفة عليه',
         '412': 'رقم المرجع (Reference) مستخدم مسبقاً',
-        '413': 'السعر المرسل لا يطابق السعر الحالي (Price Check Error)',
+        '413': 'السعر المرسل لا يطابق السعر الحالي',
         '429': 'طلبات كثيرة جداً - يرجى المحاولة بعد قليل',
         '500': 'خطأ داخلي في سيرفر المزود'
     };
@@ -215,20 +217,45 @@ async function initializeMdarahimAuth() {
 
     try {
         const response = await axios.post(url, params, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded',
+                // متصفح وهمي لتخطي حماية Cloudflare لمنع حظر خادمك
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
             timeout: 15000
         });
-        if (response.data && response.data.access_token) {
-            cachedMdarahimToken = response.data.access_token;
-            console.log('✅ [أم دراهم] تم تحديث توكن الوصول التلقائي بنجاح.');
+
+        let responseData = response.data;
+        let token = null;
+
+        // 1. إذا رجعت البيانات ككائن JSON جاهز
+        if (typeof responseData === 'object' && responseData.access_token) {
+            token = responseData.access_token;
+        } 
+        // 2. إذا رجعت البيانات كنص خام ملتصق (بسبب غياب سطر النهاية في السيرفر)
+        else if (typeof responseData === 'string') {
+            const match = responseData.match(/"access_token"\s*:\s*"([^"]+)"/);
+            if (match && match[1]) {
+                token = match[1];
+            }
         }
+
+        if (token) {
+            // تنظيف التوكن تماماً من المسافات وعلامة الـ ~ الملتصقة بالطرف
+            cachedMdarahimToken = token.trim();
+            console.log('✅ [أم دراهم] تم الحصول على التوكن وتنظيفه بنجاح.');
+        } else {
+            console.error('❌ [أم دراهم] تعذر استخراج التوكن من الرد الحركي للسيرفر:', responseData);
+        }
+
     } catch (error) {
-        console.error('❌ [أم دراهم] خطأ في تحديث توكن الدخول التلقائي:', error.response ? error.response.data : error.message);
+        console.error('❌ [أم دراهم] خطأ في تحديث التوكن:', error.response ? error.response.data : error.message);
+        // المحاولة مرة أخرى بعد دقيقة في حال فشل السيرفر بالرد
         setTimeout(initializeMdarahimAuth, 60000);
     }
 }
 
-// تجديد التوكن تلقائياً كل 23 ساعة
+// تشغيل التحديث التلقائي كل 23 ساعة
 setInterval(initializeMdarahimAuth, 23 * 60 * 60 * 1000);
 
 // ==========================================
@@ -265,7 +292,6 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         await newTxn.save();
 
         if (!cachedMdarahimToken) {
-            console.log("⚠️ التوكن غير موجود، جاري محاولة جلب توكن سريع...");
             await initializeMdarahimAuth();
         }
 
@@ -325,17 +351,16 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 cachedMdarahimToken = null;
-                initializeMdarahimAuth(); // طلب توكن جديد فوراً في الخلفية
+                initializeMdarahimAuth(); 
             }
             newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
             newTxn.errorCode = 'TIMEOUT_ERROR';
             await newTxn.save();
-            return res.json({ success: false, message: "العملية قيد المعالجة الآن، يرجى عدم تكرار الطلب ومراجعة السجل بعد قليل." });
+            return res.json({ success: false, message: "العملية قيد المعالجة الآن، يرجى مراجعة السجل بعد قليل." });
         }
 
     } catch (dbError) {
-        console.error("❌ خطأ داخلي في معالجة طلب الباقة:", dbError.message);
-        return res.status(500).json({ success: false, message: "حدث خطأ داخلي في السيرفر أثناء معالجة طلبك" });
+        return res.status(500).json({ success: false, message: "حدث خطأ داخلي في السيرفر" });
     }
 });
 
@@ -350,7 +375,7 @@ app.post('/api/mdarahim/action', async (req, res) => {
     }
 
     if (!cachedMdarahimToken) {
-        return res.status(500).json({ success: false, message: "فشل تهيئة الاتصال بمزود الخدمة، التوكن غير متوفر حالياً." });
+        return res.status(500).json({ success: false, message: "التوكن غير متوفر حالياً." });
     }
 
     try {
@@ -380,7 +405,7 @@ app.post('/api/register-token', async (req, res) => {
     if (!token || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
     try {
         await DeviceToken.findOneAndUpdate({ token }, { phone: user_id, token }, { upsert: true, new: true });
-        res.json({ success: true, message: "تم تسجيل جهازك في نظام الإشعارات" });
+        res.json({ success: true, message: "تم تسجيل جهازك بنجاح" });
     } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
@@ -529,7 +554,7 @@ app.post('/api/games/topup', async (req, res) => {
             newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
             newTxn.errorCode = 'TIMEOUT_ERROR';
             await newTxn.save();
-            return res.json({ success: false, message: "العملية قيد المعالجة، يرجى عدم تكرار الطلب ومراجعة السجل بعد دقائق." });
+            return res.json({ success: false, message: "العملية قيد المعالجة، يرجى مراجعة السجل بعد دقائق." });
         }
     } catch (err) {
         return res.status(500).json({ success: false, message: "خطأ داخلي في النظام" });
@@ -580,21 +605,21 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📋 مسار جلب باقات أم دراهم (معدل للقراءة من المونجو)
+// 📋 مسار جلب باقات أم دراهم من كولكشن mdarahimpackages المحددة
 // ==========================================
 let cachedMdarahimServices = null;
 let lastMdarahimFetchTime = 0;
 
 app.get('/api/mdarahim/services', async (req, res) => {
     try {
-        // قراءة الباقات المخزنة مباشرة من قاعدة بياناتك (MongoDB) مرتبة حسب السعر تصاعدياً
+        // يتم القراءة من كولكشن mdarahimpackages مباشرة
         const localPackages = await MdarahimPackage.find({}).sort({ price: 1 });
         
         if (localPackages && localPackages.length > 0) {
             return res.json({ success: true, services_list: localPackages, source: 'database' });
         }
 
-        // --- نظام حماية احتياطي (Fallback) في حال كانت قاعدة البيانات فارغة تماماً ---
+        // نظام حماية احتياطي (Fallback) في حال فرغت قاعدة البيانات لأي سبب
         const currentTime = Date.now();
         if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
             return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
@@ -602,7 +627,7 @@ app.get('/api/mdarahim/services', async (req, res) => {
 
         if (!cachedMdarahimToken) {
             if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
-            return res.status(500).json({ success: false, message: "جاري تهيئة الاتصال بمزود الخدمة وتعبئة البيانات..." });
+            return res.status(500).json({ success: false, message: "جاري تهيئة البيانات..." });
         }
 
         const response = await axios.get('https://www.mdarahim.net/api/ac/v1/getservices', {
@@ -615,7 +640,7 @@ app.get('/api/mdarahim/services', async (req, res) => {
             lastMdarahimFetchTime = currentTime;
             return res.json({ success: true, services_list: cachedMdarahimServices, source: 'api_fallback' });
         }
-        res.json({ success: false, message: "قائمة الخدمات فارغة حالياً في قاعدة البيانات والمزود." });
+        res.json({ success: false, message: "قائمة الخدمات فارغة." });
 
     } catch (error) {
         console.error("⚠️ خطأ في مسار جلب الباقات:", error.message);
@@ -769,7 +794,6 @@ app.post('/api/messages/send', async (req, res) => {
             const devices = await DeviceToken.find({});
             const tokens = devices.map(d => d.token);
             
-            // حل مشكلة الـ 500 تيكت الأقصى لـ Firebase بتقسيم المصفوفة
             const chunkSize = 500;
             for (let i = 0; i < tokens.length; i += chunkSize) {
                 const chunk = tokens.slice(i, i + chunkSize);
@@ -788,7 +812,7 @@ app.post('/api/messages/send', async (req, res) => {
         }
         res.json({ success: true });
     } catch (error) {
-        console.error("❌ خطأ إرسال الإشعارات من لوحة التحكم:", error.message);
+        console.error("❌ خطأ إرسال الإشعارات:", error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -830,7 +854,6 @@ app.get('/admin', (req, res) => {
 // ==========================================
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
-    console.log(`🔗 الربط الحالي: Mega Center V1.3 & MDarahim API V1.0`);
     initializeMdarahimAuth();
 });
 

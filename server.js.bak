@@ -130,6 +130,16 @@ const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
     appVersion: { type: String, default: "1.0.0" }
 }));
 
+// ✨ الموديل الجديد المضاف الخاص بباقات أم دراهم
+const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({
+    name: { type: String, required: true },
+    offerId: { type: String, required: true, unique: true },
+    price: { type: Number, required: true },
+    type: { type: String },          // مثل: دفع مسبق / فوترة
+    internetType: { type: String },  // مثل: فورجي / ثريجي / الكل
+    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
+}));
+
 // ==========================================
 // 📣 دالة إرسال الإشعارات الفورية (FCM) المحدثة
 // ==========================================
@@ -570,36 +580,47 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📋 مسار جلب باقات أم دراهم
+// 📋 مسار جلب باقات أم دراهم (معدل للقراءة من المونجو)
 // ==========================================
 let cachedMdarahimServices = null;
 let lastMdarahimFetchTime = 0;
 
 app.get('/api/mdarahim/services', async (req, res) => {
-    const currentTime = Date.now();
-    if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
-        return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
-    }
-
-    if (!cachedMdarahimToken) {
-        if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
-        return res.status(500).json({ success: false, message: "جاري تهيئة الاتصال بمزود الخدمة..." });
-    }
-
     try {
+        // قراءة الباقات المخزنة مباشرة من قاعدة بياناتك (MongoDB) مرتبة حسب السعر تصاعدياً
+        const localPackages = await MdarahimPackage.find({}).sort({ price: 1 });
+        
+        if (localPackages && localPackages.length > 0) {
+            return res.json({ success: true, services_list: localPackages, source: 'database' });
+        }
+
+        // --- نظام حماية احتياطي (Fallback) في حال كانت قاعدة البيانات فارغة تماماً ---
+        const currentTime = Date.now();
+        if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
+            return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
+        }
+
+        if (!cachedMdarahimToken) {
+            if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
+            return res.status(500).json({ success: false, message: "جاري تهيئة الاتصال بمزود الخدمة وتعبئة البيانات..." });
+        }
+
         const response = await axios.get('https://www.mdarahim.net/api/ac/v1/getservices', {
             headers: { 'Authorization': `Bearer ${cachedMdarahimToken}`, 'Accept': 'application/json' },
             timeout: 20000 
         });
+
         if (response.data) {
             cachedMdarahimServices = response.data;
             lastMdarahimFetchTime = currentTime;
-            return res.json({ success: true, services_list: cachedMdarahimServices });
+            return res.json({ success: true, services_list: cachedMdarahimServices, source: 'api_fallback' });
         }
-        res.json({ success: false, message: "فشل تحديث قائمة الخدمات من المزود" });
+        res.json({ success: false, message: "قائمة الخدمات فارغة حالياً في قاعدة البيانات والمزود." });
+
     } catch (error) {
+        console.error("⚠️ خطأ في مسار جلب الباقات:", error.message);
         if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
-        res.status(500).json({ success: false, message: "خطأ في الاتصال بسيرفر أم دراهم" });
+        res.status(500).json({ success: false, message: "حدث خطأ أثناء جلب قائمة خدمات وباقات أم دراهم" });
     }
 });
 
@@ -812,4 +833,5 @@ app.listen(PORT, () => {
     console.log(`🔗 الربط الحالي: Mega Center V1.3 & MDarahim API V1.0`);
     initializeMdarahimAuth();
 });
+
 

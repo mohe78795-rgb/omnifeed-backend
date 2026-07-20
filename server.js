@@ -442,42 +442,48 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📋 مسار جلب خدمات وباقات أم دراهم (MDarahim Get Services)
+// 📋 مسار جلب خدمات وباقات أم دراهم المطور (المقاوم لوضع النوم)
 // ==========================================
 let cachedMdarahimServices = null;
 let lastMdarahimFetchTime = 0;
 
 app.get('/api/mdarahim/services', async (req, res) => {
     const currentTime = Date.now();
-    
-    // 1. إذا كانت البيانات متوفرة في الذاكرة المؤقتة ولم يمر عليها 30 دقيقة، نرسلها فوراً لتسريع التطبيق وتوفير البيانات
+
+    // 1. إذا كانت البيانات متوفرة في الذاكرة المؤقتة ولم يمر عليها 30 دقيقة، نرسلها فوراً
     if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
         return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
     }
 
-    // 2. التحقق من وجود التوكن الخاص بالسيرفر
+    // 2. حل مشكلة الـ null: إذا استيقظ السيرفر وكان التوكن فارغاً، نحاول جلب التوكن فوراً قبل إظهار الخطأ
     if (!cachedMdarahimToken) {
-        if (cachedMdarahimServices) {
-            return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة - السيرفر جاري تحديث اتصاله" });
-        }
-        return res.status(500).json({ success: false, message: "جاري تهيئة الاتصال بمزود الخدمة، يرجى المحاولة بعد قليل" });
+        console.log("⚠️ التوكن غير موجود (احتمال بسبب إقلاع السيرفر)، جاري محاولة جلب توكن سريع...");
+        await initializeMdarahimAuth(); // انتظر حتى ينتهي جلب التوكن أولاً
     }
 
-    // 3. جلب البيانات برمجياً من سيرفر أم دراهم
+    // 3. التحقق النهائي بعد محاولة التحديث الفورية
+    if (!cachedMdarahimToken) {
+        if (cachedMdarahimServices) {
+            return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة - السيرفر فشل في تحديث التوكن حالياً" });
+        }
+        return res.status(500).json({ success: false, message: "فشل الاتصال بمزود الخدمة. يرجى التحقق من بيانات الحساب أو سجل العمليات (Logs)." });
+    }
+
+    // 4. جلب البيانات برمجياً من سيرفر أم دراهم
     try {
         const response = await axios.get('https://www.mdarahim.net/api/ac/v1/getservices', {
             headers: {
                 'Authorization': `Bearer ${cachedMdarahimToken}`,
                 'Accept': 'application/json'
             },
-            timeout: 20000 // مهلة الاتصال 20 ثانية
+            timeout: 25000 // رفع المهلة لـ 25 ثانية لتفادي بطء الاستضافة المجانية
         });
 
         if (response.data) {
             // تخزين البيانات في الذاكرة وتحديث وقت الجلب
             cachedMdarahimServices = response.data;
             lastMdarahimFetchTime = currentTime;
-            
+
             return res.json({ success: true, services_list: cachedMdarahimServices });
         }
 
@@ -486,7 +492,12 @@ app.get('/api/mdarahim/services', async (req, res) => {
 
     } catch (error) {
         console.error('❌ [أم دراهم] خطأ في جلب البيانات:', error.message);
-        
+
+        // إذا انتهت صلاحية التوكن بشكل مفاجئ (Unauthorized)، نصفر التوكن ليعاد جلبه تلقائياً في الطلب القادم
+        if (error.response && error.response.status === 401) {
+            cachedMdarahimToken = null;
+        }
+
         // في حال حدوث خطأ في الشبكة، إذا كان لدينا نسخة قديمة مخزنة نرسلها للعميل بدلاً من إظهار شاشة بيضاء
         if (cachedMdarahimServices) {
             return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة بسبب خطأ اتصال بالشبكة" });
@@ -495,9 +506,7 @@ app.get('/api/mdarahim/services', async (req, res) => {
     }
 });
 
-// ==========================================
-// 💸 مسار تفعيل باقات أم دراهم (MDarahim Packages API)
-// ==========================================
+
 app.post('/api/mdarahim/packages', async (req, res) => {
     const { phone, price, serviceId, offerId, actionType, mobileNumber, serviceName } = req.body;
     

@@ -84,7 +84,6 @@
             padding: 1rem;
             text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
         }
 
         .stat-card i {
@@ -117,7 +116,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .royal-input, select {
+        .royal-input, select, textarea {
             width: 100%;
             padding: 0.85rem;
             background: #050607;
@@ -130,7 +129,7 @@
             text-align: right;
         }
 
-        .royal-input:focus, select:focus {
+        .royal-input:focus, select:focus, textarea:focus {
             border-color: var(--gold);
         }
 
@@ -164,11 +163,12 @@
             background: #0d0f11;
             border-top: 1px solid rgba(197, 168, 98, 0.2);
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 2px;
             padding: 8px 5px;
             z-index: 1000;
             box-shadow: 0 -8px 25px rgba(0,0,0,0.8);
+            overflow-x: auto;
         }
 
         .nav-item {
@@ -177,16 +177,17 @@
             align-items: center;
             justify-content: center;
             color: var(--text-muted);
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: bold;
             padding: 6px 2px;
             cursor: pointer;
             transition: all 0.2s;
             border-radius: 0.5rem;
+            white-space: nowrap;
         }
 
         .nav-item i {
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin-bottom: 4px;
         }
 
@@ -283,6 +284,23 @@
             overflow-y: auto;
         }
 
+        .image-uploader {
+            border: 2px dashed var(--border-color);
+            padding: 1rem;
+            text-align: center;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            background: #050607;
+        }
+
+        .image-uploader img {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 10px auto 0;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
         .loading-overlay {
             position: fixed;
             inset: 0;
@@ -349,10 +367,11 @@
             </div>
         </div>
 
+        <!-- 1. تبويب العملاء والأرصدة -->
         <div id="tab-users" class="tab-content active">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-users"></i> إدارة أرصدة العملاء</div>
-                <input type="text" id="search-users" class="royal-input" oninput="filterUsers()" placeholder="ابحث باسم العميل أو رقم هاتفه..." style="margin-bottom: 1rem; text-align: right;">
+                <input type="text" id="search-users" class="royal-input" oninput="filterUsers()" placeholder="ابحث باسم العميل أو رقم هاتفه..." style="margin-bottom: 1rem;">
                 <table>
                     <thead>
                         <tr>
@@ -366,6 +385,7 @@
             </div>
         </div>
 
+        <!-- 2. تبويب الطلبات -->
         <div id="tab-orders" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-receipt"></i> الفواتير والطلبيات الحالية</div>
@@ -383,6 +403,7 @@
             </div>
         </div>
 
+        <!-- 3. تبويب السلع -->
         <div id="tab-products" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-box-open"></i> تعديل وحذف السلع</div>
@@ -400,17 +421,18 @@
             </div>
         </div>
 
+        <!-- 4. تبويب إضافة سلعة -->
         <div id="tab-add-product" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-plus-circle"></i> إضافة سلعة جديدة للمتجر</div>
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">اسم المنتج</label>
-                        <input type="text" id="new-prod-name" class="royal-input" placeholder="أرز بسمتي 5 كيلو" style="text-align: right;">
+                        <input type="text" id="new-prod-name" class="royal-input" placeholder="أرز بسمتي 5 كيلو">
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">سعر البيع الحالي (YER)</label>
-                        <input type="number" id="new-prod-price" class="royal-input" placeholder="12000" style="text-align: right;">
+                        <input type="number" id="new-prod-price" class="royal-input" placeholder="12000">
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">اختر قسم السلعة</label>
@@ -431,17 +453,18 @@
             </div>
         </div>
 
+        <!-- 5. تبويب إضافة قسم -->
         <div id="tab-add-category" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-folder-plus"></i> إضافة قسم رئيسي جديد</div>
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">اسم القسم الجديد</label>
-                        <input type="text" id="new-cat-name" class="royal-input" placeholder="أجبان، معلبات..." style="text-align: right;">
+                        <input type="text" id="new-cat-name" class="royal-input" placeholder="أجبان، معلبات...">
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">وصف فرعي</label>
-                        <input type="text" id="new-cat-sub" class="royal-input" placeholder="أجود الأنواع الطازجة" style="text-align: right;">
+                        <input type="text" id="new-cat-sub" class="royal-input" placeholder="أجود الأنواع الطازجة">
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">صورة القسم</label>
@@ -458,6 +481,25 @@
             </div>
         </div>
 
+        <!-- 6. تبويب الأقسام -->
+        <div id="tab-categories-list" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-list"></i> إدارة وتعديل أقسام المتجر</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>صورة</th>
+                            <th>اسم القسم</th>
+                            <th>الوصف الفرعي</th>
+                            <th>خيارات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categories-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 7. تبويب الرسائل والإشعارات -->
         <div id="tab-broadcast" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-paper-plane"></i> بث إرسال وتنبيه جديد للزبائن</div>
@@ -470,15 +512,15 @@
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">عنوان التنبيه</label>
-                        <input type="text" id="broadcast-title" class="royal-input" placeholder="عنوان التنبيه..." style="text-align: right;">
+                        <input type="text" id="broadcast-title" class="royal-input" placeholder="عنوان التنبيه...">
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">نص الرسالة</label>
-                        <textarea id="broadcast-body" class="royal-input" placeholder="اكتب نص الرسالة هنا..." style="height: 80px; resize: none; text-align: right;"></textarea>
+                        <textarea id="broadcast-body" class="royal-input" placeholder="اكتب نص الرسالة هنا..." style="height: 80px; resize: none;"></textarea>
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">رابط صورة الإشعار (اختياري)</label>
-                        <input type="text" id="broadcast-image-url" class="royal-input" placeholder="رابط مباشر للصورة (اختياري)..." style="direction: ltr; text-align: left;">
+                        <input type="text" id="broadcast-image-url" class="royal-input" placeholder="رابط مباشر للصورة..." style="direction: ltr; text-align: left;">
                     </div>
                     <button class="royal-btn" onclick="sendBroadcast()">بث التنبيه للهواتف فوراً 🔔</button>
                 </div>
@@ -489,7 +531,7 @@
                 <div style="margin-bottom: 1rem;">
                     <label style="font-size: 0.8rem; color: var(--text-muted);">فرز الرسائل حسب المستخدم:</label>
                     <select id="filter-messages-select" onchange="filterMessagesByReceiver()">
-                        <option value="SHOW_ALL">عرض كل الرسائل المرسلة (الجميع والخاص)</option>
+                        <option value="SHOW_ALL">عرض كل الرسائل المرسلة</option>
                         <option value="ALL">رسائل الجميع فقط (ALL)</option>
                     </select>
                 </div>
@@ -508,6 +550,7 @@
             </div>
         </div>
 
+        <!-- 8. تبويب يوتيوب والفرعية -->
         <div id="tab-ads" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-video"></i> الإعلانات والفيديو الترويجي بالتطبيق</div>
@@ -521,13 +564,74 @@
             </div>
         </div>
 
+        <!-- 9. تبويب المعاملات وأم دراهم -->
+        <div id="tab-transactions" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-bolt"></i> سجل عمليات شحن الألعاب وأم دراهم</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>الخدمة / الباقة</th>
+                            <th>المبلغ YER</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tx-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 10. تبويب إدارة أم دراهم (تحديث التوكن) -->
+        <div id="tab-mdarahim" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-sim-card"></i> إدارة بوابة "أم دراهم" (التوكن)</div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <label style="font-size: 0.85rem; font-weight: bold; color: var(--gold);">تحديث توكن المصادقة (Bearer Token)</label>
+                    <input type="text" id="mdarahim-token-input" class="royal-input" placeholder="ألصق التوكن الجديد هنا..." style="direction: ltr;">
+                    <button class="royal-btn" onclick="updateMdarahimTokenAdmin()">تحديث التوكن سحابياً 🔑</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. تبويب الشحن الفوري الجديد -->
+        <div id="tab-instant-charge" class="tab-content">
+            <div class="card-container">
+                <div class="section-title"><i class="fa-solid fa-bolt"></i> شحن باقات أم دراهم فورياً للعملاء</div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">رقم هاتف العميل (صاحب الحساب / الخصم)</label>
+                        <input type="text" id="instant-phone" class="royal-input" placeholder="مثال: 735429057">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">رقم المستفيد (المراد شحن الباقة له)</label>
+                        <input type="text" id="instant-mobile" class="royal-input" placeholder="مثال: 770000000">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">اختر الباقة / الخدمة</label>
+                        <select id="instant-package-select" onchange="updatePackageDetails()">
+                            <option value="YM_1GB_01" data-service="101" data-price="500" data-name="باكدج يمن موبايل 1 جيجا">باكدج يمن موبايل 1 جيجا (500 YER)</option>
+                        </select>
+                    </div>
+                    <div style="background: rgba(197, 168, 98, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(197, 168, 98, 0.2);">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                            <span style="color: var(--text-muted);">السعر الإجمالي:</span>
+                            <span id="instant-price-preview" style="color: var(--gold); font-weight: bold;">500 YER</span>
+                        </div>
+                    </div>
+                    <button class="royal-btn" onclick="executeInstantCharge()">تنفيذ الشحن الفوري الآن ⚡</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. تبويب الإعدادات العامة -->
         <div id="tab-settings" class="tab-content">
             <div class="card-container">
                 <div class="section-title"><i class="fa-solid fa-gears"></i> إعدادات التطبيق العامة</div>
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">اسم التطبيق المعتمد</label>
-                        <input type="text" id="set-app-name" class="royal-input" style="text-align: right;">
+                        <input type="text" id="set-app-name" class="royal-input">
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted);">رقم الدعم الفني (واتساب)</label>
@@ -546,42 +650,9 @@
             </div>
         </div>
 
-        <div id="tab-transactions" class="tab-content">
-            <div class="card-container">
-                <div class="section-title"><i class="fa-solid fa-bolt"></i> سجل عمليات شحن الألعاب</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>العميل</th>
-                            <th>الخدمة / الباقة</th>
-                            <th>المبلغ YER</th>
-                            <th>الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tx-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="tab-categories-list" class="tab-content">
-            <div class="card-container">
-                <div class="section-title"><i class="fa-solid fa-list"></i> إدارة وتعديل أقسام المتجر</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>صورة</th>
-                            <th>اسم القسم</th>
-                            <th>الوصف الفرعي</th>
-                            <th>خيارات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="categories-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 
+    <!-- شريط التنقل السفلي المحدث -->
     <div class="admin-nav" id="admin-nav" style="display: none;">
         <div class="nav-item active" onclick="switchNavTab(this, 'tab-users')"><i class="fa-solid fa-users"></i>رصيد</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-orders')"><i class="fa-solid fa-file-invoice"></i>طلبات</div>
@@ -591,10 +662,13 @@
         <div class="nav-item" onclick="switchNavTab(this, 'tab-categories-list')"><i class="fa-solid fa-list-ul"></i>أقسام</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-broadcast')"><i class="fa-solid fa-bell"></i>رسائل</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-ads')"><i class="fa-solid fa-play"></i>يوتيوب</div>
-        <div class="nav-item" onclick="switchNavTab(this, 'tab-transactions')"><i class="fa-solid fa-shuffle"></i>ألعاب</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-transactions')"><i class="fa-solid fa-shuffle"></i>سجل</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-mdarahim')"><i class="fa-solid fa-sim-card"></i>توكن</div>
+        <div class="nav-item" onclick="switchNavTab(this, 'tab-instant-charge')"><i class="fa-solid fa-bolt"></i>شحن فوري</div>
         <div class="nav-item" onclick="switchNavTab(this, 'tab-settings')"><i class="fa-solid fa-cog"></i>إعدادات</div>
     </div>
 
+    <!-- مودال تعديل الرصيد -->
     <div id="balance-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:var(--gold); margin-bottom:1rem;"><i class="fa-solid fa-wallet"></i> إدارة رصيد حساب العميل</h3>
@@ -604,7 +678,7 @@
                 <span id="current-balance-preview" style="font-size: 1.4rem; font-weight: 900; color: var(--gold);">0 YER</span>
             </div>
             <div style="margin-bottom: 1.5rem;">
-                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">المبلغ الجديد المراد شحنه (سيتم إضافته للرصيد الحالي)</label>
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">المبلغ الجديد المراد شحنه</label>
                 <input type="number" id="bal-modal-input" class="royal-input" placeholder="اكتب قيمة الشحن هنا..." style="font-size: 1.2rem; font-weight: bold; color: var(--green-success);">
             </div>
             <div style="display:flex; gap:10px;">
@@ -614,6 +688,7 @@
         </div>
     </div>
 
+    <!-- مودال تعديل السعر -->
     <div id="price-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:var(--gold); margin-bottom:1rem;"><i class="fa-solid fa-tag"></i> تعديل سعر السلعة</h3>
@@ -715,7 +790,7 @@
             const broadcastSelect = document.getElementById('broadcast-receiver-select');
             const filterSelect = document.getElementById('filter-messages-select');
             broadcastSelect.innerHTML = '<option value="ALL">جميع العملاء المشتركين (ALL)</option>';
-            filterSelect.innerHTML = `<option value="SHOW_ALL">عرض كل الرسائل المرسلة (الجميع والخاص)</option><option value="ALL">رسائل الجميع فقط (ALL)</option>`;
+            filterSelect.innerHTML = `<option value="SHOW_ALL">عرض كل الرسائل المرسلة</option><option value="ALL">رسائل الجميع فقط (ALL)</option>`;
             dataStore.users.forEach(u => {
                 const opt = document.createElement('option'); opt.value = u.phone; opt.innerText = `${u.name} (${u.phone})`; broadcastSelect.appendChild(opt);
                 const optFilter = document.createElement('option'); optFilter.value = u.phone; optFilter.innerText = `الرسائل الخاصة بـ: ${u.name}`; filterSelect.appendChild(optFilter);
@@ -811,28 +886,22 @@
             const receiver = document.getElementById('broadcast-receiver-select').value;
             const title = document.getElementById('broadcast-title').value;
             const body = document.getElementById('broadcast-body').value;
-            const imageUrl = document.getElementById('broadcast-image-url').value; // جلب الرابط الجديد
+            const imageUrl = document.getElementById('broadcast-image-url').value;
 
             if(!receiver || !title || !body) return alert("يرجى ملئ الحقول الأساسية!");
-            
+
             showLoader(true, "بث وتخزين التنبيه الجديد...");
             try {
                 const res = await fetch(`${API_URL}/api/messages/send`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ 
-                        adminPass: ADMIN_PIN, 
-                        receiver, 
-                        title, 
-                        body,
-                        imageUrl // إرسال الرابط للسيرفر
-                    })
+                    body: JSON.stringify({ adminPass: ADMIN_PIN, receiver, title, body, imageUrl })
                 });
                 if(res.ok) {
                     alert("تم بث الإرسال بنجاح! 🔔");
                     document.getElementById('broadcast-title').value = "";
                     document.getElementById('broadcast-body').value = "";
-                    document.getElementById('broadcast-image-url').value = ""; // تفريغ الحقل
+                    document.getElementById('broadcast-image-url').value = "";
                     await refreshAllData();
                 }
             } catch(e){ alert("خطأ في الاتصال"); } finally { showLoader(false); }
@@ -951,6 +1020,78 @@
             showLoader(false);
         }
 
+        async function updateMdarahimTokenAdmin() {
+            const token = document.getElementById('mdarahim-token-input').value;
+            if(!token) return alert("يرجى إدخال التوكن أولاً!");
+            showLoader(true, "جاري تحديث توكن أم دراهم...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/mdarahim/update-token`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ adminPass: ADMIN_PIN, token: token })
+                });
+                const data = await res.json();
+                if(res.ok && data.success) {
+                    alert("تم تحديث توكن أم دراهم بنجاح! 🚀");
+                    document.getElementById('mdarahim-token-input').value = "";
+                } else {
+                    alert("فشل التحديث: " + (data.message || "خطأ غير معروف"));
+                }
+            } catch(e) {
+                alert("خطأ في الاتصال بالسيرفر");
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        function updatePackageDetails() {
+            const select = document.getElementById('instant-package-select');
+            const selectedOption = select.options[select.selectedIndex];
+            const price = selectedOption.getAttribute('data-price');
+            document.getElementById('instant-price-preview').innerText = price + " YER";
+        }
+
+        async function executeInstantCharge() {
+            const phone = document.getElementById('instant-phone').value;
+            const mobileNumber = document.getElementById('instant-mobile').value;
+            const select = document.getElementById('instant-package-select');
+            const selectedOption = select.options[select.selectedIndex];
+
+            if(!phone || !mobileNumber) {
+                return alert("يرجى إدخال رقم هاتف الحساب ورقم المستفيد!");
+            }
+
+            const payload = {
+                phone: phone,
+                price: Number(selectedOption.getAttribute('data-price')),
+                serviceId: selectedOption.getAttribute('data-service'),
+                offerId: selectedOption.value,
+                mobileNumber: mobileNumber,
+                serviceName: selectedOption.getAttribute('data-name')
+            };
+
+            showLoader(true, "جاري إرسال طلب الشحن الفوري...");
+            try {
+                const response = await fetch(`${API_URL}/api/mdarahim/packages`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert("تمت العملية بنجاح! 🎉\n" + (result.message || "تم شحن الباقة بنجاح"));
+                } else {
+                    alert("ملاحظة من السيرفر: " + (result.message || "فشلت العملية"));
+                }
+                await refreshAllData();
+            } catch (err) {
+                alert("حدث خطأ أثناء الاتصال بالسيرفر أثناء الشحن.");
+            } finally {
+                showLoader(false);
+            }
+        }
+
         async function loadAppSettings() {
             try {
                 const res = await fetch(`${API_URL}/api/admin/settings?adminPass=${ADMIN_PIN}`);
@@ -978,4 +1119,5 @@
     </script>
 </body>
 </html>
+
 

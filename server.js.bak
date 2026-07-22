@@ -131,7 +131,6 @@ const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
     appVersion: { type: String, default: "1.0.0" }
 }), 'appsettings');
 
-// موديل باقات أم دراهم المرتبط بكولكشن mdarahimpackages[span_1](start_span)[span_1](end_span)
 const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({
     name: { type: String, required: true },
     offerId: { type: String, required: true, unique: true },
@@ -203,7 +202,7 @@ function makeEmbedUrl(url) {
 }
 
 // ==========================================
-// 💳 إعدادات ودوال نظام أم دراهم (MDarahim API)
+// 💳 إعدادات ودوال نظام أم دراهم المحدثة (MDarahim API V2)
 // ==========================================
 let cachedMdarahimToken = null;
 
@@ -269,12 +268,12 @@ app.post('/api/admin/mdarahim/update-token', async (req, res) => {
 });
 
 // ==========================================
-// 🚀 المسارات الخاصة بنظام أم دراهم (تنفيذ الشحن والباقات)
+// 🚀 المسارات الخاصة بنظام أم دراهم (تنفيذ الشحن والباقات مطابقة للتوثيق الرسمي V2)
 // ==========================================
 app.post('/api/mdarahim/packages', async (req, res) => {
     const { phone, price, serviceId, offerId, mobileNumber, serviceName } = req.body;
 
-    if (!phone || !price || !serviceId || !offerId || !mobileNumber) {
+    if (!phone || !price || !serviceId || !mobileNumber) {
         return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
     }
 
@@ -284,10 +283,13 @@ app.post('/api/mdarahim/packages', async (req, res) => {
             return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لتفعيل هذه الباقة" });
         }
 
+        // خصم المبلغ مؤقتاً من رصيد المستخدم المحلي
         user.bal -= Number(price);
         await user.save();
 
-        const referenceId = 'MD-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        // توليد مرجع فريد بطول مناسب (مثلاً رقم مرجع يبدأ بـ MD ويتكون من أرقام أو رموز حسب التوثيق)
+        const referenceId = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+        
         const newTxn = new Transaction({
             userId: user._id,
             phone,
@@ -314,25 +316,32 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         }
 
         try {
-            const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', {
-                "AC": 1,
+            // بناء الطلب بالهيكل الرسمي المعتمد في الجدول (3.1) والمسار /api/ac/v1/do
+            const payload = {
+                "AC": 1, // 1 لتنفيذ عملية التسديد/الباقات
                 "PSI": Number(serviceId),
                 "AMT": Number(price),
-                "OFFER_ID": String(offerId),
                 "NUM": String(mobileNumber),
                 "TRANID": referenceId
-            }, {
+            };
+
+            if (offerId) {
+                payload.OFFER_ID = String(offerId);
+            }
+
+            const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', payload, {
                 headers: {
                     'Authorization': `Bearer ${cachedMdarahimToken}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                timeout: 35000
+                timeout: 45000 // رفع المهلة إلى 45 ثانية لتفادي الـ Timeout
             });
 
             const result = response.data;
 
-            if (result && result.RC === 1) {
+            // بناءً على جدول (1.2) لكواد الاستجابة RC
+            if (result && Number(result.RC) === 1) {
                 newTxn.status = 'ناجحة ✅';
                 await newTxn.save();
 
@@ -341,14 +350,16 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
                 sendPushNotification(phone, nTitle, nBody);
 
-                return res.json({ success: true, currentBal: user.bal });
+                return res.json({ success: true, currentBal: user.bal, response: result });
 
-            } else if (result && (result.RC === 2 || result.RC === -1)) {
+            } else if (result && (Number(result.RC) === 2 || Number(result.RC) === -1)) {
+                // العمليات المعلقة
                 newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
                 await newTxn.save();
-                return res.json({ success: false, message: "العملية معلقة لدى المزود، سيتم مراجعتها وتحديثها." });
+                return res.json({ success: false, message: result.RD || "العملية معلقة لدى المزود، سيتم مراجعتها وتحديثها." });
 
             } else {
+                // فشل العملية واسترجاع الرصيد للمستخدم
                 user.bal += Number(price);
                 await user.save();
                 newTxn.status = 'فاشلة ❌';
@@ -362,6 +373,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 cachedMdarahimToken = null;
                 initializeMdarahimAuth();
             }
+            // في حال حدوث Timeout أو انقطع الاتصال، نتركها معلقة ونبلغ المستخدم
             newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
             newTxn.errorCode = 'TIMEOUT_ERROR';
             await newTxn.save();
@@ -394,7 +406,7 @@ app.post('/api/mdarahim/action', async (req, res) => {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            timeout: 25000
+            timeout: 35000
         });
         return res.json({ success: true, result: response.data });
     } catch (error) {
@@ -614,7 +626,7 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📋 مسار جلب باقات أم دراهم من كولكشن mdarahimpackages[span_2](start_span)[span_2](end_span)
+// 📋 مسار جلب باقات أم دراهم
 // ==========================================
 let cachedMdarahimServices = null;
 let lastMdarahimFetchTime = 0;
@@ -852,7 +864,6 @@ app.post('/api/admin/settings/update', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// مسار أدمن لحفظ وتحديث باقات أم دراهم يدوياً في القاعدة[span_3](start_span)[span_3](end_span)
 app.post('/api/admin/mdarahim/save-packages', async (req, res) => {
     const { adminPass, packages } = req.body;
 
@@ -887,5 +898,4 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
-
 

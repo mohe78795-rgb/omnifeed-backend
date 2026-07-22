@@ -522,7 +522,7 @@
                         <label style="font-size: 0.8rem; color: var(--text-muted);">رابط صورة الإشعار (اختياري)</label>
                         <input type="text" id="broadcast-image-url" class="royal-input" placeholder="رابط مباشر للصورة..." style="direction: ltr; text-align: left;">
                     </div>
-                    <button class="royal-btn" onclick="sendBroadcast()">بث التنبيه للهواتف فوراً 🔔</button>
+                    <button class="royal-btn" onclick="sendBroadcast()">بث التنبيه للهواتف فوراً  🔔</button>
                 </div>
 
                 <div class="section-title" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
@@ -559,7 +559,7 @@
                         <label style="font-size: 0.8rem; color: var(--text-muted);">رابط فيديو يوتيوب</label>
                         <input type="text" id="new-ad-url" class="royal-input" placeholder="https://www.youtube.com/watch?v=..." style="direction: ltr;">
                     </div>
-                    <button class="royal-btn" onclick="savePromoVideo()">تحديث الفيديو الإعلاني 🎬</button>
+                    <button class="royal-btn" onclick="savePromoVideo()">تحديث الفيديو الإعلاني  🎬</button>
                 </div>
             </div>
         </div>
@@ -582,14 +582,43 @@
             </div>
         </div>
 
-        <!-- 10. تبويب إدارة أم دراهم (تحديث التوكن) -->
+        <!-- 10. تبويب إدارة أم دراهم (تحديث التوكن والباقات) -->
         <div id="tab-mdarahim" class="tab-content">
             <div class="card-container">
-                <div class="section-title"><i class="fa-solid fa-sim-card"></i> إدارة بوابة "أم دراهم" (التوكن)</div>
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <label style="font-size: 0.85rem; font-weight: bold; color: var(--gold);">تحديث توكن المصادقة (Bearer Token)</label>
-                    <input type="text" id="mdarahim-token-input" class="royal-input" placeholder="ألصق التوكن الجديد هنا..." style="direction: ltr;">
-                    <button class="royal-btn" onclick="updateMdarahimTokenAdmin()">تحديث التوكن سحابياً 🔑</button>
+                <div class="section-title"><i class="fa-solid fa-sim-card"></i> إدارة بوابة "أم دراهم" (التوكن والباقات)</div>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: bold; color: var(--gold); display: block; margin-bottom: 5px;">تحديث توكن المصادقة (Bearer Token)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="mdarahim-token-input" class="royal-input" placeholder="ألصق التوكن الجديد هنا..." style="direction: ltr;">
+                            <button class="royal-btn" style="width: auto; padding: 0 1.5rem;" onclick="updateMdarahimTokenAdmin()">حفظ 🔑</button>
+                        </div>
+                    </div>
+
+                    <hr style="border-color: var(--border-color);">
+
+                    <div style="background: rgba(197, 168, 98, 0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <h4 style="color: var(--gold); margin-bottom: 10px; font-size: 0.95rem;"><i class="fa-solid fa-plus"></i> إضافة باقة / خدمة جديدة لنظام أم دراهم</h4>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                                <label style="font-size: 0.75rem; color: var(--text-muted);">معرف العرض (Offer ID)</label>
+                                <input type="text" id="new-pkg-id" class="royal-input" placeholder="مثال: YM_2GB_02" style="direction: ltr;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.75rem; color: var(--text-muted);">رقم الخدمة لدى المزود (Service ID)</label>
+                                <input type="text" id="new-pkg-service" class="royal-input" placeholder="مثال: 101" style="direction: ltr;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.75rem; color: var(--text-muted);">اسم الباقة الوصفي</label>
+                                <input type="text" id="new-pkg-name" class="royal-input" placeholder="مثال: باكدج يمن موبايل 2 جيجا">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.75rem; color: var(--text-muted);">السعر (YER)</label>
+                                <input type="number" id="new-pkg-price" class="royal-input" placeholder="مثال: 950">
+                            </div>
+                            <button class="royal-btn" onclick="addNewMdarahimPackage()">إضافة الباقة للقائمة الفورية ⚡</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -610,13 +639,13 @@
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">اختر الباقة / الخدمة</label>
                         <select id="instant-package-select" onchange="updatePackageDetails()">
-                            <option value="YM_1GB_01" data-service="101" data-price="500" data-name="باكدج يمن موبايل 1 جيجا">باكدج يمن موبايل 1 جيجا (500 YER)</option>
+                            <!-- سيتم تعبئتها ديناميكياً -->
                         </select>
                     </div>
                     <div style="background: rgba(197, 168, 98, 0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(197, 168, 98, 0.2);">
                         <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
                             <span style="color: var(--text-muted);">السعر الإجمالي:</span>
-                            <span id="instant-price-preview" style="color: var(--gold); font-weight: bold;">500 YER</span>
+                            <span id="instant-price-preview" style="color: var(--gold); font-weight: bold;">0 YER</span>
                         </div>
                     </div>
                     <button class="royal-btn" onclick="executeInstantCharge()">تنفيذ الشحن الفوري الآن ⚡</button>
@@ -704,7 +733,14 @@
     <script>
         const API_URL = window.location.origin;
         let ADMIN_PIN = "";
-        let dataStore = { users: [], orders: [], products: [], categories: [], transactions: [], messages: [] };
+        let dataStore = { users: [], orders: [], products: [], categories: [], transactions: [], messages: [], packages: [] };
+
+        // باقات افتراضية أولية لنظام أم دراهم يمكن تعديلها أو إضافتها ديناميكياً
+        let defaultMdarahimPackages = [
+            { offerId: "YM_1GB_01", serviceId: "101", name: "باكدج يمن موبايل 1 جيجا", price: 500 },
+            { offerId: "YM_2GB_02", serviceId: "101", name: "باكدج يمن موبايل 2 جيجا", price: 950 },
+            { offerId: "YM_4GB_03", serviceId: "101", name: "باكدج يمن موبايل 4 جيجا", price: 1800 }
+        ];
 
         function showLoader(status, msg = "جاري الاتصال بالسيرفر سحابياً...") {
             document.getElementById('loading-text').innerText = msg;
@@ -752,6 +788,9 @@
                 const resMsgs = await fetch(`${API_URL}/api/admin/messages?adminPass=${ADMIN_PIN}`);
                 if(resMsgs.ok) dataStore.messages = await resMsgs.json();
 
+                // محاولة جلب الباقات المخصصة لأم دراهم إن وجدت مخزنة محلياً بالسشن أو السيرفر
+                loadLocalPackages();
+
                 renderUsers(dataStore.users);
                 renderOrders();
                 renderProducts();
@@ -766,6 +805,53 @@
             } finally {
                 showLoader(false);
             }
+        }
+
+        function loadLocalPackages() {
+            const savedPkgs = localStorage.getItem('mdarahim_custom_packages');
+            if(savedPkgs) {
+                try { dataStore.packages = JSON.parse(savedPkgs); } catch(e){ dataStore.packages = defaultMdarahimPackages; }
+            } else {
+                dataStore.packages = defaultMdarahimPackages;
+            }
+            updatePackagesDropdown();
+        }
+
+        function updatePackagesDropdown() {
+            const select = document.getElementById('instant-package-select');
+            select.innerHTML = "";
+            dataStore.packages.forEach(pkg => {
+                const opt = document.createElement('option');
+                opt.value = pkg.offerId;
+                opt.setAttribute('data-service', pkg.serviceId);
+                opt.setAttribute('data-price', pkg.price);
+                opt.setAttribute('data-name', pkg.name);
+                opt.innerText = `${pkg.name} (${pkg.price} YER)`;
+                select.appendChild(opt);
+            });
+            updatePackageDetails();
+        }
+
+        function addNewMdarahimPackage() {
+            const offerId = document.getElementById('new-pkg-id').value.trim();
+            const serviceId = document.getElementById('new-pkg-service').value.trim();
+            const name = document.getElementById('new-pkg-name').value.trim();
+            const price = Number(document.getElementById('new-pkg-price').value);
+
+            if(!offerId || !serviceId || !name || !price) {
+                return alert("يرجى ملء جميع حقول الباقة بدقة!");
+            }
+
+            dataStore.packages.push({ offerId, serviceId, name, price });
+            localStorage.setItem('mdarahim_custom_packages', JSON.stringify(dataStore.packages));
+            
+            document.getElementById('new-pkg-id').value = "";
+            document.getElementById('new-pkg-service').value = "";
+            document.getElementById('new-pkg-name').value = "";
+            document.getElementById('new-pkg-price').value = "";
+
+            updatePackagesDropdown();
+            alert("تم إضافة الباقة وتحديث القائمة الفورية بنجاح! 🚀");
         }
 
         function updateStatistics() {
@@ -1046,8 +1132,9 @@
 
         function updatePackageDetails() {
             const select = document.getElementById('instant-package-select');
+            if(!select || select.options.length === 0) return;
             const selectedOption = select.options[select.selectedIndex];
-            const price = selectedOption.getAttribute('data-price');
+            const price = selectedOption.getAttribute('data-price') || 0;
             document.getElementById('instant-price-preview').innerText = price + " YER";
         }
 
@@ -1055,6 +1142,7 @@
             const phone = document.getElementById('instant-phone').value;
             const mobileNumber = document.getElementById('instant-mobile').value;
             const select = document.getElementById('instant-package-select');
+            if(!select || select.options.length === 0) return alert("لا توجد باقات متاحة للشحن!");
             const selectedOption = select.options[select.selectedIndex];
 
             if(!phone || !mobileNumber) {
@@ -1078,7 +1166,7 @@
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                
+
                 if (result.success) {
                     alert("تمت العملية بنجاح! 🎉\n" + (result.message || "تم شحن الباقة بنجاح"));
                 } else {

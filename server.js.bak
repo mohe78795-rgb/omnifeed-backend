@@ -43,12 +43,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ==========================================
 // 🗄️ الاتصال بقاعدة البيانات (MongoDB)
 // ==========================================
-// تأكد من ضبط اسم قاعدة البيانات النهائي في الرابط ليطابق المجلد الأب للكولكشنز الحالية
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohe78795_db_user:737465252@cluster0.qr9q8iv.mongodb.net/abu_hussein_db?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
@@ -56,7 +55,7 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
 
 // ==========================================
-// 🗃️ تعريف الموديلات وتحديد أسماء الجداول بدقة (Explicit Collection Names)
+// 🗃️ تعريف الموديلات وتحديد أسماء الجداول بدقة
 // ==========================================
 
 const DeviceToken = mongoose.model('DeviceToken', new mongoose.Schema({
@@ -113,7 +112,7 @@ const Ad = mongoose.model('Ad', new mongoose.Schema({
 const Transaction = mongoose.model('Transaction', new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     phone: String,
-    type: { type: String, default: 'game' }, 
+    type: { type: String, default: 'game' },
     targetId: { type: String, required: true },
     serviceId: { type: String, required: true },
     serviceName: { type: String, required: true },
@@ -126,24 +125,24 @@ const Transaction = mongoose.model('Transaction', new mongoose.Schema({
 }), 'transactions');
 
 const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
-    appName: { type: String, default: "تموينات أبو حين" },
+    appName: { type: String, default: "تموينات أبو حسين" },
     maintenanceMode: { type: Boolean, default: false },
-    whatsappSupport: { type: String, default: "967737465252" },
+    whatsappSupport: { type: String, default: "967737528057" },
     appVersion: { type: String, default: "1.0.0" }
 }), 'appsettings');
 
-// ✨ تم توجيه الموديل بدقة لكولكشن mdarahimpackages الموضحة في قائمتك
+// موديل باقات أم دراهم المرتبط بكولكشن mdarahimpackages[span_1](start_span)[span_1](end_span)
 const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({
     name: { type: String, required: true },
     offerId: { type: String, required: true, unique: true },
     price: { type: Number, required: true },
-    type: { type: String },          
-    internetType: { type: String },  
+    type: { type: String },
+    internetType: { type: String },
     date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
 }), 'mdarahimpackages');
 
 // ==========================================
-// 📣 دالة إرسال الإشعارات الفورية (FCM) 
+// 📣 دالة إرسال الإشعارات الفورية (FCM)
 // ==========================================
 async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
     try {
@@ -217,7 +216,7 @@ async function initializeMdarahimAuth() {
 
     try {
         const response = await axios.post(url, params, {
-            headers: { 
+            headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
@@ -244,21 +243,17 @@ async function initializeMdarahimAuth() {
         }
 
     } catch (error) {
-        console.error('⚠️ [أم دراهم] السيرفر محظور مؤقتاً من كلويد فلير. يمكنك تحديث التوكن يدويًا عبر مسار الأدمن.');
-        // إعادة المحاولة بعد ساعة في الخلفية
+        console.error('⚠️ [أم دراهم] السيرفر محظور مؤقتاً. يمكنك تحديث التوكن يدويًا عبر مسار الأدمن المخصص.');
         setTimeout(initializeMdarahimAuth, 60 * 60 * 1000);
     }
 }
 
-// تشغيل التحديث التلقائي كل 23 ساعة
 setInterval(initializeMdarahimAuth, 23 * 60 * 60 * 1000);
 
-// ==========================================
-// 🛠️ مسار استقبال التوكن يدوياً (الحل الأضمن والأذكى)
-// ==========================================
+// مسار استقبال التوكن يدوياً للأدمن
 app.post('/api/admin/mdarahim/update-token', async (req, res) => {
     const { adminPass, token } = req.body;
-    
+
     if (adminPass !== ADMIN_SECRET_KEY) {
         return res.status(401).json({ success: false, message: "كلمة مرور الأدمن غير صحيحة" });
     }
@@ -268,15 +263,14 @@ app.post('/api/admin/mdarahim/update-token', async (req, res) => {
     }
 
     cachedMdarahimToken = token.trim();
-    console.log("📌 [أم دراهم] تم اعتماد التوكن الجديد وربطه بالسيرفر بنجاح بواسطة الأدمن.");
-    
+    console.log("📌 [أم دراهم] تم اعتماد التوكن الجديد وربطه بالسيرفر بنجاح.");
+
     return res.json({ success: true, message: "تم تحديث توكن أم دراهم بنجاح وسيرفرك جاهز للشحن الآن!" });
 });
 
 // ==========================================
-// 🚀 المسارات الخاصة بنظام أم دراهم
+// 🚀 المسارات الخاصة بنظام أم دراهم (تنفيذ الشحن والباقات)
 // ==========================================
-
 app.post('/api/mdarahim/packages', async (req, res) => {
     const { phone, price, serviceId, offerId, mobileNumber, serviceName } = req.body;
 
@@ -300,7 +294,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
             type: 'package',
             targetId: mobileNumber,
             serviceId: String(serviceId),
-            serviceName: serviceName || 'باقات ومزايا',
+            serviceName: serviceName || 'باقات ومزايا أم دراهم',
             price: Number(price),
             referenceId: referenceId
         });
@@ -322,11 +316,11 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         try {
             const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', {
                 "AC": 1,
-                "PSI": Number(serviceId),       
-                "AMT": Number(price),           
-                "OFFER_ID": String(offerId),    
-                "NUM": String(mobileNumber),    
-                "TRANID": referenceId           
+                "PSI": Number(serviceId),
+                "AMT": Number(price),
+                "OFFER_ID": String(offerId),
+                "NUM": String(mobileNumber),
+                "TRANID": referenceId
             }, {
                 headers: {
                     'Authorization': `Bearer ${cachedMdarahimToken}`,
@@ -366,7 +360,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 cachedMdarahimToken = null;
-                initializeMdarahimAuth(); 
+                initializeMdarahimAuth();
             }
             newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
             newTxn.errorCode = 'TIMEOUT_ERROR';
@@ -408,7 +402,7 @@ app.post('/api/mdarahim/action', async (req, res) => {
             cachedMdarahimToken = null;
             initializeMdarahimAuth();
         }
-        return res.status(500).json({ success: false, message: "حدث خطأ أثناء الاتصال بسيرفر أم دراهم الموحد", error: error.message });
+        return res.status(500).json({ success: false, message: "حدث خطأ أثناء الاتصال بسيرفر أم دراهم", error: error.message });
     }
 });
 
@@ -620,21 +614,19 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📋 مسار جلب باقات أم دراهم من كولكشن mdarahimpackages المحددة
+// 📋 مسار جلب باقات أم دراهم من كولكشن mdarahimpackages[span_2](start_span)[span_2](end_span)
 // ==========================================
 let cachedMdarahimServices = null;
 let lastMdarahimFetchTime = 0;
 
 app.get('/api/mdarahim/services', async (req, res) => {
     try {
-        // يتم القراءة من كولكشن mdarahimpackages مباشرة
         const localPackages = await MdarahimPackage.find({}).sort({ price: 1 });
-        
+
         if (localPackages && localPackages.length > 0) {
             return res.json({ success: true, services_list: localPackages, source: 'database' });
         }
 
-        // نظام حماية احتياطي (Fallback) في حال فرغت قاعدة البيانات لأي سبب
         const currentTime = Date.now();
         if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
             return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
@@ -647,7 +639,7 @@ app.get('/api/mdarahim/services', async (req, res) => {
 
         const response = await axios.get('https://www.mdarahim.net/api/ac/v1/getservices', {
             headers: { 'Authorization': `Bearer ${cachedMdarahimToken}`, 'Accept': 'application/json' },
-            timeout: 20000 
+            timeout: 20000
         });
 
         if (response.data) {
@@ -808,7 +800,7 @@ app.post('/api/messages/send', async (req, res) => {
         if (receiver === 'ALL') {
             const devices = await DeviceToken.find({});
             const tokens = devices.map(d => d.token);
-            
+
             const chunkSize = 500;
             for (let i = 0; i < tokens.length; i += chunkSize) {
                 const chunk = tokens.slice(i, i + chunkSize);
@@ -860,16 +852,7 @@ app.post('/api/admin/settings/update', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-// ==========================================
-// 🚀 بدء تشغيل السيرفر
-// ==========================================
-// ==========================================
-// 🛠️ مسار أدمن لإضافة وتحديث باقات أم دراهم يدوياً في القاعدة
-// ==========================================
+// مسار أدمن لحفظ وتحديث باقات أم دراهم يدوياً في القاعدة[span_3](start_span)[span_3](end_span)
 app.post('/api/admin/mdarahim/save-packages', async (req, res) => {
     const { adminPass, packages } = req.body;
 
@@ -882,7 +865,6 @@ app.post('/api/admin/mdarahim/save-packages', async (req, res) => {
     }
 
     try {
-        // تفريغ الباقات القديمة وإدخال الجديدة لتحديث القائمة فوراً
         await MdarahimPackage.deleteMany({});
         await MdarahimPackage.insertMany(packages);
 
@@ -894,6 +876,13 @@ app.post('/api/admin/mdarahim/save-packages', async (req, res) => {
     }
 });
 
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// ==========================================
+// 🚀 بدء تشغيل السيرفر
+// ==========================================
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();

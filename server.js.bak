@@ -1,7 +1,7 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
+const mongoose = require('mongoose');                                             
+const cors = require('cors');                                                     
+const path = require('path');                                                     
 require('dotenv').config();
 const axios = require('axios');
 const FormData = require('form-data');
@@ -202,7 +202,7 @@ function makeEmbedUrl(url) {
 }
 
 // ==========================================
-// 💳 إعدادات ودوال نظام أم دراهم المحدثة (MDarahim API V2)
+// 💳 إعدادات نظام أم دراهم (MDarahim API)
 // ==========================================
 let cachedMdarahimToken = null;
 
@@ -242,12 +242,9 @@ async function initializeMdarahimAuth() {
         }
 
     } catch (error) {
-        console.error('⚠️ [أم دراهم] السيرفر محظور مؤقتاً. يمكنك تحديث التوكن يدويًا عبر مسار الأدمن المخصص.');
-        setTimeout(initializeMdarahimAuth, 60 * 60 * 1000);
+        console.error('⚠️ [أم دراهم] جلب التوكن تلقائياً تعذر، سيتم الاعتماد على التسجيل المباشر مع كل طلب.');
     }
 }
-
-setInterval(initializeMdarahimAuth, 23 * 60 * 60 * 1000);
 
 // مسار استقبال التوكن يدوياً للأدمن
 app.post('/api/admin/mdarahim/update-token', async (req, res) => {
@@ -268,120 +265,122 @@ app.post('/api/admin/mdarahim/update-token', async (req, res) => {
 });
 
 // ==========================================
-// 🚀 المسارات الخاصة بنظام أم دراهم (تنفيذ الشحن والباقات مطابقة للتوثيق الرسمي V2)
+// 🚀 المسار المعتمد والمصحح لتنفيذ الشحن والباقات (مطابق تماماً للتجربة الناجحة)
 // ==========================================
 app.post('/api/mdarahim/packages', async (req, res) => {
     const { phone, price, serviceId, offerId, mobileNumber, serviceName } = req.body;
 
-    if (!phone || !price || !serviceId || !mobileNumber) {
+    if (!phone || !serviceId || !mobileNumber) {
         return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
     }
 
     try {
         const user = await User.findOne({ phone });
-        if (!user || user.bal < Number(price)) {
-            return res.json({ success: false, message: "رصيدك الحالي غير كافٍ لتفعيل هذه الباقة" });
+        const itemPrice = price ? Number(price) : 0;
+
+        if (user && itemPrice > 0 && user.bal < itemPrice) {
+            return res.json({ success: false, message: "رصيدك الحالي غير كافٍ" });
         }
 
-        // خصم المبلغ مؤقتاً من رصيد المستخدم المحلي
-        user.bal -= Number(price);
-        await user.save();
+        if (user && itemPrice > 0) {
+            user.bal -= itemPrice;
+            await user.save();
+        }
 
-        // توليد مرجع فريد بطول مناسب (مثلاً رقم مرجع يبدأ بـ MD ويتكون من أرقام أو رموز حسب التوثيق)
-        const referenceId = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+        // توليد رقم مرجعي عشوائي رقمي مثل shuf تماماً
+        const referenceId = Math.floor(10000000 + Math.random() * 90000000).toString();
         
         const newTxn = new Transaction({
-            userId: user._id,
+            userId: user ? user._id : null,
             phone,
             type: 'package',
             targetId: mobileNumber,
             serviceId: String(serviceId),
-            serviceName: serviceName || 'باقات ومزايا أم دراهم',
-            price: Number(price),
+            serviceName: serviceName || 'أم دراهم',
+            price: itemPrice,
             referenceId: referenceId
         });
         await newTxn.save();
 
-        if (!cachedMdarahimToken) {
-            await initializeMdarahimAuth();
-        }
-
-        if (!cachedMdarahimToken) {
-            user.bal += Number(price);
-            await user.save();
-            newTxn.status = 'فاشلة ❌';
-            newTxn.errorCode = 'TOKEN_MISSING';
-            await newTxn.save();
-            return res.json({ success: false, message: "جاري تهيئة الاتصال بالمزود، يرجى المحاولة بعد قليل." });
-        }
-
         try {
-            // بناء الطلب بالهيكل الرسمي المعتمد في الجدول (3.1) والمسار /api/ac/v1/do
+            // 1. تسجيل الدخول الفوري وجلب التوكن الحصري مع كل طلب لضمان عدم انتهاء الجلسة
+            const loginResponse = await axios.post('https://www.mdarahim.net/logins', 
+                new URLSearchParams({
+                    'username': '780425632',
+                    'password': '737465252',
+                    'grant_type': 'password'
+                }), {
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    timeout: 30000
+                }
+            );
+
+            const accessToken = loginResponse.data && loginResponse.data.access_token;
+            if (!accessToken) {
+                throw new Error("فشل في استخراج التوكن من بيانات الاعتماد");
+            }
+
+            // 2. تجهيز هيكل الطلب المباشر والمطابق تماماً لتجربة الـ Termux الناجحة
             const payload = {
-                "AC": 1, // 1 لتنفيذ عملية التسديد/الباقات
+                "AC": 1,
                 "PSI": Number(serviceId),
-                "AMT": Number(price),
                 "NUM": String(mobileNumber),
                 "TRANID": referenceId
             };
 
-            if (offerId) {
+            if (offerId !== undefined && offerId !== null && offerId !== "") {
                 payload.OFFER_ID = String(offerId);
             }
 
+            if (itemPrice > 0) {
+                payload.AMT = itemPrice;
+            }
+
+            // 3. التنفيذ المباشر للعملية عند المزود
             const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', payload, {
                 headers: {
-                    'Authorization': `Bearer ${cachedMdarahimToken}`,
+                    'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                timeout: 45000 // رفع المهلة إلى 45 ثانية لتفادي الـ Timeout
+                timeout: 45000
             });
 
             const result = response.data;
 
-            // بناءً على جدول (1.2) لكواد الاستجابة RC
             if (result && Number(result.RC) === 1) {
                 newTxn.status = 'ناجحة ✅';
                 await newTxn.save();
 
-                const nTitle = "نجاح تفعيل الباقة ⚡";
-                const nBody = `تم شحن وتسديد ${serviceName || 'الباقة المطلوبة'} للرقم ${mobileNumber} بنجاح.`;
+                const nTitle = "نجاح عملية التسديد ⚡";
+                const nBody = `تم شحن وتسديد ${serviceName || 'الخدمة'} للرقم ${mobileNumber} بنجاح.`;
                 await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
                 sendPushNotification(phone, nTitle, nBody);
 
-                return res.json({ success: true, currentBal: user.bal, response: result });
-
-            } else if (result && (Number(result.RC) === 2 || Number(result.RC) === -1)) {
-                // العمليات المعلقة
-                newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
-                await newTxn.save();
-                return res.json({ success: false, message: result.RD || "العملية معلقة لدى المزود، سيتم مراجعتها وتحديثها." });
-
+                return res.json({ success: true, currentBal: user ? user.bal : 0, response: result });
             } else {
-                // فشل العملية واسترجاع الرصيد للمستخدم
-                user.bal += Number(price);
-                await user.save();
+                if (user && itemPrice > 0) {
+                    user.bal += itemPrice;
+                    await user.save();
+                }
                 newTxn.status = 'فاشلة ❌';
                 newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
                 await newTxn.save();
-                return res.json({ success: false, message: result ? result.RD : "تم رفض الطلب من قبل نظام المزود." });
+                return res.json({ success: false, message: result ? (result.RD || "رفض الطلب من المزود") : "استجابة غير صالحة" });
             }
 
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                cachedMdarahimToken = null;
-                initializeMdarahimAuth();
+            if (user && itemPrice > 0) {
+                user.bal += itemPrice;
+                await user.save();
             }
-            // في حال حدوث Timeout أو انقطع الاتصال، نتركها معلقة ونبلغ المستخدم
-            newTxn.status = 'معلقة (تحقق يدوي) ⚠️';
-            newTxn.errorCode = 'TIMEOUT_ERROR';
-            await newTxn.save();
-            return res.json({ success: false, message: "العملية قيد المعالجة الآن، يرجى مراجعة السجل بعد قليل." });
+            newTxn.status = 'معلقة ⚠️';
+            newTxn.save();
+            return res.json({ success: false, message: "خطأ في الاتصال بالمزود، تم إعادة الرصيد.", error: error.message });
         }
 
     } catch (dbError) {
-        return res.status(500).json({ success: false, message: "حدث خطأ داخلي في السيرفر" });
+        return res.status(500).json({ success: false, message: "خطأ في قاعدة البيانات" });
     }
 });
 
@@ -395,10 +394,6 @@ app.post('/api/mdarahim/action', async (req, res) => {
         await initializeMdarahimAuth();
     }
 
-    if (!cachedMdarahimToken) {
-        return res.status(500).json({ success: false, message: "التوكن غير متوفر حالياً." });
-    }
-
     try {
         const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', requestBody, {
             headers: {
@@ -410,10 +405,6 @@ app.post('/api/mdarahim/action', async (req, res) => {
         });
         return res.json({ success: true, result: response.data });
     } catch (error) {
-        if (error.response && error.response.status === 401) {
-            cachedMdarahimToken = null;
-            initializeMdarahimAuth();
-        }
         return res.status(500).json({ success: false, message: "حدث خطأ أثناء الاتصال بسيرفر أم دراهم", error: error.message });
     }
 });

@@ -1,21 +1,23 @@
 const express = require('express');
-const mongoose = require('mongoose');                                             
-const cors = require('cors');                                                     
-const path = require('path');                                                     
+const mongoose = require('mongoose');
+const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 const axios = require('axios');
 const FormData = require('form-data');
 const crypto = require('crypto');
 const admin = require('firebase-admin');
 
+// ==========================================
+// 🔑 تهيئة خدمات Firebase Admin
+// ==========================================
 let serviceAccount;
 
-// قراءة بيانات مفتاح Firebase من متغيرات البيئة أو محلياً
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
         serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     } catch (err) {
-        console.error("❌ خطأ في تحليل نص FIREBASE_SERVICE_ACCOUNT المستلم:", err.message);
+        console.error("❌ خطأ في تحليل نص FIREBASE_SERVICE_ACCOUNT:", err.message);
     }
 } else {
     try {
@@ -27,7 +29,7 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 
 if (serviceAccount) {
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+        credential: admin.credential.cert(serviceAccount)
     });
     console.log("✅ تم تفعيل خدمة Firebase Admin بنجاح.");
 } else {
@@ -41,23 +43,26 @@ const PORT = process.env.PORT || 3000;
 // 🛠️ إعدادات الوسائط (Middleware)
 // ==========================================
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ==========================================
 // 🗄️ الاتصال بقاعدة البيانات (MongoDB)
 // ==========================================
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mohe78795_db_user:737465252@cluster0.qr9q8iv.mongodb.net/abu_hussein_db?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+    console.error("❌ تحذير: لم يتم ضبط MONGO_URI في ملف .env");
+}
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log("✅ متصل بقاعدة البيانات (MongoDB)"))
     .catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
 
 // ==========================================
-// 🗃️ تعريف الموديلات وتحديد أسماء الجداول بدقة
+// 🗃️ تعريف الموديلات والمخططات (Schemas)
 // ==========================================
-
 const DeviceToken = mongoose.model('DeviceToken', new mongoose.Schema({
     phone: { type: String, required: true },
     token: { type: String, required: true, unique: true },
@@ -86,7 +91,7 @@ const Product = mongoose.model('Product', new mongoose.Schema({
 }), 'products');
 
 const Order = mongoose.model('Order', new mongoose.Schema({
-    id: { type: String, default: () => "INV-" + Math.floor(100000 + Math.random() * 900000) },
+    id: { type: String, unique: true, default: () => "INV-" + Date.now() + Math.floor(100 + Math.random() * 900) },
     phone: String,
     items: Array,
     total: Number,
@@ -169,9 +174,9 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
 // ==========================================
 // 🗝️ إعدادات ومتغيرات نظام Mega Center
 // ==========================================
-const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "123456";
-const MEGA_USERNAME = 'u_4082361957';
-const MEGA_API_KEY = 'trrC6caLfhvod3HPxTE5ND9Ld6wvdsa5jm1Nlq2GrNdD7';
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "SECURE_ADMIN_PASS_123";
+const MEGA_USERNAME = process.env.MEGA_USERNAME;
+const MEGA_API_KEY = process.env.MEGA_API_KEY;
 const MEGA_URL = 'https://megatec-center.com/api/rest.php';
 
 const getMegaAuthHeader = () => {
@@ -198,7 +203,7 @@ function makeEmbedUrl(url) {
     if (!url) return "";
     let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     let match = url.match(regExp);
-    return (match && match[2].length == 11) ? "https://www.youtube.com/embed/" + match[2] : url;
+    return (match && match[2].length === 11) ? "https://www.youtube.com/embed/" + match[2] : url;
 }
 
 // ==========================================
@@ -209,15 +214,15 @@ let cachedMdarahimToken = null;
 async function initializeMdarahimAuth() {
     const url = 'https://www.mdarahim.net/logins';
     const params = new URLSearchParams();
-    params.append('username', '780425632');
-    params.append('password', '737465252');
+    params.append('username', process.env.MDARAHIM_USERNAME || '');
+    params.append('password', process.env.MDARAHIM_PASSWORD || '');
     params.append('grant_type', 'password');
 
     try {
-        const response = await axios.post(url, params, {
+        const response = await axios.post(url, params.toString(), {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             },
             timeout: 15000
         });
@@ -238,11 +243,11 @@ async function initializeMdarahimAuth() {
             cachedMdarahimToken = token.trim();
             console.log('✅ [أم دراهم] تم الحصول على التوكن وتنظيفه بنجاح تلقائياً.');
         } else {
-            console.error('❌ [أم دراهم] تعذر استخراج التوكن، يرجى تحديثه يدويًا.');
+            console.error('❌ [أم دراهم] تعذر استخراج التوكن.');
         }
 
     } catch (error) {
-        console.error('⚠️ [أم دراهم] جلب التوكن تلقائياً تعذر، سيتم الاعتماد على التسجيل المباشر مع كل طلب.');
+        console.error('⚠️ [أم دراهم] تعذر جلب التوكن تلقائياً:', error.message);
     }
 }
 
@@ -260,12 +265,11 @@ app.post('/api/admin/mdarahim/update-token', async (req, res) => {
 
     cachedMdarahimToken = token.trim();
     console.log("📌 [أم دراهم] تم اعتماد التوكن الجديد وربطه بالسيرفر بنجاح.");
-
-    return res.json({ success: true, message: "تم تحديث توكن أم دراهم بنجاح وسيرفرك جاهز للشحن الآن!" });
+    return res.json({ success: true, message: "تم تحديث توكن أم دراهم بنجاح!" });
 });
 
 // ==========================================
-// 🚀 المسار المعتمد والمصحح لتنفيذ الشحن والباقات (مطابق تماماً للتجربة الناجحة)
+// 🚀 المسار المصحح لتنفيذ شحن باقات أم دراهم
 // ==========================================
 app.post('/api/mdarahim/packages', async (req, res) => {
     const { phone, price, serviceId, offerId, mobileNumber, serviceName } = req.body;
@@ -274,22 +278,27 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
     }
 
+    const itemPrice = price ? Number(price) : 0;
+
     try {
-        const user = await User.findOne({ phone });
-        const itemPrice = price ? Number(price) : 0;
+        // اقتطاع الرصيد بشكل آمن لمنع Race Condition
+        let user = null;
+        if (itemPrice > 0) {
+            user = await User.findOneAndUpdate(
+                { phone, bal: { $gte: itemPrice } },
+                { $inc: { bal: -itemPrice } },
+                { new: true }
+            );
 
-        if (user && itemPrice > 0 && user.bal < itemPrice) {
-            return res.json({ success: false, message: "رصيدك الحالي غير كافٍ" });
+            if (!user) {
+                return res.json({ success: false, message: "رصيدك الحالي غير كافٍ" });
+            }
+        } else {
+            user = await User.findOne({ phone });
         }
 
-        if (user && itemPrice > 0) {
-            user.bal -= itemPrice;
-            await user.save();
-        }
-
-        // توليد رقم مرجعي عشوائي رقمي مثل shuf تماماً
         const referenceId = Math.floor(10000000 + Math.random() * 90000000).toString();
-        
+
         const newTxn = new Transaction({
             userId: user ? user._id : null,
             phone,
@@ -303,24 +312,23 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         await newTxn.save();
 
         try {
-            // 1. تسجيل الدخول الفوري وجلب التوكن الحصري مع كل طلب لضمان عدم انتهاء الجلسة
-            const loginResponse = await axios.post('https://www.mdarahim.net/logins', 
-                new URLSearchParams({
-                    'username': '780425632',
-                    'password': '737465252',
-                    'grant_type': 'password'
-                }), {
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    timeout: 30000
-                }
-            );
+            // 1. جلب التوكن الحصري للعملية
+            const params = new URLSearchParams();
+            params.append('username', process.env.MDARAHIM_USERNAME || '');
+            params.append('password', process.env.MDARAHIM_PASSWORD || '');
+            params.append('grant_type', 'password');
+
+            const loginResponse = await axios.post('https://www.mdarahim.net/logins', params.toString(), {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                timeout: 30000
+            });
 
             const accessToken = loginResponse.data && loginResponse.data.access_token;
             if (!accessToken) {
                 throw new Error("فشل في استخراج التوكن من بيانات الاعتماد");
             }
 
-            // 2. تجهيز هيكل الطلب المباشر والمطابق تماماً لتجربة الـ Termux الناجحة
+            // 2. تجهيز هيكل الطلب
             const payload = {
                 "AC": 1,
                 "PSI": Number(serviceId),
@@ -336,7 +344,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 payload.AMT = itemPrice;
             }
 
-            // 3. التنفيذ المباشر للعملية عند المزود
+            // 3. التنفيذ المباشر عند المزود
             const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', payload, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -360,8 +368,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 return res.json({ success: true, currentBal: user ? user.bal : 0, response: result });
             } else {
                 if (user && itemPrice > 0) {
-                    user.bal += itemPrice;
-                    await user.save();
+                    await User.findByIdAndUpdate(user._id, { $inc: { bal: itemPrice } });
                 }
                 newTxn.status = 'فاشلة ❌';
                 newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
@@ -371,11 +378,10 @@ app.post('/api/mdarahim/packages', async (req, res) => {
 
         } catch (error) {
             if (user && itemPrice > 0) {
-                user.bal += itemPrice;
-                await user.save();
+                await User.findByIdAndUpdate(user._id, { $inc: { bal: itemPrice } });
             }
             newTxn.status = 'معلقة ⚠️';
-            newTxn.save();
+            await newTxn.save();
             return res.json({ success: false, message: "خطأ في الاتصال بالمزود، تم إعادة الرصيد.", error: error.message });
         }
 
@@ -384,6 +390,9 @@ app.post('/api/mdarahim/packages', async (req, res) => {
     }
 });
 
+// ==========================================
+// ⚡ مسار Action لخدمات أم دراهم المباشرة (تم إصلاح عدم إرجاع الاستجابة)
+// ==========================================
 app.post('/api/mdarahim/action', async (req, res) => {
     const requestBody = req.body;
     if (!requestBody || !requestBody.AC) {
@@ -462,13 +471,19 @@ app.get('/api/auth/user/:phone', async (req, res) => {
 
 app.post('/api/orders/add', async (req, res) => {
     const { phone, order } = req.body;
+    const totalAmount = Number(order.total);
+
     try {
-        const user = await User.findOne({ phone });
-        if (!user || user.bal < order.total) return res.status(400).json({ success: false, message: "الرصيد غير كافٍ" });
-        user.bal -= order.total;
-        await user.save();
-        await new Order({ phone, items: order.items, total: order.total }).save();
-        sendPushNotification(phone, "تم استلام طلبك 📦", `خصم ${order.total} YER. طلبك قيد المراجعة حالياً.`);
+        const user = await User.findOneAndUpdate(
+            { phone, bal: { $gte: totalAmount } },
+            { $inc: { bal: -totalAmount } },
+            { new: true }
+        );
+
+        if (!user) return res.status(400).json({ success: false, message: "الرصيد غير كافٍ" });
+
+        await new Order({ phone, items: order.items, total: totalAmount }).save();
+        sendPushNotification(phone, "تم استلام طلبك 📦", `خصم ${totalAmount} YER. طلبك قيد المراجعة حالياً.`);
         res.json({ success: true, currentBal: user.bal });
     } catch (e) { res.status(500).json({ success: false }); }
 });
@@ -485,7 +500,7 @@ app.get('/api/messages/:phone', async (req, res) => {
 });
 
 // ==========================================
-// 🕹️ مسارات ميجا سنتر والويب هوك
+// 🕹️ مسارات Mega Center والويب هوك
 // ==========================================
 let cachedServices = null;
 let lastFetchTime = 0;
@@ -518,16 +533,20 @@ app.post('/api/games/topup', async (req, res) => {
     const { phone, price, serviceId, serviceName, user_id, type } = req.body;
     if (!phone || !price || !serviceId || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
 
-    try {
-        const user = await User.findOne({ phone });
-        if (!user || user.bal < Number(price)) return res.json({ success: false, message: "رصيدك غير كافٍ" });
+    const itemPrice = Number(price);
 
-        user.bal -= Number(price);
-        await user.save();
+    try {
+        const user = await User.findOneAndUpdate(
+            { phone, bal: { $gte: itemPrice } },
+            { $inc: { bal: -itemPrice } },
+            { new: true }
+        );
+
+        if (!user) return res.json({ success: false, message: "رصيدك غير كافٍ" });
 
         const referenceId = 'TMN-' + crypto.randomBytes(4).toString('hex').toUpperCase();
         const newTxn = new Transaction({
-            userId: user._id, phone, type: type || 'game', targetId: user_id, serviceId, serviceName, price: Number(price), referenceId
+            userId: user._id, phone, type: type || 'game', targetId: user_id, serviceId, serviceName, price: itemPrice, referenceId
         });
         await newTxn.save();
 
@@ -536,7 +555,7 @@ app.post('/api/games/topup', async (req, res) => {
         form.append('service', String(serviceId));
         form.append('reference', referenceId);
         form.append('player_id', String(user_id));
-        form.append('price_check', String(price));
+        form.append('price_check', String(itemPrice));
 
         try {
             const response = await axios.post(MEGA_URL, form, {
@@ -555,8 +574,7 @@ app.post('/api/games/topup', async (req, res) => {
 
                 return res.json({ success: true, currentBal: user.bal, orderId: data.orderid });
             } else {
-                user.bal += Number(price);
-                await user.save();
+                await User.findByIdAndUpdate(user._id, { $inc: { bal: itemPrice } });
                 newTxn.status = 'فاشلة ❌';
                 newTxn.errorCode = data.code;
                 await newTxn.save();
@@ -598,11 +616,8 @@ app.post('/api/mega-webhook', async (req, res) => {
             txn.megaOrderId = orderid;
             await txn.save();
 
-            const user = await User.findById(txn.userId);
+            const user = await User.findByIdAndUpdate(txn.userId, { $inc: { bal: txn.price } }, { new: true });
             if (user) {
-                user.bal += txn.price;
-                await user.save();
-
                 const nTitle = "إلغاء العملية وإعادة الرصيد ↩️";
                 const nBody = `تم رفض عملية الشحن لـ ${txn.serviceName}. السبب: ${result || 'غير محدد'}. تم إعادة مبلغ ${txn.price} إلى حسابك.`;
                 await new Message({ receiver: txn.phone, title: nTitle, body: nBody }).save();
@@ -889,4 +904,5 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
+
 

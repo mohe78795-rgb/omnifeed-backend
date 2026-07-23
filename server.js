@@ -211,44 +211,8 @@ function makeEmbedUrl(url) {
 // ==========================================
 let cachedMdarahimToken = null;
 
-async function initializeMdarahimAuth_disabled() {
-    const url = 'https://www.mdarahim.net/logins';
-    const params = new URLSearchParams();
-    params.append('username', process.env.MDARAHIM_USERNAME || '');
-    params.append('password', process.env.MDARAHIM_PASSWORD || '');
-    params.append('grant_type', 'password');
-
-    try {
-        const response = await axios.post(url, params.toString(), {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            },
-            timeout: 15000
-        });
-
-        let responseData = response.data;
-        let token = null;
-
-        if (typeof responseData === 'object' && responseData.access_token) {
-            token = responseData.access_token;
-        } else if (typeof responseData === 'string') {
-            const match = responseData.match(/"access_token"\s*:\s*"([^"]+)"/);
-            if (match && match[1]) {
-                token = match[1];
-            }
-        }
-
-        if (token) {
-            cachedMdarahimToken = token.trim();
-            console.log('✅ [أم دراهم] تم الحصول على التوكن وتنظيفه بنجاح تلقائياً.');
-        } else {
-            console.error('❌ [أم دراهم] تعذر استخراج التوكن.');
-        }
-
-    } catch (error) {
-        console.error('⚠️ [أم دراهم] تعذر جلب التوكن تلقائياً:', error.message);
-    }
+function initializeMdarahimAuth() {
+    console.log("ℹ️ [أم دراهم] التوكن التلقائي معطل لتفادي حظر Cloudflare. يتم الاعتماد على التحديث اليدوي عبر Endpoint.");
 }
 
 // مسار استقبال التوكن يدوياً للأدمن
@@ -281,7 +245,6 @@ app.post('/api/mdarahim/packages', async (req, res) => {
     const itemPrice = price ? Number(price) : 0;
 
     try {
-        // اقتطاع الرصيد بشكل آمن لمنع Race Condition
         let user = null;
         if (itemPrice > 0) {
             user = await User.findOneAndUpdate(
@@ -312,23 +275,32 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         await newTxn.save();
 
         try {
-            // 1. جلب التوكن الحصري للعملية
-            const params = new URLSearchParams();
-            params.append('username', process.env.MDARAHIM_USERNAME || '');
-            params.append('password', process.env.MDARAHIM_PASSWORD || '');
-            params.append('grant_type', 'password');
+            let accessToken = cachedMdarahimToken;
 
-            const loginResponse = await axios.post('https://www.mdarahim.net/logins', params.toString(), {
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                timeout: 30000
-            });
-
-            const accessToken = loginResponse.data && loginResponse.data.access_token;
+            // إذا لم يكن هناك توكن مخزن، نحاول جلب توكن جديد للعملية
             if (!accessToken) {
-                throw new Error("فشل في استخراج التوكن من بيانات الاعتماد");
+                const params = new URLSearchParams();
+                params.append('username', process.env.MDARAHIM_USERNAME || '');
+                params.append('password', process.env.MDARAHIM_PASSWORD || '');
+                params.append('grant_type', 'password');
+
+                const loginResponse = await axios.post('https://www.mdarahim.net/logins', params.toString(), {
+                    headers: { 
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    },
+                    timeout: 30000
+                });
+
+                if (loginResponse.data && loginResponse.data.access_token) {
+                    accessToken = loginResponse.data.access_token;
+                }
             }
 
-            // 2. تجهيز هيكل الطلب
+            if (!accessToken) {
+                throw new Error("لا يوجد توكن صالح لإتمام العملية");
+            }
+
             const payload = {
                 "AC": 1,
                 "PSI": Number(serviceId),
@@ -344,7 +316,6 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 payload.AMT = itemPrice;
             }
 
-            // 3. التنفيذ المباشر عند المزود
             const response = await axios.post('https://www.mdarahim.net/api/ac/v1/do', payload, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -391,7 +362,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
 });
 
 // ==========================================
-// ⚡ مسار Action لخدمات أم دراهم المباشرة (تم إصلاح عدم إرجاع الاستجابة)
+// ⚡ مسار Action لخدمات أم دراهم المباشرة
 // ==========================================
 app.post('/api/mdarahim/action', async (req, res) => {
     const requestBody = req.body;
@@ -400,7 +371,7 @@ app.post('/api/mdarahim/action', async (req, res) => {
     }
 
     if (!cachedMdarahimToken) {
-        await // initializeMdarahimAuth();
+        return res.status(400).json({ success: false, message: "التوكن غير متوفر حالياً، يرجى تحديثه من لوحة التحكم." });
     }
 
     try {
@@ -902,8 +873,7 @@ app.get('/admin', (req, res) => {
 // ==========================================
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
-    // initializeMdarahimAuth();
+    initializeMdarahimAuth();
 });
 
 
-function initializeMdarahimAuth() { console.log('⚠️ التوكن التلقائي معطل لتفادي حظر Cloudflare'); }

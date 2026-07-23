@@ -400,7 +400,7 @@ app.post('/api/mdarahim/action', async (req, res) => {
     }
 
     if (!cachedMdarahimToken) {
-        await initializeMdarahimAuth();
+        await // initializeMdarahimAuth();
     }
 
     try {
@@ -902,7 +902,7 @@ app.get('/admin', (req, res) => {
 // ==========================================
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
-    initializeMdarahimAuth();
+    // initializeMdarahimAuth();
 });
 
 

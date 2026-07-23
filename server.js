@@ -211,7 +211,7 @@ function makeEmbedUrl(url) {
 // ==========================================
 let cachedMdarahimToken = null;
 
-async function initializeMdarahimAuth() {
+async function initializeMdarahimAuth_disabled() {
     const url = 'https://www.mdarahim.net/logins';
     const params = new URLSearchParams();
     params.append('username', process.env.MDARAHIM_USERNAME || '');
@@ -906,3 +906,4 @@ app.listen(PORT, () => {
 });
 
 
+function initializeMdarahimAuth() { console.log('⚠️ التوكن التلقائي معطل لتفادي حظر Cloudflare'); }

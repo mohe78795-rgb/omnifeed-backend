@@ -291,6 +291,40 @@ app.post('/api/admin/mdarahim/update-token', async (req, res) => {
 });
 
 // ==========================================
+// 💰 مسار جلب رصيد أم دراهم المباشر للوكيل
+// ==========================================
+app.get('/api/admin/mdarahim/balance', async (req, res) => {
+    const { adminPass } = req.query;
+
+    if (adminPass !== ADMIN_SECRET_KEY) {
+        return res.status(401).json({ success: false, message: "كلمة مرور الأدمن غير صحيحة" });
+    }
+
+    try {
+        if (!cachedMdarahimToken) {
+            await fetchMdarahimToken();
+        }
+
+        if (!cachedMdarahimToken) {
+            return res.status(500).json({ success: false, message: "تعذر الحصول على توكن أم دراهم" });
+        }
+
+        const response = await axios.get(`${MDARAHIM_BASE_URL}/api/ac/v1/getbalance`, {
+            headers: {
+                'Authorization': `Bearer ${cachedMdarahimToken}`,
+                'Accept': 'application/json'
+            },
+            timeout: 20000
+        });
+
+        return res.json({ success: true, balanceData: response.data });
+    } catch (error) {
+        console.error("❌ خطأ في جلب رصيد أم دراهم:", error.message);
+        return res.status(500).json({ success: false, message: "حدث خطأ أثناء الاستعلام عن رصيد أم دراهم", error: error.message });
+    }
+});
+
+// ==========================================
 // 🚀 تنفيذ شحن باقات أم دراهم
 // ==========================================
 app.post('/api/mdarahim/packages', async (req, res) => {
@@ -367,7 +401,6 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                     timeout: 45000
                 });
             } catch (apiErr) {
-                // إذا كان خطأ 401 (التوكن انتهت صلاحيته)، نعيد محاولة جلب التوكن والطلب مرة أخرى
                 if (apiErr.response && apiErr.response.status === 401) {
                     console.log("🔄 [أم دراهم] التوكن منتهي الصلاحية، جاري إعادة التجديد...");
                     await fetchMdarahimToken();
@@ -403,7 +436,13 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 newTxn.status = 'فاشلة ❌';
                 newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
                 await newTxn.save();
-                return res.json({ success: false, message: result ? (result.RD || "رفض الطلب من المزود") : "استجابة غير صالحة" });
+
+                let failureMsg = result ? (result.RD || "رفض الطلب من المزود") : "استجابة غير صالحة";
+                if (failureMsg.includes("رصيدك الحالي غير كافي") || failureMsg.includes("غير كافي")) {
+                    failureMsg = "رصيد الوكيل غير كافي، يرجى التواصل مع الدعم الفني";
+                }
+
+                return res.json({ success: false, message: failureMsg });
             }
 
         } catch (error) {

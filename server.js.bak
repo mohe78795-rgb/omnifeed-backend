@@ -7,10 +7,6 @@ const axios = require('axios');
 const FormData = require('form-data');
 const crypto = require('crypto');
 const admin = require('firebase-admin');
-const https = require('https');
-
-// إنشاء وكيل HTTPS ليتجاوز مشاكل شهادة SSL مع الـ IP المباشر
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 // ==========================================
 // 🔑 تهيئة خدمات Firebase Admin
@@ -176,14 +172,14 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
 
         const response = await admin.messaging().sendEachForMulticast(message);
         console.log(`🔔 [إشعار] تم إرسال الإشعار بنجاح إلى (${response.successCount}) جهاز.`);
-        
+
         if (response.failureCount > 0) {
             response.responses.forEach((resp, idx) => {
                 if (!resp.success) {
                     const errCode = resp.error?.code;
                     if (errCode === 'messaging/invalid-registration-token' ||
                         errCode === 'messaging/registration-token-not-registered') {
-                        DeviceToken.deleteOne({ token: tokens[idx] }).catch(err => 
+                        DeviceToken.deleteOne({ token: tokens[idx] }).catch(err =>
                             console.error("❌ خطأ في حذف التوكن التالف:", err.message)
                         );
                     }
@@ -231,10 +227,10 @@ function makeEmbedUrl(url) {
 }
 
 // ==========================================
-// 💳 إعدادات ونظام جلب توكن أم دراهم المباشر (IP)
+// 💳 إعدادات ونظام جلب توكن أم دراهم (النطاق الجديد)
 // ==========================================
 let cachedMdarahimToken = null;
-const MDARAHIM_BASE_IP = 'https://82.114.179.177';
+const MDARAHIM_BASE_URL = 'https://mdarahim.app';
 
 async function fetchMdarahimToken() {
     try {
@@ -251,31 +247,29 @@ async function fetchMdarahimToken() {
         params.append('password', password);
         params.append('grant_type', 'password');
 
-        const loginResponse = await axios.post(`${MDARAHIM_BASE_IP}/logins`, params.toString(), {
+        const loginResponse = await axios.post(`${MDARAHIM_BASE_URL}/logins`, params.toString(), {
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Host': 'www.mdarahim.net'
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
-            httpsAgent,
             timeout: 25000
         });
 
         if (loginResponse.data && loginResponse.data.access_token) {
             cachedMdarahimToken = loginResponse.data.access_token;
-            console.log("✅ [أم دراهم] تم جلب التوكن التلقائي بنجاح عبر IP المباشر.");
+            console.log("✅ [أم دراهم] تم جلب التوكن التلقائي بنجاح عبر النطاق المباشر.");
             return cachedMdarahimToken;
         } else {
             console.error("❌ [أم دراهم] استجابة تسجل الدخول لم تحتوي على access_token:", loginResponse.data);
             return null;
         }
     } catch (error) {
-        console.error("❌ [أم دراهم] فشل جلب التوكن التلقائي عبر الـ IP:", error.message);
+        console.error("❌ [أم دراهم] فشل جلب التوكن التلقائي:", error.message);
         return null;
     }
 }
 
 function initializeMdarahimAuth() {
-    console.log("⚡ [أم دراهم] جاري بدء الاتصال بجلب التوكن التلقائي عبر الـ IP...");
+    console.log("⚡ [أم دراهم] جاري بدء الاتصال بجلب التوكن التلقائي...");
     fetchMdarahimToken();
 }
 
@@ -364,14 +358,12 @@ app.post('/api/mdarahim/packages', async (req, res) => {
 
             let response;
             try {
-                response = await axios.post(`${MDARAHIM_BASE_IP}/api/ac/v1/do`, payload, {
+                response = await axios.post(`${MDARAHIM_BASE_URL}/api/ac/v1/do`, payload, {
                     headers: {
                         'Authorization': `Bearer ${cachedMdarahimToken}`,
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Host': 'www.mdarahim.net'
+                        'Accept': 'application/json'
                     },
-                    httpsAgent,
                     timeout: 45000
                 });
             } catch (apiErr) {
@@ -379,14 +371,12 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 if (apiErr.response && apiErr.response.status === 401) {
                     console.log("🔄 [أم دراهم] التوكن منتهي الصلاحية، جاري إعادة التجديد...");
                     await fetchMdarahimToken();
-                    response = await axios.post(`${MDARAHIM_BASE_IP}/api/ac/v1/do`, payload, {
+                    response = await axios.post(`${MDARAHIM_BASE_URL}/api/ac/v1/do`, payload, {
                         headers: {
                             'Authorization': `Bearer ${cachedMdarahimToken}`,
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'Host': 'www.mdarahim.net'
+                            'Accept': 'application/json'
                         },
-                        httpsAgent,
                         timeout: 45000
                     });
                 } else {
@@ -444,14 +434,12 @@ app.post('/api/mdarahim/action', async (req, res) => {
             await fetchMdarahimToken();
         }
 
-        const response = await axios.post(`${MDARAHIM_BASE_IP}/api/ac/v1/do`, requestBody, {
+        const response = await axios.post(`${MDARAHIM_BASE_URL}/api/ac/v1/do`, requestBody, {
             headers: {
                 'Authorization': `Bearer ${cachedMdarahimToken}`,
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Host': 'www.mdarahim.net'
+                'Accept': 'application/json'
             },
-            httpsAgent,
             timeout: 35000
         });
         return res.json({ success: true, result: response.data });
@@ -514,7 +502,7 @@ app.get('/api/auth/user/:phone', async (req, res) => {
 app.post('/api/orders/add', async (req, res) => {
     const { phone, order } = req.body;
     if (!order || !order.total) return res.status(400).json({ success: false, message: "تفاصيل الطلب ناقصة" });
-    
+
     const totalAmount = Number(order.total);
 
     try {
@@ -698,13 +686,11 @@ app.get('/api/mdarahim/services', async (req, res) => {
             await fetchMdarahimToken();
         }
 
-        const response = await axios.get(`${MDARAHIM_BASE_IP}/api/ac/v1/getservices`, {
-            headers: { 
-                'Authorization': `Bearer ${cachedMdarahimToken}`, 
-                'Accept': 'application/json',
-                'Host': 'www.mdarahim.net'
+        const response = await axios.get(`${MDARAHIM_BASE_URL}/api/ac/v1/getservices`, {
+            headers: {
+                'Authorization': `Bearer ${cachedMdarahimToken}`,
+                'Accept': 'application/json'
             },
-            httpsAgent,
             timeout: 20000
         });
 
@@ -954,4 +940,5 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
+
 

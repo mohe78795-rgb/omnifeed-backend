@@ -298,7 +298,6 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         try {
             let accessToken = cachedMdarahimToken;
 
-            // إذا لم يكن هناك توكن مخزن، نحاول جلب توكن جديد للعملية
             if (!accessToken) {
                 const params = new URLSearchParams();
                 params.append('username', process.env.MDARAHIM_USERNAME || '');
@@ -900,4 +899,5 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
+
 

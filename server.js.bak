@@ -28,10 +28,14 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 }
 
 if (serviceAccount) {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-    console.log("✅ تم تفعيل خدمة Firebase Admin بنجاح.");
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        console.log("✅ تم تفعيل خدمة Firebase Admin بنجاح.");
+    } catch (err) {
+        console.error("❌ خطأ أثناء تهيئة Firebase Admin:", err.message);
+    }
 } else {
     console.error("❌ فشل تشغيل Firebase: لا يوجد ملف مفتاح أو متغير بيئة معرّف!");
 }
@@ -54,11 +58,11 @@ const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
     console.error("❌ تحذير: لم يتم ضبط MONGO_URI في ملف .env");
+} else {
+    mongoose.connect(MONGO_URI)
+        .then(() => console.log("✅ متصل بقاعدة البيانات (MongoDB)"))
+        .catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
 }
-
-mongoose.connect(MONGO_URI)
-    .then(() => console.log("✅ متصل بقاعدة البيانات (MongoDB)"))
-    .catch(err => console.error("❌ خطأ في الاتصال بقاعدة البيانات:", err));
 
 // ==========================================
 // 🗃️ تعريف الموديلات والمخططات (Schemas)
@@ -150,6 +154,8 @@ const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({
 // ==========================================
 async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
     try {
+        if (!admin.apps.length) return;
+
         const devices = await DeviceToken.find({ phone: targetPhone });
         if (!devices || devices.length === 0) return;
         const tokens = devices.map(d => d.token);
@@ -166,6 +172,21 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
 
         const response = await admin.messaging().sendEachForMulticast(message);
         console.log(`🔔 [إشعار] تم إرسال الإشعار بنجاح إلى (${response.successCount}) جهاز.`);
+        
+        // تنظيف التوكنات المنتهية / غير الصالحة
+        if (response.failureCount > 0) {
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    const errCode = resp.error?.code;
+                    if (errCode === 'messaging/invalid-registration-token' ||
+                        errCode === 'messaging/registration-token-not-registered') {
+                        DeviceToken.deleteOne({ token: tokens[idx] }).catch(err => 
+                            console.error("❌ خطأ في حذف التوكن التالف:", err.message)
+                        );
+                    }
+                }
+            });
+        }
     } catch (error) {
         console.error("❌ خطأ إرسال الإشعار:", error.message);
     }
@@ -285,7 +306,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 params.append('grant_type', 'password');
 
                 const loginResponse = await axios.post('https://www.mdarahim.net/logins', params.toString(), {
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                     },
@@ -442,6 +463,8 @@ app.get('/api/auth/user/:phone', async (req, res) => {
 
 app.post('/api/orders/add', async (req, res) => {
     const { phone, order } = req.body;
+    if (!order || !order.total) return res.status(400).json({ success: false, message: "تفاصيل الطلب ناقصة" });
+    
     const totalAmount = Number(order.total);
 
     try {
@@ -790,18 +813,20 @@ app.post('/api/messages/send', async (req, res) => {
             const devices = await DeviceToken.find({});
             const tokens = devices.map(d => d.token);
 
-            const chunkSize = 500;
-            for (let i = 0; i < tokens.length; i += chunkSize) {
-                const chunk = tokens.slice(i, i + chunkSize);
-                await admin.messaging().sendEachForMulticast({
-                    notification: { title, body, ...(imageUrl && { imageUrl }) },
-                    data: { title, body, imageUrl: imageUrl || "" },
-                    android: {
-                        priority: 'high',
-                        notification: { channelId: "messages_channel", sound: "default", clickAction: 'OPEN_ACTIVITY_1' }
-                    },
-                    tokens: chunk
-                });
+            if (tokens.length > 0 && admin.apps.length > 0) {
+                const chunkSize = 500;
+                for (let i = 0; i < tokens.length; i += chunkSize) {
+                    const chunk = tokens.slice(i, i + chunkSize);
+                    await admin.messaging().sendEachForMulticast({
+                        notification: { title, body, ...(imageUrl && { imageUrl }) },
+                        data: { title, body, imageUrl: imageUrl || "" },
+                        android: {
+                            priority: 'high',
+                            notification: { channelId: "messages_channel", sound: "default", clickAction: 'OPEN_ACTIVITY_1' }
+                        },
+                        tokens: chunk
+                    });
+                }
             }
         } else {
             await sendPushNotification(receiver, title, body, imageUrl);
@@ -875,5 +900,4 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
-
 

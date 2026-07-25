@@ -718,47 +718,58 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📋 مسار جلب باقات أم دراهم
+// 📦 مسار جلب الباقات المباشر من قاعدة البيانات
 // ==========================================
-let cachedMdarahimServices = null;
-let lastMdarahimFetchTime = 0;
-
-app.get('/api/mdarahim/services', async (req, res) => {
+app.get('/api/packages', async (req, res) => {
     try {
-        const localPackages = await MdarahimPackage.find({}).sort({ price: 1 });
+        // 1️⃣ جلب الباقات المخزنة في مجموعة (mdarahimpackages) بداخل MongoDb
+        const dbPackages = await MdarahimPackage.find({}).sort({ price: 1 });
 
-        if (localPackages && localPackages.length > 0) {
-            return res.json({ success: true, services_list: localPackages, source: 'database' });
+        if (!dbPackages || dbPackages.length === 0) {
+            return res.status(200).json({ 
+                success: true, 
+                packages: [], 
+                message: "لا توجد باقات مخزنة حالياً في قاعدة البيانات" 
+            });
         }
 
-        const currentTime = Date.now();
-        if (cachedMdarahimServices && (currentTime - lastMdarahimFetchTime < 30 * 60 * 1000)) {
-            return res.json({ success: true, services_list: cachedMdarahimServices, from_cache: true });
-        }
+        // 2️⃣ إعادة صياغة البيانات وتنسيقها لتوافق الواجهة تماماً
+        const formattedPackages = dbPackages.map(pkg => {
+            let netKey = 'YM'; // يمن موبايل كافتراضي
+            if (pkg.type) {
+                const t = pkg.type.toLowerCase();
+                if (t.includes('you') || t.includes('يو')) netKey = 'YOU';
+                else if (t.includes('sabafon') || t.includes('سبأفون')) netKey = 'SABA';
+                else if (t.includes('wye') || t.includes('واي')) netKey = 'WYE';
+                else if (t.includes('tele') || t.includes('ثابت')) netKey = 'TELE';
+            }
 
-        if (!cachedMdarahimToken) {
-            await fetchMdarahimToken();
-        }
-
-        const response = await axios.get(`${MDARAHIM_BASE_URL}/api/ac/v1/getservices`, {
-            headers: {
-                'Authorization': `Bearer ${cachedMdarahimToken}`,
-                'Accept': 'application/json'
-            },
-            timeout: 20000
+            return {
+                _id: pkg._id,
+                serviceId: pkg.offerId,  // تحويل offerId إلى serviceId
+                title: pkg.name,          // تحويل name إلى title
+                price: pkg.price,
+                psi: 46,                  // مشغل الخدمة
+                net: netKey,
+                type: pkg.type || '',
+                internetType: pkg.internetType || ''
+            };
         });
 
-        if (response.data) {
-            cachedMdarahimServices = response.data;
-            lastMdarahimFetchTime = currentTime;
-            return res.json({ success: true, services_list: cachedMdarahimServices, source: 'api_fallback' });
-        }
-        res.json({ success: false, message: "قائمة الخدمات فارغة." });
+        // 3️⃣ إرجاع الاستجابة بنجاح
+        return res.status(200).json({
+            success: true,
+            count: formattedPackages.length,
+            packages: formattedPackages
+        });
 
     } catch (error) {
-        console.error("⚠️ خطأ في مسار جلب الباقات:", error.message);
-        if (cachedMdarahimServices) return res.json({ success: true, services_list: cachedMdarahimServices, note: "بيانات مؤقتة" });
-        res.status(500).json({ success: false, message: "حدث خطأ أثناء جلب قائمة خدمات وباقات أم دراهم" });
+        console.error("❌ خطأ في جلب الباقات من قاعدة البيانات:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "حدث خطأ أثناء قراءة البيانات من السيرفر",
+            error: error.message
+        });
     }
 });
 

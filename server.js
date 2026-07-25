@@ -259,7 +259,7 @@ async function fetchMdarahimToken() {
             console.log("✅ [أم دراهم] تم جلب التوكن التلقائي بنجاح عبر النطاق المباشر.");
             return cachedMdarahimToken;
         } else {
-            console.error("❌ [أم دراهم] استجابة تسجل الدخول لم تحتوي على access_token:", loginResponse.data);
+            console.error("❌ [أم دراهم] استجابة تسجيل الدخول لم تحتوي على access_token:", loginResponse.data);
             return null;
         }
     } catch (error) {
@@ -320,19 +320,19 @@ app.get('/api/admin/mdarahim/balance', async (req, res) => {
         return res.json({ success: true, balanceData: response.data });
     } catch (error) {
         console.error("❌ خطأ في جلب رصيد أم دراهم:", error.message);
-        return res.status(500).json({ 
-            success: false, 
-            message: "حدث خطأ أثناء الاستعلام عن رصيد أم دراهم", 
-            error: error.message 
+        return res.status(500).json({
+            success: false,
+            message: "حدث خطأ أثناء الاستعلام عن رصيد أم دراهم",
+            error: error.message
         });
     }
 });
 
 // ==========================================
-// 🚀 تنفيذ شحن باقات أم دراهم
+// 🚀 تنفيذ شحن باقات أم دراهم (معدل ومصحح)
 // ==========================================
 app.post('/api/mdarahim/packages', async (req, res) => {
-    const { phone, price, serviceId, offerId, psi, PSI, mobileNumber, serviceName } = req.body;
+    const { phone, price, serviceId, offerId, psi, PSI, mobileNumber, serviceName, act, ACT, actionType, AC } = req.body;
 
     if (!phone || (!serviceId && !offerId) || !mobileNumber) {
         return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
@@ -359,6 +359,9 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         const referenceId = Math.floor(10000000 + Math.random() * 90000000).toString();
         const finalOfferId = String(offerId || serviceId);
         const finalPsi = Number(psi || PSI || 7);
+        // تم تحديث ACT لإرسال 1 (إضافة)، 2 (تجديد)، 3 (حذف) بحسب توثيق أم دراهم v2
+        const finalAct = Number(ACT || act || actionType || 1);
+        const finalAc = Number(AC || 1);
 
         const newTxn = new Transaction({
             userId: user ? user._id : null,
@@ -381,8 +384,10 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                 throw new Error("فشل الحصول على توكن صالح لإتمام العملية");
             }
 
+            // الهيكل الرسمي للطلب بناءً على توثيق أم دراهم v2
             const payload = {
-                "AC": 1,
+                "AC": finalAc,
+                "ACT": finalAct,
                 "PSI": finalPsi,
                 "NUM": String(mobileNumber),
                 "OFFER_ID": finalOfferId,
@@ -457,10 +462,10 @@ app.post('/api/mdarahim/packages', async (req, res) => {
             }
             newTxn.status = 'معلقة ⚠️';
             await newTxn.save();
-            return res.json({ 
-                success: false, 
-                message: "خطأ في الاتصال بالمزود، تم إعادة الرصيد.", 
-                error: error.response?.data || error.message 
+            return res.json({
+                success: false,
+                message: "خطأ في الاتصال بالمزود، تم إعادة الرصيد.",
+                error: error.response?.data || error.message
             });
         }
 

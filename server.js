@@ -294,7 +294,7 @@ app.post('/api/admin/mdarahim/update-token', async (req, res) => {
 // 💰 مسار جلب رصيد أم دراهم المباشر للوكيل
 // ==========================================
 app.get('/api/admin/mdarahim/balance', async (req, res) => {
-    const { adminPass } = req.query;
+    const adminPass = req.headers['x-admin-pass'] || req.query.adminPass;
 
     if (adminPass !== ADMIN_SECRET_KEY) {
         return res.status(401).json({ success: false, message: "كلمة مرور الأدمن غير صحيحة" });
@@ -320,7 +320,11 @@ app.get('/api/admin/mdarahim/balance', async (req, res) => {
         return res.json({ success: true, balanceData: response.data });
     } catch (error) {
         console.error("❌ خطأ في جلب رصيد أم دراهم:", error.message);
-        return res.status(500).json({ success: false, message: "حدث خطأ أثناء الاستعلام عن رصيد أم دراهم", error: error.message });
+        return res.status(500).json({ 
+            success: false, 
+            message: "حدث خطأ أثناء الاستعلام عن رصيد أم دراهم", 
+            error: error.message 
+        });
     }
 });
 
@@ -328,9 +332,9 @@ app.get('/api/admin/mdarahim/balance', async (req, res) => {
 // 🚀 تنفيذ شحن باقات أم دراهم
 // ==========================================
 app.post('/api/mdarahim/packages', async (req, res) => {
-    const { phone, price, serviceId, offerId, mobileNumber, serviceName } = req.body;
+    const { phone, price, serviceId, offerId, psi, PSI, mobileNumber, serviceName } = req.body;
 
-    if (!phone || !serviceId || !mobileNumber) {
+    if (!phone || (!serviceId && !offerId) || !mobileNumber) {
         return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة" });
     }
 
@@ -353,13 +357,15 @@ app.post('/api/mdarahim/packages', async (req, res) => {
         }
 
         const referenceId = Math.floor(10000000 + Math.random() * 90000000).toString();
+        const finalOfferId = String(offerId || serviceId);
+        const finalPsi = Number(psi || PSI || 7);
 
         const newTxn = new Transaction({
             userId: user ? user._id : null,
             phone,
             type: 'package',
             targetId: mobileNumber,
-            serviceId: String(serviceId),
+            serviceId: finalOfferId,
             serviceName: serviceName || 'أم دراهم',
             price: itemPrice,
             referenceId: referenceId
@@ -377,18 +383,17 @@ app.post('/api/mdarahim/packages', async (req, res) => {
 
             const payload = {
                 "AC": 1,
-                "PSI": Number(serviceId),
+                "PSI": finalPsi,
                 "NUM": String(mobileNumber),
+                "OFFER_ID": finalOfferId,
                 "TRANID": referenceId
             };
-
-            if (offerId !== undefined && offerId !== null && offerId !== "") {
-                payload.OFFER_ID = String(offerId);
-            }
 
             if (itemPrice > 0) {
                 payload.AMT = itemPrice;
             }
+
+            console.log("📤 [أم دراهم] البيانات المرسلة للمزود:", payload);
 
             let response;
             try {
@@ -413,6 +418,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                         timeout: 45000
                     });
                 } else {
+                    console.error("❌ [أم دراهم] رد السيرفر عند الخطأ:", apiErr.response?.data || apiErr.message);
                     throw apiErr;
                 }
             }
@@ -442,7 +448,7 @@ app.post('/api/mdarahim/packages', async (req, res) => {
                     failureMsg = "رصيد الوكيل غير كافي، يرجى التواصل مع الدعم الفني";
                 }
 
-                return res.json({ success: false, message: failureMsg });
+                return res.json({ success: false, message: failureMsg, providerDetails: result });
             }
 
         } catch (error) {
@@ -451,7 +457,11 @@ app.post('/api/mdarahim/packages', async (req, res) => {
             }
             newTxn.status = 'معلقة ⚠️';
             await newTxn.save();
-            return res.json({ success: false, message: "خطأ في الاتصال بالمزود، تم إعادة الرصيد.", error: error.message });
+            return res.json({ 
+                success: false, 
+                message: "خطأ في الاتصال بالمزود، تم إعادة الرصيد.", 
+                error: error.response?.data || error.message 
+            });
         }
 
     } catch (dbError) {
@@ -979,5 +989,4 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
-
 

@@ -140,14 +140,7 @@ const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
     appVersion: { type: String, default: "1.0.0" }
 }), 'appsettings');
 
-const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({
-    name: { type: String, required: true },
-    offerId: { type: String, required: true, unique: true },
-    price: { type: Number, required: true },
-    type: { type: String },
-    internetType: { type: String },
-    date: { type: String, default: () => new Date().toLocaleString('ar-YE', { timeZone: 'Asia/Aden' }) }
-}), 'mdarahimpackages');
+const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({}, { strict: false }), 'mdarahimpackages');
 
 // ==========================================
 // 📣 دالة إرسال الإشعارات الفورية (FCM)
@@ -207,7 +200,7 @@ const getMegaAuthHeader = () => {
 const getMegaErrorMessage = (code) => {
     const errors = {
         '400': 'طلب غير مكتمل أو مفقود',
-        '401': 'خطأ في التوثيق - يرجى مراجعة مفاتيح الربط',
+        '401': 'خطأ في التوثيق - يرجى مراجع مفاتيح الربط',
         '404': 'الخدمة غير موجودة حالياً',
         '405': 'رصيد الوكيل لا يكفي',
         '410': 'رقم المعرف (ID) غير صحيح أو الخدمة متوقفة عليه',
@@ -715,39 +708,49 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📦 مسار جلب الباقات المباشر للواجهة
+// 📦 مسار جلب الباقات المباشر للواجهة (مصحح وشامل لكافة الشبكات)
 // ==========================================
 app.get('/api/packages', async (req, res) => {
     try {
         const dbPackages = await MdarahimPackage.find({}).sort({ price: 1 });
 
         if (!dbPackages || dbPackages.length === 0) {
-            return res.status(200).json({ 
-                success: true, 
-                packages: [], 
-                message: "لا توجد باقات مخزنة حالياً في قاعدة البيانات" 
+            return res.status(200).json({
+                success: true,
+                packages: [],
+                message: "لا توجد باقات مخزنة حالياً في قاعدة البيانات"
             });
         }
 
         const formattedPackages = dbPackages.map(pkg => {
+            const doc = pkg._doc || pkg;
             let netKey = 'YM';
-            if (pkg.type) {
-                const t = pkg.type.toLowerCase();
-                if (t.includes('you') || t.includes('يو')) netKey = 'YOU';
-                else if (t.includes('sabafon') || t.includes('سبأفون')) netKey = 'SABA';
-                else if (t.includes('wye') || t.includes('واي')) netKey = 'WYE';
-                else if (t.includes('tele') || t.includes('ثابت')) netKey = 'TELE';
+
+            const provider = (doc.provider || '').toLowerCase();
+            const typeStr = (doc.type || '').toLowerCase();
+            const serviceName = (doc.serviceName || '').toLowerCase();
+
+            if (provider === 'you' || provider.includes('you') || typeStr.includes('you') || typeStr.includes('يو') || serviceName.includes('يو')) {
+                netKey = 'YOU';
+            } else if (provider === 'sabafon' || provider.includes('saba') || typeStr.includes('saba') || typeStr.includes('سبأفون') || serviceName.includes('سبأفون')) {
+                netKey = 'SABA';
+            } else if (provider === 'y' || provider.includes('wye') || typeStr.includes('واي') || serviceName.includes('واي')) {
+                netKey = 'WYE';
+            } else if (provider.includes('tele') || typeStr.includes('ثابت')) {
+                netKey = 'TELE';
             }
 
             return {
-                _id: pkg._id,
-                serviceId: pkg.offerId,
-                title: pkg.name,
-                price: pkg.price,
-                psi: 46,
+                _id: doc._id,
+                serviceId: doc.offerId || doc.serviceId,
+                title: doc.name,
+                price: doc.price,
+                psi: doc.psi || 46,
                 net: netKey,
-                type: pkg.type || '',
-                internetType: pkg.internetType || ''
+                provider: doc.provider || '',
+                numberType: doc.numberType || '',
+                type: doc.type || '',
+                internetType: doc.internetType || ''
             };
         });
 
@@ -999,4 +1002,3 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
-

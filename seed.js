@@ -8,23 +8,27 @@ const MdarahimPackage = mongoose.model('MdarahimPackage', packageSchema, 'mdarah
 
 async function uploadPackages() {
   try {
-    console.log("جاري الاتصال بقاعدة البيانات...");
-    await mongoose.connect(MONGO_URI);
-    console.log("تم الاتصال بنجاح!");
+    console.log("1. بدء محاولة الاتصال بـ MongoDB Atlas...");
+    await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 10000 });
+    console.log("2. تم الاتصال بنجاح!");
 
-    // مسح الباقات القديمة
-    await MdarahimPackage.deleteMany({});
-    console.log("تم مسح الباقات القديمة...");
+    console.log("3. جاري مسح المجموعة القديمة mdarahimpackages...");
+    const deleteRes = await MdarahimPackage.deleteMany({});
+    console.log(`تم مسح ${deleteRes.deletedCount} مستند من قاعدة البيانات.`);
 
+    console.log("4. جاري قراءة ملف packages.json...");
     const rawData = fs.readFileSync('./packages.json', 'utf-8');
     const packages = JSON.parse(rawData);
+    console.log(`تم قراءة ${packages.length} باقة من الملف المحلي.`);
 
+    console.log("5. جاري إدراج الباقات الجديدة...");
     const result = await MdarahimPackage.insertMany(packages);
-    console.log(`تم رفع ${result.length} باقة بنجاح إلى mdarahimpackages!`);
+    console.log(`✅ تم رفع ${result.length} باقة بنجاح إلى Atlas!`);
 
     process.exit(0);
   } catch (error) {
-    console.error("حدث خطأ أثناء الرفع:", error.message);
+    console.error("❌ حدث خطأ:");
+    console.error(error);
     process.exit(1);
   }
 }

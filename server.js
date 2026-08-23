@@ -186,7 +186,7 @@ app.get('/api/items/:barcode', async (req, res) => {
 // 3. إدخال صنف جديد أو توريد بضاعة للمخزن
 app.post('/api/items', async (req, res) => {
     try {
-        const { 
+        const {
             barcode,      // الباركود
             name,         // اسم الصنف
             costPrice,    // سعر الشراء / التكلفة للحبة
@@ -216,7 +216,7 @@ app.post('/api/items', async (req, res) => {
             item.totalPacks += parseInt(totalPacks || 0); // إضافة البواكت الجديدة
             item.totalQty += incomingQty;                 // إضافة إجمالي الحبات
             item.remainingQty += incomingQty;             // زيادة المتبقي بالمخزن
-            
+
             await item.save();
         } else {
             // إذا كان صنف جديد لأول مرة
@@ -431,7 +431,7 @@ app.get('/api/admin/mdarahim/balance', async (req, res) => {
 });
 
 // ==========================================
-// 🚀 تنفيذ شحن باقات أم دراهم (مصحح ومتوافق مع السكربت)
+// 🚀 تنفيذ شحن باقات أم دراهم
 // ==========================================
 app.post('/api/mdarahim/packages', async (req, res) => {
     const { phone, price, serviceId, offerId, psi, PSI, mobileNumber, serviceName, act, ACT, actionType, AC } = req.body;
@@ -606,7 +606,7 @@ app.post('/api/mdarahim/action', async (req, res) => {
 });
 
 // ==========================================
-// 🌐 مسارات العميل الأساسية
+// 🌐 مسارات العميل الأساسية والمصادقة
 // ==========================================
 app.post('/api/register-token', async (req, res) => {
     const { token, user_id } = req.body;
@@ -649,11 +649,25 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// مسار جلب المستخدم القديم (للتوافق)
 app.get('/api/auth/user/:phone', async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.params.phone });
         res.json({ success: !!user, user });
     } catch (e) { res.status(500).json({ success: false }); }
+});
+
+// 🛠️ المسار المضاف خصيصاً لحل مشكلة عدم تحديث الرصيد وإقلاع التطبيق (Endpoint Mismatch)
+app.get('/api/user/:phone', async (req, res) => {
+    try {
+        const user = await User.findOne({ phone: req.params.phone });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "المستخدم غير موجود" });
+        }
+        res.json({ success: true, user });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
 });
 
 app.post('/api/orders/add', async (req, res) => {
@@ -821,7 +835,7 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
-// 📦 مسار جلب الباقات المباشر للواجهة (مصحح وشامل لكافة الشبكات)
+// 📦 مسار جلب الباقات المباشر للواجهة
 // ==========================================
 app.get('/api/packages', async (req, res) => {
     try {
@@ -1116,5 +1130,3 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
-
-

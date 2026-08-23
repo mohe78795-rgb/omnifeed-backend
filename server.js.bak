@@ -94,6 +94,20 @@ const Product = mongoose.model('Product', new mongoose.Schema({
     cat: { type: String, required: true }
 }), 'products');
 
+// --- الموديل الجديد: منتجات الكاشير والمخزون ---
+const Item = mongoose.model('Item', new mongoose.Schema({
+    barcode: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    costPrice: { type: Number, default: 0 },     // سعر شراء الحبة
+    packCostPrice: { type: Number, default: 0 }, // سعر شراء الباكت
+    price: { type: Number, required: true },     // سعر بيع الحبة للمستهلك
+    pcsPerPack: { type: Number, default: 1 },    // عدد القطع بالباكت
+    totalPacks: { type: Number, default: 0 },    // إجمالي البواكت المدخلة
+    totalQty: { type: Number, default: 0 },      // إجمالي الحبات الواردة
+    soldQty: { type: Number, default: 0 },       // المباع بالحبات
+    remainingQty: { type: Number, default: 0 }   // المتبقي بالمخزن بالحبات
+}, { timestamps: true }), 'items');
+
 const Order = mongoose.model('Order', new mongoose.Schema({
     id: { type: String, unique: true, default: () => "INV-" + Date.now() + Math.floor(100 + Math.random() * 900) },
     phone: String,
@@ -141,6 +155,105 @@ const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
 }), 'appsettings');
 
 const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({}, { strict: false }), 'mdarahimpackages');
+
+// ==========================================
+// 📦 مسارات إدارة منتجات الكاشير والمخزون (POS Items API)
+// ==========================================
+
+// 1. جلب جميع منتجات الكاشير والمخزون
+app.get('/api/items', async (req, res) => {
+    try {
+        const items = await Item.find({}).sort({ updatedAt: -1 });
+        res.json({ success: true, count: items.length, items });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 2. جلب صنف محدد عبر الباركود (خاص بشاشة الكاشير وقارئ الباركود)
+app.get('/api/items/:barcode', async (req, res) => {
+    try {
+        const item = await Item.findOne({ barcode: req.params.barcode });
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'الصنف غير موجود بالمخزن' });
+        }
+        res.json({ success: true, item });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 3. إدخال صنف جديد أو توريد بضاعة للمخزن
+app.post('/api/items', async (req, res) => {
+    try {
+        const { 
+            barcode,      // الباركود
+            name,         // اسم الصنف
+            costPrice,    // سعر الشراء / التكلفة للحبة
+            packCostPrice,// سعر شراء الباكت
+            price,        // سعر البيع للمستهلك للحبة
+            pcsPerPack,   // عدد القطع بالباكت
+            totalPacks    // عدد البواكت المدخلة للمخزن
+        } = req.body;
+
+        if (!barcode || !name || price === undefined) {
+            return res.status(400).json({ success: false, error: 'يرجى إدخال الباركود، الاسم، وسعر البيع' });
+        }
+
+        // حساب إجمالي الحبات الواردة للمخزن
+        const incomingQty = parseInt(totalPacks || 0) * parseInt(pcsPerPack || 1);
+
+        // البحث عن الصنف إذا كان مخزناً سابقاً
+        let item = await Item.findOne({ barcode });
+
+        if (item) {
+            // إذا كان الصنف موجود، نقوم بتحديث الأسعار وإضافة الكمية الجديدة فوق المتبقي
+            item.name = name;
+            item.costPrice = parseFloat(costPrice || 0);
+            item.packCostPrice = parseFloat(packCostPrice || 0);
+            item.price = parseFloat(price);
+            item.pcsPerPack = parseInt(pcsPerPack || 1);
+            item.totalPacks += parseInt(totalPacks || 0); // إضافة البواكت الجديدة
+            item.totalQty += incomingQty;                 // إضافة إجمالي الحبات
+            item.remainingQty += incomingQty;             // زيادة المتبقي بالمخزن
+            
+            await item.save();
+        } else {
+            // إذا كان صنف جديد لأول مرة
+            item = new Item({
+                barcode,
+                name,
+                costPrice: parseFloat(costPrice || 0),
+                packCostPrice: parseFloat(packCostPrice || 0),
+                price: parseFloat(price),
+                pcsPerPack: parseInt(pcsPerPack || 1),
+                totalPacks: parseInt(totalPacks || 0),
+                totalQty: incomingQty,
+                soldQty: 0,
+                remainingQty: incomingQty
+            });
+
+            await item.save();
+        }
+
+        res.json({ success: true, message: 'تم حفظ الصنف بالمخزن بنجاح', item });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// 4. حذف صنف من قاعدة بيانات الكاشير
+app.delete('/api/items/:barcode', async (req, res) => {
+    try {
+        const deletedItem = await Item.findOneAndDelete({ barcode: req.params.barcode });
+        if (!deletedItem) {
+            return res.status(404).json({ success: false, error: 'الصنف غير موجود' });
+        }
+        res.json({ success: true, message: 'تم حذف الصنف من المخزن بنجاح' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // ==========================================
 // 📣 دالة إرسال الإشعارات الفورية (FCM)
@@ -778,6 +891,7 @@ app.get('/api/admin/stats', async (req, res) => {
     try {
         res.json({
             productsCount: await Product.countDocuments(),
+            itemsCount: await Item.countDocuments(),
             usersCount: await User.countDocuments(),
             pendingOrders: await Order.countDocuments({ status: 'قيد المراجعة ⏳' }),
             categoriesCount: await Category.countDocuments()
@@ -1002,3 +1116,5 @@ app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
     initializeMdarahimAuth();
 });
+
+

@@ -1,160 +1,692 @@
+/* ==========================================================================
+   🌐 1. التنسيقات الأساسية ولوحة الألوان الفاخرة (Royal Obsidian & Champagne Gold)
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+
+:root {
+    --bg-dark: #07080a;                  /* الأسود الملكي العميق */
+    --card-bg: #0e1116;                  /* الفحمي المخملي للبطاقات */
+    --card-border: #1a1e24;              /* حدود رمادية دافئة هادئة */
+    --gold-primary: #c5a862;             /* الذهبي الشامبين الملكي */
+    --gold-glow: rgba(197, 168, 98, 0.2);/* توهج ذهبي ناعم */
+    --text-white: #ffffff;
+    --text-muted: #8e9aa8;
+    --success-green: #25D366;
+    --blue-accent: #3b82f6;
+}
+
 body {
-    font-family: 'Cairo', sans-serif;
-    background-color: #08090a; /* أسود كربوني عميق */
-    color: #ffffff;
+    font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
     overflow-x: hidden;
     position: relative;
     -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
+    direction: rtl;
+    user-select: none;
+    -webkit-user-select: none;
+    background-image: radial-gradient(circle at top right, rgba(197, 168, 98, 0.03) 0%, transparent 40%),
+                      radial-gradient(circle at bottom left, rgba(197, 168, 98, 0.02) 0%, transparent 50%);
 }
 
-/* هيدر مستقبلي مصمت ومسطح */
-.cyber-header {
-    background: #0d0f11;
-    border-bottom: 2px solid #171a1f;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+/* إخفاء شريط التمرير الافتراضي */
+::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    display: none;
 }
 
-/* شريط التحكم السفلي العريض والموزع بالتساوي للستة أزرار */
-.cyber-nav {
-    background: #0d0f11;
-    border-top: 2px solid #171a1f;
-    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7);
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
 }
 
-/* أزرار القائمة السفلية الستة بنمط مالي فاخر */
-.nav-item {
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+#app-layout {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   📂 2. شبكة الأقسام والمجلدات بتأثير الأبعاد الثلاثية الخفيفة
+   ========================================================================== */
+#categories-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.85rem !important;
+    padding-bottom: 1rem;
+    width: 100%;
+}
+
+#categories-list > div {
+    padding: 0.75rem 0.5rem !important;
+}
+
+.category-card {
+    background: linear-gradient(135deg, #0e1116 0%, #13171f 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 1.25rem;
+    padding: 0.85rem 0.6rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    color: #4b5563; /* رمادي خافت */
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 100%;
+    gap: 0.6rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.category-card:active {
+    transform: scale(0.94);
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 15px var(--gold-glow);
+}
+
+.category-card img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 0.95rem;
+    border: 1px solid rgba(197, 168, 98, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.category-card:hover img {
+    transform: scale(1.05);
+}
+
+/* ==========================================================================
+   📱 3. كروت العرض الشبكي الفخمة للمنتجات
+   ========================================================================== */
+.grid-product-card {
+    background: linear-gradient(180deg, #0e1116 0%, #090b0e 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 1.5rem;
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.6rem;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-.nav-item span {
-    font-size: 10px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.nav-item i {
-    font-size: 17px;
-}
-
-/* الزر النشط يتوهج بالذهب الملكي */
-.nav-item.active {
-    color: #ffcc00; /* الذهب السيبراني الفاخر */
-}
-
-/* خط تتبع علوي حاد للزر النشط */
-.nav-item.active::before {
+.grid-product-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    width: 60%;
-    height: 3px;
-    background: #ffcc00;
-    border-radius: 0 0 4px 4px;
-    box-shadow: 0 2px 10px rgba(255, 204, 0, 0.5);
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(197, 168, 98, 0.05) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-/* بطاقات المنتجات والأقسام المصمتة (Cyber Blocks) */
-.card-glass {
-    background: #121418;
-    border: 1px solid #1d2127;
-    border-radius: 1.5rem;
-    padding: 1.25rem;
-    cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-    transition: all 0.25s ease;
-    text-align: center;
+.grid-product-card:hover::before {
+    opacity: 1;
 }
 
-/* تأثير الضغط المسطح السريع */
-.card-glass:active {
-    transform: scale(0.97);
-    background: #171a1f;
-    border-color: #ffcc00;
+.grid-product-card:hover {
+    border-color: rgba(197, 168, 98, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(197, 168, 98, 0.08);
 }
 
-.card-glass img {
+.grid-product-card img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
     border-radius: 1rem;
-    border: 1px solid #1d2127;
-    background-color: #171a1f;
+    background-color: #07080a;
 }
 
-/* شريط تبديل العرض الحاد */
-.modern-switch-bar {
-    background: #121418;
-    border: 1px solid #1d2127;
-}
-
-.modern-switch-btn {
-    color: #4b5563;
-    transition: all 0.2s ease;
-}
-.modern-switch-btn.active {
-    background: #ffcc00;
-    color: #000000;
-    font-weight: 900;
-    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
-}
-
-/* حقول إدخال ذكية مشفرة وعميقة */
+/* ==========================================================================
+   💳 4. المدخلات والأزرار الملكية (Royal Form Controls)
+   ========================================================================== */
 .royal-input {
     width: 100%;
-    padding: 1rem 1.25rem;
-    background: #0d0f11;
-    border: 1px solid #1d2127;
-    border-radius: 1rem;
+    padding: 1.1rem 1.4rem;
+    background: #090c10;
+    border: 1px solid var(--card-border);
+    border-radius: 1.15rem;
     font-size: 13px;
-    color: #ffffff;
+    color: var(--text-white);
     outline: none;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
     text-align: right;
-}
-.royal-input:focus {
-    border-color: #ffcc00;
-    background: #121418;
-    box-shadow: 0 0 10px rgba(255, 204, 0, 0.05);
+    box-sizing: border-box;
+    font-weight: 600;
 }
 
-/* أزرار الدفع والعمليات الكبرى */
+.royal-input:focus {
+    border-color: var(--gold-primary);
+    background: #0e1218;
+    box-shadow: 0 0 15px rgba(197, 168, 98, 0.12);
+}
+
 .btn-payment {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 12px;
     width: 100%;
-    padding: 1.1rem;
-    border-radius: 1.25rem;
+    padding: 1.15rem;
+    border-radius: 1.35rem;
     font-size: 14px;
     font-weight: 900;
-    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    letter-spacing: 0.5px;
 }
+
+.btn-payment:active {
+    transform: scale(0.96);
+    filter: brightness(0.9);
+}
+
 .btn-wallet {
-    background: #ffcc00;
-    color: #000000;
-    box-shadow: 0 6px 20px rgba(255, 204, 0, 0.2);
+    background: linear-gradient(135deg, #d8bc79 0%, #a38743 100%);
+    color: #050608;
+    box-shadow: 0 6px 22px rgba(197, 168, 98, 0.3);
 }
+
+.btn-wallet:hover {
+    box-shadow: 0 8px 28px rgba(197, 168, 98, 0.45);
+}
+
 .btn-whatsapp {
-    background: #121418;
-    border: 1px solid #25D366;
-    color: #25D366;
+    background: #0d1116;
+    border: 1px solid var(--success-green);
+    color: var(--success-green);
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.1);
 }
+
+.btn-whatsapp:hover {
+    background: rgba(37, 211, 102, 0.08);
+}
+
 .btn-cod {
-    background: #121418;
-    border: 1px solid #3b82f6;
-    color: #3b82f6;
+    background: #0d1116;
+    border: 1px solid var(--blue-accent);
+    color: var(--blue-accent);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
 }
 
-/* التخطيط */
+.btn-cod:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+/* ==========================================================================
+   📲 5. عناصر الشحن المباشر للباقات (Topup Premium UI)
+   ========================================================================== */
+.fav-card {
+    min-width: 105px;
+    background: linear-gradient(180deg, #11151d 0%, #0d1116 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 1.15rem;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.fav-card:active {
+    border-color: var(--gold-primary);
+    transform: scale(0.94);
+    box-shadow: 0 0 10px var(--gold-glow);
+}
+
+.fav-card img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 0 auto 0.5rem auto;
+    object-fit: cover;
+    border: 1px solid rgba(197, 168, 98, 0.15);
+}
+
+.fav-card p {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.fav-card span {
+    font-size: 9px;
+    color: var(--gold-primary);
+    font-weight: 800;
+}
+
+.pkg-item {
+    background: linear-gradient(90deg, #11151c 0%, #0d1116 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 1.35rem;
+    padding: 0.95rem 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.pkg-item:active {
+    border-color: var(--gold-primary);
+    background: rgba(197, 168, 98, 0.04);
+}
+
+.pkg-info {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.pkg-info img {
+    width: 44px;
+    height: 44px;
+    border-radius: 0.85rem;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pkg-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-white);
+}
+
+.pkg-price {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold-primary);
+    margin-top: 3px;
+}
+
+/* ==========================================================================
+   📺 6. الهيدر والتنقل والسلايدر (Glassmorphic Components)
+   ========================================================================== */
+#ad-video-container {
+    width: 100% !important;
+    min-height: 190px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    border: 1px solid var(--card-border);
+}
+
+#ad-video-player {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block;
+}
+
+.cyber-header {
+    background: rgba(7, 8, 10, 0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.cyber-nav {
+    background: rgba(7, 8, 10, 0.85);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(197, 168, 98, 0.15);
+    box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.8);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: #5d6775;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+}
+
+.nav-item span {
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.nav-item i {
+    font-size: 1.2rem;
+}
+
+.nav-item.active {
+    color: var(--gold-primary);
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 45%;
+    height: 4px;
+    background: var(--gold-primary);
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 2px 12px rgba(197, 168, 98, 0.6);
+}
+
+.quick-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    background: linear-gradient(180deg, #11151c 0%, #0d1116 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 1.15rem;
+    padding: 0.85rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+}
+
+.quick-nav-btn:active {
+    transform: scale(0.94);
+    border-color: var(--gold-primary);
+}
+
+.quick-nav-btn span {
+    font-size: 10px;
+    font-weight: 800;
+    color: #e2e8f0;
+    text-align: center;
+    line-height: 1.3;
+}
+
+.quick-nav-btn .icon-wrap {
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 0.85rem;
+    background-color: rgba(197, 168, 98, 0.08);
+    border: 1px solid rgba(197, 168, 98, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    transition: all 0.25s ease;
+}
+
+.quick-nav-btn .icon-wrap.active-layout {
+    background: linear-gradient(135deg, #d8bc79 0%, #a38743 100%);
+    border-color: var(--gold-primary);
+    color: #050608;
+    box-shadow: 0 5px 15px rgba(197, 168, 98, 0.35);
+}
+
+/* ==========================================================================
+   💎 7. بطاقات العرض الزجاجية المذهلة (Glassmorphic Cards)
+   ========================================================================== */
+.card-glass {
+    background: linear-gradient(135deg, #11151d 0%, #080a0e 100%);
+    border: 1px solid rgba(197, 168, 98, 0.08);
+    border-radius: 1.65rem;
+    padding: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+}
+
+.card-glass:active {
+    transform: scale(0.96);
+    background: #141922;
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 15px var(--gold-glow);
+}
+
+.card-glass .img-container {
+    background-color: #ffffff;
+    border-radius: 1.35rem;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.85rem;
+    overflow: hidden;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card-glass img {
+    height: 100%;
+    max-height: 90px;
+    object-fit: contain;
+}
+
+.card-glass h3 {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--gold-primary);
+    margin-top: 0.75rem;
+    letter-spacing: 0.25px;
+}
+
+.card-glass p {
+    font-size: 9px;
+    font-weight: 600;
+    color: #718096;
+    margin-top: 0.25rem;
+}
+
+/* ==========================================================================
+   🔲 8. أنماط الحاويات والنوافذ المنبثقة (Modal Popups)
+   ========================================================================== */
 .cards-container.mode-dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.cards-container.mode-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
-.cards-container.mode-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.cards-container.mode-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.65rem; }
+.cards-container.mode-list { display: flex; flex-direction: column; gap: 0.85rem; }
 
+/* غطاء المودال المعتم المضبب */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(5, 6, 8, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
 
+/* بطاقة المودال الفاخرة */
+.modal-content, .modal-card {
+    background-color: #0d1116;
+    border: 2px solid var(--card-border);
+    border-radius: 1.85rem;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+    animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    border-image: linear-gradient(to bottom, var(--card-border), rgba(197, 168, 98, 0.15)) 1;
+    border-radius: 1.85rem; /* كسر للتوافق */
+}
 
+.bottom-sheet {
+    align-self: flex-end;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.close-btn {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    background: transparent;
+    border: none;
+    color: var(--text-white);
+    font-size: 26px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--gold-primary);
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--gold-primary);
+    margin-bottom: 1.15rem;
+    text-align: center;
+}
+
+.loan-option-container {
+    margin-bottom: 1.15rem;
+    background: #080a0d;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.price-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #080a0d;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--card-border);
+    margin-bottom: 1.35rem;
+}
+
+.price-input-group label {
+    font-size: 12px;
+    color: #a0aec0;
+    font-weight: 700;
+}
+
+.price-input-group input {
+    background: transparent;
+    border: none;
+    color: var(--gold-primary);
+    font-weight: bold;
+    width: 100%;
+    outline: none;
+    font-size: 15px;
+}
+
+.modal-actions, .confirm-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn {
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: none;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+}
+
+.btn-primary { background: linear-gradient(135deg, #d8bc79 0%, #a38743 100%); color: #000; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-info { background: #3b82f6; color: #fff; }
+
+.btn-primary:active { transform: scale(0.97); }
+
+.confirm-table {
+    width: 100%;
+    margin-bottom: 12px;
+    border-collapse: collapse;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.confirm-table th, .confirm-table td {
+    border: 1px solid var(--card-border);
+    padding: 8px;
+    text-align: center;
+}
+
+.confirm-table th {
+    background: #080a0d;
+    color: var(--gold-primary);
+}
+
+.total-summary {
+    text-align: right;
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--gold-primary);
+    margin-bottom: 14px;
+}
+
+.info-icon {
+    text-align: center;
+    font-size: 26px;
+    color: var(--blue-accent);
+    margin-bottom: 8px;
+}
+
+/* حركة ظهور المودال الاحترافية */
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}

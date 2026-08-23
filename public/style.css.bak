@@ -1,42 +1,160 @@
-/* --- إعدادات التصميم الأساسية --- */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-body { font-family: 'Cairo', sans-serif; background-color: #08090a; color: #ffffff; margin: 0; padding: 0; }
+body {
+    font-family: 'Cairo', sans-serif;
+    background-color: #08090a; /* أسود كربوني عميق */
+    color: #ffffff;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
 
-/* --- الشريط السفلي (الذي كان يسبب المشكلة) --- */
+/* هيدر مستقبلي مصمت ومسطح */
+.cyber-header {
+    background: #0d0f11;
+    border-bottom: 2px solid #171a1f;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* شريط التحكم السفلي العريض والموزع بالتساوي للستة أزرار */
 .cyber-nav {
-    display: grid !important;
-    grid-template-columns: repeat(6, 1fr) !important; /* توزيع الـ 6 أزرار */
-    height: 80px !important;
-    background: #0d0f11 !important;
-    border-top: 2px solid #171a1f !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 500;
+    background: #0d0f11;
+    border-top: 2px solid #171a1f;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.7);
 }
 
+/* أزرار القائمة السفلية الستة بنمط مالي فاخر */
 .nav-item {
-    display: flex !important;
-    flex-direction: column !important; /* الأيقونة فوق النص */
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    color: #4b5563 !important;
-    text-decoration: none;
-    transition: 0.3s;
-    background: transparent;
-    border: none;
-    outline: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #4b5563; /* رمادي خافت */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    position: relative;
 }
 
-.nav-item i { font-size: 20px !important; }
-.nav-item span { font-size: 10px !important; font-weight: bold; }
+.nav-item span {
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
 
-/* تأثير الزر النشط */
-.nav-item.active { color: #ffcc00 !important; }
+.nav-item i {
+    font-size: 17px;
+}
+
+/* الزر النشط يتوهج بالذهب الملكي */
+.nav-item.active {
+    color: #ffcc00; /* الذهب السيبراني الفاخر */
+}
+
+/* خط تتبع علوي حاد للزر النشط */
 .nav-item.active::before {
-    content: ''; position: absolute; top: 0; width: 40px; height: 3px;
-    background: #ffcc00; border-radius: 0 0 4px 4px;
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 60%;
+    height: 3px;
+    background: #ffcc00;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 2px 10px rgba(255, 204, 0, 0.5);
 }
+
+/* بطاقات المنتجات والأقسام المصمتة (Cyber Blocks) */
+.card-glass {
+    background: #121418;
+    border: 1px solid #1d2127;
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    transition: all 0.25s ease;
+    text-align: center;
+}
+
+/* تأثير الضغط المسطح السريع */
+.card-glass:active {
+    transform: scale(0.97);
+    background: #171a1f;
+    border-color: #ffcc00;
+}
+
+.card-glass img {
+    border-radius: 1rem;
+    border: 1px solid #1d2127;
+    background-color: #171a1f;
+}
+
+/* شريط تبديل العرض الحاد */
+.modern-switch-bar {
+    background: #121418;
+    border: 1px solid #1d2127;
+}
+
+.modern-switch-btn {
+    color: #4b5563;
+    transition: all 0.2s ease;
+}
+.modern-switch-btn.active {
+    background: #ffcc00;
+    color: #000000;
+    font-weight: 900;
+    box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
+}
+
+/* حقول إدخال ذكية مشفرة وعميقة */
+.royal-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: #0d0f11;
+    border: 1px solid #1d2127;
+    border-radius: 1rem;
+    font-size: 13px;
+    color: #ffffff;
+    outline: none;
+    transition: all 0.2s ease;
+    text-align: right;
+}
+.royal-input:focus {
+    border-color: #ffcc00;
+    background: #121418;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.05);
+}
+
+/* أزرار الدفع والعمليات الكبرى */
+.btn-payment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 1.1rem;
+    border-radius: 1.25rem;
+    font-size: 14px;
+    font-weight: 900;
+    transition: all 0.2s ease;
+}
+.btn-wallet {
+    background: #ffcc00;
+    color: #000000;
+    box-shadow: 0 6px 20px rgba(255, 204, 0, 0.2);
+}
+.btn-whatsapp {
+    background: #121418;
+    border: 1px solid #25D366;
+    color: #25D366;
+}
+.btn-cod {
+    background: #121418;
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+}
+
+/* التخطيط */
+.cards-container.mode-dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.cards-container.mode-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+.cards-container.mode-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+
 

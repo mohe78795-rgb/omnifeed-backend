@@ -1,9 +1,8 @@
-// ==========================================================================
+// ==========================================
 // ⚙️ 1. الثوابت والإعدادات العامة للمنظومة
-// ==========================================================================
-const API = window.location.origin;
+// ==========================================
+const API = "https://0zk30qr9iu.onrender.com";
 const API_GET_PACKAGES = `${API}/api/packages`;
-const API_EXECUTE_TOPUP = `${API}/api/mdarahim/packages`;
 
 const WHATSAPP_NUMBER = "967737528057";
 const USD_TO_YER_RATE = 535;
@@ -38,18 +37,15 @@ let state = {
     viewHistory: ["home"]
 };
 
-// ==========================================================================
-// 🔊 نظام التفاعل الصوتي والاهتزاز للمسات الأزرار الملكية
-// ==========================================================================
+// ==========================================
+// 🔊 أصوات واهتزاز الأزرار (Vibration & Audio)
+// ==========================================
 document.addEventListener('click', function(e) {
     const btn = e.target.closest('button, .quick-nav-btn, .nav-item, a, [onclick]');
     if (btn) {
         try {
             const snd = document.getElementById('snd-click');
-            if (snd) { 
-                snd.currentTime = 0; 
-                snd.play().catch(() => {}); 
-            }
+            if (snd) { snd.currentTime = 0; snd.play().catch(()=>{}); }
         } catch(err){}
 
         if (navigator.vibrate) {
@@ -58,9 +54,9 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ==========================================================================
-// 📱 2. إدارة التنقل وتاريخ المتصفح والتشغيل الآمن
-// ==========================================================================
+// ==========================================
+// 📱 2. إدارة التنقل وتاريخ المتصفح والتشغيل
+// ==========================================
 window.addEventListener('popstate', function () {
     if (state.viewHistory.length > 1) {
         state.viewHistory.pop();
@@ -110,9 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupScrollRefreshListener();
 });
 
-// ==========================================================================
+// ==========================================
 // 🔄 تحديث الرصيد والبيانات الحية من السيرفر
-// ==========================================================================
+// ==========================================
 async function fetchUserData() {
     if (!state.user || !state.user.phone) return;
     try {
@@ -127,16 +123,16 @@ async function fetchUserData() {
                 state.user.bal = data.balance;
             }
             localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
-            ui(); // تحديث واجهة الرصيد فوراً
+            ui();
         }
     } catch (e) {
         console.error("خطأ في جلب بيانات الرصيد من السيرفر:", e);
     }
 }
 
-// ==========================================================================
+// ==========================================
 // 🔔 3. نظام إشعارات الـ FCM ومزامنة الجلسة
-// ==========================================================================
+// ==========================================
 window.handleFcmToken = function(token) {
     localStorage.setItem("fcm_token", token);
     if (state.user && state.user.phone) {
@@ -176,7 +172,6 @@ async function unlockApp() {
     changeViewSilent('home');
     ui();
 
-    // جلب الرصيد والبيانات المحدثة فوراً من السيرفر عند فتح التطبيق
     await fetchUserData();
 
     Promise.allSettled([
@@ -197,9 +192,9 @@ function convertUsdToYer(usd) {
     return isNaN(r) ? 0 : Math.ceil((r * USD_TO_YER_RATE) * (1 + COMMISSION_PERCENT));
 }
 
-// ==========================================================================
+// ==========================================
 // 🔄 سحب الشاشة للأسفل للتحديث (Pull to Refresh)
-// ==========================================================================
+// ==========================================
 function setupScrollRefreshListener() {
     let touchstartY = 0;
     const homeView = document.getElementById('view-home');
@@ -219,9 +214,9 @@ function setupScrollRefreshListener() {
     }, {passive: true});
 }
 
-// ==========================================================================
+// ==========================================
 // 🔐 4. إدارة الجلسات والمصادقة
-// ==========================================================================
+// ==========================================
 function toggleAuthMode() {
     const container = document.getElementById('signup-name-container');
     const title = document.getElementById('auth-title');
@@ -441,7 +436,7 @@ async function fetchMessages() {
 }
 
 // ==========================================
-// 💬 7. نظام الرسائل والدردشة الدعم الفني
+// 💬 7. نظام الرسائل والدردشة
 // ==========================================
 function sendSupportMsg() {
     const input = document.getElementById('support-input-text');
@@ -482,7 +477,7 @@ function sendSupportMsg() {
 }
 
 // ==========================================
-// 🛒 8. سلة التسوق وإرسال الطلب مع الموقع الدقيق
+// 🛒 8. السلة وإرسال الطلب مع الموقع الدقيق
 // ==========================================
 function addToCart(p, eventElement = null) {
     const pId = p._id?.$oid || p._id;
@@ -545,7 +540,7 @@ function getUserLocation() {
             return; 
         }
         
-        toast("📍 جاري تحديد الإحداثيات عبر الـ GPS...");
+        toast("📍 جاري التقاط إحداثيات موقعك بدقة عبر GPS...");
         
         navigator.geolocation.getCurrentPosition(
             (p) => {
@@ -555,7 +550,7 @@ function getUserLocation() {
                 resolve({ link: mapLink, lat, lng });
             },
             (e) => {
-                alert("❌ تعذر تحديد موقعك بدقة. يرجى تفعيل الـ GPS بهاتفك وإعادة المحاولة.");
+                alert("❌ تعذر تحديد موقعك بدقة. يرجى التأكد من تفعيل خدمة الـ GPS في هاتفك.");
                 reject(e);
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -568,7 +563,7 @@ async function processOrder(method) {
     const total = state.cart.reduce((s, i) => s + (Number(i.price) * Number(i.qty)), 0);
     
     if (method === 'wallet' && Number(state.user.bal) < total) {
-        return toast("❌ رصيد محفظتك غير كافٍ لإتمام الفاتورة");
+        return toast("❌ رصيد محفظتك غير كافٍ لإتمام هذه الفاتورة");
     }
 
     if (method === 'whatsapp') {
@@ -587,7 +582,7 @@ async function processOrder(method) {
 }
 
 async function submitOrderToDB(loc, total, paymentType) {
-    toast("⏳ جاري إرسال الطلب للسيرفر...");
+    toast("⏳ جاري إرسال الطلب للسيرفر مع موقعك الدقيق...");
     try {
         let res = await fetch(`${API}/api/orders/add`, {
             method: 'POST',
@@ -605,19 +600,19 @@ async function submitOrderToDB(loc, total, paymentType) {
         if (res.ok) {
             let data = await res.json();
             try { document.getElementById('snd-cashier')?.play().catch(()=>{}); } catch(e){}
-            toast("✅ تم تسجيل الطلب وحفظ موقع التوصيل بنجاح!");
+            toast("✅ تم تسجيل الطلب وإرسال موقعك بنجاح!");
             state.cart = [];
             if (data.currentBal !== undefined) {
                 state.user.bal = data.currentBal;
             } else {
-                await fetchUserData(); // مزامنة فورية للرصيد
+                await fetchUserData();
             }
             localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
             ui();
             changeView('orders', null);
         }
     } catch (e) {
-        toast("❌ حدث عطل في اتصال الشبكة بالخادم");
+        toast("❌ عطل في شبكة الاتصال");
     }
 }
 
@@ -656,7 +651,7 @@ async function loadOrders() {
 }
 
 // ==========================================
-// 🧾 9. الأقسام والمنتجات (الكاش والمزامنة الحية)
+// 🧾 9. الأقسام والمنتجات
 // ==========================================
 async function initProducts() {
     const cachedCat = localStorage.getItem('abu_cache_categories');
@@ -682,9 +677,7 @@ async function initProducts() {
             state.prods = await rProd.json();
             localStorage.setItem('abu_cache_products', JSON.stringify(state.prods));
         }
-    } catch (e) {
-        console.log("التطبيق يعمل أوفلاين حالياً للأقسام والمنتجات");
-    }
+    } catch (e) {}
 }
 
 function renderCategories(customList = null) {
@@ -757,7 +750,7 @@ function filterCurrentCategoryProducts(query) {
 }
 
 // ==========================================
-// 🕹️ 10. ميجا سنتر للألعاب والشحن الفوري
+// 🕹️ 10. ميجا سنتر والألعاب الفورية
 // ==========================================
 async function fetchGames() {
     const list = document.getElementById('mega-services-list');
@@ -928,7 +921,7 @@ async function executeMegaTopup() {
             if (data.currentBal !== undefined) {
                 state.user.bal = data.currentBal;
             } else {
-                await fetchUserData(); // مزامنة الرصيد حياً
+                await fetchUserData();
             }
             localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
             ui();
@@ -938,7 +931,7 @@ async function executeMegaTopup() {
 }
 
 // ==========================================
-// ⚡ 11. باقات أم دراهم الفورية (التصفية الذكية)
+// ⚡ 11. شحن باقات مزود الحرابي الفوري
 // ==========================================
 async function fetchPackagesFromDB() {
     const container = document.getElementById('packagesContainer');
@@ -954,12 +947,12 @@ async function fetchPackagesFromDB() {
     try {
         const response = await fetch(API_GET_PACKAGES, { signal: AbortSignal.timeout(4000) });
         const data = await response.json();
-        const rawList = data.success && Array.isArray(data.packages) ? data.packages : (Array.isArray(data) ? data : []);
+        const rawList = data.success && Array.isArray(data.packages) ? data.packages : (Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []));
 
         const uniqueMap = new Map();
         rawList.forEach(pkg => {
-            const title = (pkg.title || pkg.serviceName || '').trim();
-            const price = Number(pkg.price || 0);
+            const title = (pkg.title || pkg.serviceName || pkg.name || '').trim();
+            const price = Number(pkg.price || pkg.amount || 0);
             const key = `${title}_${price}`;
             if (!uniqueMap.has(key)) uniqueMap.set(key, pkg);
         });
@@ -1103,9 +1096,10 @@ function renderPackages() {
     const filterText = searchInput ? searchInput.value.toLowerCase() : '';
 
     const list = dbPackages.filter(p => {
-        const matchesNet = p.net === currentNetKey;
-        const title = (p.title || p.serviceName || '').toLowerCase();
-        const matchesSearch = title.includes(filterText) || String(p.price).includes(filterText);
+        const netIdentifier = p.net || p.network || '';
+        const matchesNet = netIdentifier === currentNetKey || !netIdentifier;
+        const title = (p.title || p.serviceName || p.name || '').toLowerCase();
+        const matchesSearch = title.includes(filterText) || String(p.price || p.amount || '').includes(filterText);
         
         let matchesTag = true;
         if (activePackageTag === '4G') {
@@ -1114,8 +1108,7 @@ function renderPackages() {
             matchesTag = title.includes('اتصال') || title.includes('دقائق');
         } else if (activePackageTag === 'SMS') {
             matchesTag = title.includes('رسائل') || title.includes('رساله');
-        } 
-        else if (activePackageTag === 'YM_SOCIAL') {
+        } else if (activePackageTag === 'YM_SOCIAL') {
             matchesTag = title.includes('تواصل') || title.includes('سوشيال') || title.includes('واتساب') || title.includes('مواقع');
         } else if (activePackageTag === 'VOLTE') {
             matchesTag = title.includes('فولتي') || title.includes('volte');
@@ -1125,8 +1118,7 @@ function renderPackages() {
             matchesTag = (title.includes('10 أيام') || title.includes('10 ايام') || title.includes('عشرة') || title.includes('10')) && title.includes('3g');
         } else if (activePackageTag === '3G_MONTHLY') {
             matchesTag = (title.includes('شهرية') || title.includes('شهر') || title.includes('30')) && title.includes('3g') && !title.includes('10');
-        }
-        else if (activePackageTag === 'YOU_SAWA') {
+        } else if (activePackageTag === 'YOU_SAWA') {
             matchesTag = title.includes('سوا');
         } else if (activePackageTag === 'SOCIAL') {
             matchesTag = title.includes('تواصل') || title.includes('سوشيال') || title.includes('واتساب');
@@ -1140,8 +1132,7 @@ function renderPackages() {
             matchesTag = title.includes('هلال');
         } else if (activePackageTag === 'KSA') {
             matchesTag = title.includes('السعودية') || title.includes('السعوديه');
-        }
-        else if (activePackageTag === 'YABALASH') {
+        } else if (activePackageTag === 'YABALASH') {
             matchesTag = title.includes('يابلاش') || title.includes('واحد');
         } else if (activePackageTag === 'SUPER_NET') {
             matchesTag = title.includes('سوبر نت') || title.includes('سوبر');
@@ -1158,17 +1149,19 @@ function renderPackages() {
     }
 
     container.innerHTML = list.map(pkg => {
-        const title = pkg.title || pkg.serviceName;
+        const title = pkg.title || pkg.serviceName || pkg.name || 'باقة رقمية';
+        const price = pkg.price || pkg.amount || 0;
         const img = pkg.img || NETWORKS[pkg.net]?.logo || 'https://i.postimg.cc/BZrr0yD7/images-2026-07-06T163911-011.jpg';
         const netName = NETWORKS[pkg.net]?.name || 'خدمات رقمية';
+        const sId = pkg.serviceId || pkg.offerkey || pkg.packageid || pkg._id || '';
 
         return `
-            <div onclick="openConfirmModal('${pkg.serviceId}', '${pkg.psi || 46}', ${pkg.price}, '${title}', '${img}', '${netName}')" class="p-3 bg-slate-800/90 rounded-2xl border border-slate-700/80 hover:border-[#c5a862]/60 flex flex-col items-center text-center cursor-pointer active:scale-[0.98] transition">
+            <div onclick="openConfirmModal('${sId}', '${pkg.psi || 46}', ${price}, '${title}', '${img}', '${netName}')" class="p-3 bg-slate-800/90 rounded-2xl border border-slate-700/80 hover:border-[#c5a862]/60 flex flex-col items-center text-center cursor-pointer active:scale-[0.98] transition">
                 <img src="${img}" onerror="this.src='https://i.postimg.cc/BZrr0yD7/images-2026-07-06T163911-011.jpg'" class="w-12 h-12 object-contain bg-black/40 rounded-xl p-1 mb-2">
                 <h3 class="font-bold text-xs text-white truncate w-full mb-1">${title}</h3>
                 <p class="text-[10px] text-slate-400 mb-2">${netName}</p>
                 <div class="mt-auto w-full flex items-center justify-between pt-2 border-t border-slate-700/50">
-                    <span class="text-[10px] font-black text-[#c5a862] font-mono">${pkg.price} YER</span>
+                    <span class="text-[10px] font-black text-[#c5a862] font-mono">${price} YER</span>
                     <span class="text-[9px] bg-[#c5a862] text-black font-black px-2 py-0.5 rounded">شحن</span>
                 </div>
             </div>
@@ -1205,7 +1198,6 @@ function closeModal() {
 async function executeTopup() {
     const phoneInput = document.getElementById('phoneInput');
     const targetPhone = phoneInput ? phoneInput.value.trim() : "";
-    const actValue = parseInt(document.getElementById('modalAct').value) || 1;
     const btn = document.getElementById('btnConfirm');
 
     if (!selectedPackage) return closeModal();
@@ -1218,31 +1210,64 @@ async function executeTopup() {
     if (btn) { btn.disabled = true; btn.innerText = "جاري إرسال التسديد... ⏳"; }
     closeModal();
 
-    const operationId = "TXN-" + Math.floor(100000 + Math.random() * 900000);
-
     try {
-        const response = await fetch(API_EXECUTE_TOPUP, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({
-                phone: state.user.phone,
-                mobileNumber: targetPhone,
-                serviceId: selectedPackage.serviceId,
-                PSI: selectedPackage.psi,
-                price: selectedPackage.price,
-                serviceName: selectedPackage.title,
-                ACT: actValue, AC: 1,
-                transaction_id: operationId
-            })
+        let endpoint = "";
+        let queryParams = new URLSearchParams();
+        queryParams.append('mobile', targetPhone);
+        queryParams.append('amount', selectedPackage.price);
+
+        switch (currentNetKey) {
+            case 'YM':
+                endpoint = `/api/provider/yemen-mobile`;
+                queryParams.append('action', 'bill');
+                if (selectedPackage.serviceId && selectedPackage.serviceId !== "null" && selectedPackage.serviceId !== "undefined") {
+                    queryParams.append('offerkey', selectedPackage.serviceId);
+                }
+                break;
+            case 'YOU':
+                endpoint = `/api/provider/you/bill`;
+                queryParams.delete('amount'); 
+                queryParams.append('num', selectedPackage.price);
+                queryParams.append('isOffer', selectedPackage.serviceId && selectedPackage.serviceId !== "null" ? 'true' : 'false');
+                break;
+            case 'SABA':
+                endpoint = `/api/provider/sabaphone`;
+                queryParams.delete('amount'); 
+                queryParams.append('num', selectedPackage.price);
+                queryParams.append('type', selectedPackage.serviceId && selectedPackage.serviceId !== "null" ? 'offer' : 'bill');
+                queryParams.append('region', 'north');
+                break;
+            case 'WYE':
+                endpoint = `/api/provider/why`;
+                queryParams.delete('amount');
+                queryParams.append('num', selectedPackage.price);
+                if (selectedPackage.serviceId && selectedPackage.serviceId !== "null") {
+                    queryParams.append('packageid', selectedPackage.serviceId);
+                }
+                break;
+            case 'TELE':
+                endpoint = `/api/provider/post-adsl`;
+                queryParams.append('action', 'bill');
+                queryParams.append('type', 'post');
+                break;
+            default:
+                throw new Error("نوع الشبكة غير معروف أو غير مدعوم للتسديد الآلي");
+        }
+
+        const url = `${API}${endpoint}?${queryParams.toString()}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
         });
 
         const data = await response.json();
 
-        if (response.ok && (data.success || data.status === 'success')) {
+        if (response.ok && (data.success || data.status === 'success' || data.status === true)) {
             if (data.currentBal !== undefined) {
                 state.user.bal = data.currentBal;
             } else {
-                await fetchUserData(); // تحديث فوري وحي للرصيد
+                await fetchUserData();
             }
             localStorage.setItem('abu_user_v30', JSON.stringify(state.user));
             ui();
@@ -1254,17 +1279,18 @@ async function executeTopup() {
             document.getElementById('netBadgeContainer')?.classList.add('hidden');
             renderPackages();
         } else {
-            toast(`❌ فشل التسديد: ${data.message || 'رفض الطلب من المزود'}`);
+            toast(`❌ فشل التسديد: ${data.message || data.error || 'تم الرفض من المزود'}`);
         }
     } catch (e) {
-        toast("⚠️ خطأ في الاتصال بالخادم");
+        console.error("Topup error:", e);
+        toast("⚠️ خطأ في الاتصال بالسيرفر أو بالشبكة");
     } finally {
         if (btn) { btn.disabled = false; btn.innerText = "✅ تأكيد الدفع الفوري"; }
     }
 }
 
 // ==========================================
-// 👤 12. الحساب والمحفظة والتحكم بالواجهة الملكية
+// 👤 12. الحساب والمحفظة والتحكم بالواجهة
 // ==========================================
 function ui() {
     if(!state.user) return;
@@ -1341,7 +1367,7 @@ function toast(m) {
 
 async function manualRefresh() {
     toast("🔄 جاري التحديث...");
-    await fetchUserData(); // جلب فوري من السيرفر
+    await fetchUserData();
     ui();
     initProducts();
     fetchAds();

@@ -94,18 +94,18 @@ const Product = mongoose.model('Product', new mongoose.Schema({
     cat: { type: String, required: true }
 }), 'products');
 
-// --- موديل منتجات الكاشير والمخزون ---
+// --- الموديل الجديد: منتجات الكاشير والمخزون ---
 const Item = mongoose.model('Item', new mongoose.Schema({
     barcode: { type: String, required: true, unique: true },
     name: { type: String, required: true },
-    costPrice: { type: Number, default: 0 },
-    packCostPrice: { type: Number, default: 0 },
-    price: { type: Number, required: true },
-    pcsPerPack: { type: Number, default: 1 },
-    totalPacks: { type: Number, default: 0 },
-    totalQty: { type: Number, default: 0 },
-    soldQty: { type: Number, default: 0 },
-    remainingQty: { type: Number, default: 0 }
+    costPrice: { type: Number, default: 0 },     // سعر شراء الحبة
+    packCostPrice: { type: Number, default: 0 }, // سعر شراء الباكت
+    price: { type: Number, required: true },     // سعر بيع الحبة للمستهلك
+    pcsPerPack: { type: Number, default: 1 },    // عدد القطع بالباكت
+    totalPacks: { type: Number, default: 0 },    // إجمالي البواكت المدخلة
+    totalQty: { type: Number, default: 0 },      // إجمالي الحبات الواردة
+    soldQty: { type: Number, default: 0 },       // المباع بالحبات
+    remainingQty: { type: Number, default: 0 }   // المتبقي بالمخزن بالحبات
 }, { timestamps: true }), 'items');
 
 const Order = mongoose.model('Order', new mongoose.Schema({
@@ -154,9 +154,13 @@ const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
     appVersion: { type: String, default: "1.0.0" }
 }), 'appsettings');
 
+const MdarahimPackage = mongoose.model('MdarahimPackage', new mongoose.Schema({}, { strict: false }), 'mdarahimpackages');
+
 // ==========================================
 // 📦 مسارات إدارة منتجات الكاشير والمخزون (POS Items API)
 // ==========================================
+
+// 1. جلب جميع منتجات الكاشير والمخزون
 app.get('/api/items', async (req, res) => {
     try {
         const items = await Item.find({}).sort({ updatedAt: -1 });
@@ -166,6 +170,7 @@ app.get('/api/items', async (req, res) => {
     }
 });
 
+// 2. جلب صنف محدد عبر الباركود (خاص بشاشة الكاشير وقارئ الباركود)
 app.get('/api/items/:barcode', async (req, res) => {
     try {
         const item = await Item.findOne({ barcode: req.params.barcode });
@@ -178,28 +183,43 @@ app.get('/api/items/:barcode', async (req, res) => {
     }
 });
 
+// 3. إدخال صنف جديد أو توريد بضاعة للمخزن
 app.post('/api/items', async (req, res) => {
     try {
-        const { barcode, name, costPrice, packCostPrice, price, pcsPerPack, totalPacks } = req.body;
+        const {
+            barcode,      // الباركود
+            name,         // اسم الصنف
+            costPrice,    // سعر الشراء / التكلفة للحبة
+            packCostPrice,// سعر شراء الباكت
+            price,        // سعر البيع للمستهلك للحبة
+            pcsPerPack,   // عدد القطع بالباكت
+            totalPacks    // عدد البواكت المدخلة للمخزن
+        } = req.body;
 
         if (!barcode || !name || price === undefined) {
             return res.status(400).json({ success: false, error: 'يرجى إدخال الباركود، الاسم، وسعر البيع' });
         }
 
+        // حساب إجمالي الحبات الواردة للمخزن
         const incomingQty = parseInt(totalPacks || 0) * parseInt(pcsPerPack || 1);
+
+        // البحث عن الصنف إذا كان مخزناً سابقاً
         let item = await Item.findOne({ barcode });
 
         if (item) {
+            // إذا كان الصنف موجود، نقوم بتحديث الأسعار وإضافة الكمية الجديدة فوق المتبقي
             item.name = name;
             item.costPrice = parseFloat(costPrice || 0);
             item.packCostPrice = parseFloat(packCostPrice || 0);
             item.price = parseFloat(price);
             item.pcsPerPack = parseInt(pcsPerPack || 1);
-            item.totalPacks += parseInt(totalPacks || 0);
-            item.totalQty += incomingQty;
-            item.remainingQty += incomingQty;
+            item.totalPacks += parseInt(totalPacks || 0); // إضافة البواكت الجديدة
+            item.totalQty += incomingQty;                 // إضافة إجمالي الحبات
+            item.remainingQty += incomingQty;             // زيادة المتبقي بالمخزن
+
             await item.save();
         } else {
+            // إذا كان صنف جديد لأول مرة
             item = new Item({
                 barcode,
                 name,
@@ -212,6 +232,7 @@ app.post('/api/items', async (req, res) => {
                 soldQty: 0,
                 remainingQty: incomingQty
             });
+
             await item.save();
         }
 
@@ -221,6 +242,7 @@ app.post('/api/items', async (req, res) => {
     }
 });
 
+// 4. حذف صنف من قاعدة بيانات الكاشير
 app.delete('/api/items/:barcode', async (req, res) => {
     try {
         const deletedItem = await Item.findOneAndDelete({ barcode: req.params.barcode });
@@ -276,7 +298,7 @@ async function sendPushNotification(targetPhone, title, body, imageUrl = "") {
 }
 
 // ==========================================
-// 🗝️ إعدادات ومتغيرات نظام Mega Center للألعاب
+// 🗝️ إعدادات ومتغيرات نظام Mega Center
 // ==========================================
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "SECURE_ADMIN_PASS_123";
 const MEGA_USERNAME = process.env.MEGA_USERNAME;
@@ -291,7 +313,7 @@ const getMegaAuthHeader = () => {
 const getMegaErrorMessage = (code) => {
     const errors = {
         '400': 'طلب غير مكتمل أو مفقود',
-        '401': 'خطأ في التوثيق - يرجى مراجعة مفاتيح الربط',
+        '401': 'خطأ في التوثيق - يرجى مراجع مفاتيح الربط',
         '404': 'الخدمة غير موجودة حالياً',
         '405': 'رصيد الوكيل لا يكفي',
         '410': 'رقم المعرف (ID) غير صحيح أو الخدمة متوقفة عليه',
@@ -311,209 +333,276 @@ function makeEmbedUrl(url) {
 }
 
 // ==========================================
-// 🌐 إعدادات ونظام مزود خدمات (الحرابي) الجديد
+// 💳 إعدادات ونظام جلب توكن أم دراهم
 // ==========================================
-const PROVIDER_CONFIG = {
-  apiUrl: process.env.PROVIDER_API_URL || "https://alhirabi.yemoney.net/api/yr/",
-  userId: process.env.PROVIDER_USER_ID || "7367",
-  username: process.env.PROVIDER_USERNAME || "735429057",
-  password: process.env.PROVIDER_PASSWORD || "moh737465252"
-};
+let cachedMdarahimToken = null;
+const MDARAHIM_BASE_URL = 'https://mdarahim.app';
 
-function md5(string) {
-  return crypto.createHash('md5').update(string).digest('hex');
+async function fetchMdarahimToken() {
+    try {
+        const username = process.env.MDARAHIM_USERNAME;
+        const password = process.env.MDARAHIM_PASSWORD;
+
+        if (!username || !password) {
+            console.warn("⚠️ [أم دراهم] بيانات MDARAHIM_USERNAME أو MDARAHIM_PASSWORD غير معرفة في البيئة.");
+            return null;
+        }
+
+        const params = new URLSearchParams();
+        params.append('username', username);
+        params.append('password', password);
+        params.append('grant_type', 'password');
+
+        const loginResponse = await axios.post(`${MDARAHIM_BASE_URL}/logins`, params.toString(), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            timeout: 25000
+        });
+
+        if (loginResponse.data && loginResponse.data.access_token) {
+            cachedMdarahimToken = loginResponse.data.access_token;
+            console.log("✅ [أم دراهم] تم جلب التوكن التلقائي بنجاح عبر النطاق المباشر.");
+            return cachedMdarahimToken;
+        } else {
+            console.error("❌ [أم دراهم] استجابة تسجيل الدخول لم تحتوي على access_token:", loginResponse.data);
+            return null;
+        }
+    } catch (error) {
+        console.error("❌ [أم دراهم] فشل جلب التوكن التلقائي:", error.message);
+        return null;
+    }
 }
 
-function generateHirabiToken(transid, mobile) {
-  const hashedPass = md5(PROVIDER_CONFIG.password);
-  return md5(hashedPass + transid + PROVIDER_CONFIG.username + (mobile || ''));
+function initializeMdarahimAuth() {
+    console.log("⚡ [أم دراهم] جاري بدء الاتصال بجلب التوكن التلقائي...");
+    fetchMdarahimToken();
 }
 
-async function sendHirabiRequest(endpoint, params) {
-  const transid = Date.now().toString();
-  const token = generateHirabiToken(transid, params.mobile);
-  const targetUrl = `${PROVIDER_CONFIG.apiUrl}${endpoint}`;
+app.post('/api/admin/mdarahim/update-token', async (req, res) => {
+    const { adminPass, token } = req.body;
 
-  const requestParams = {
-    ...params,
-    username: PROVIDER_CONFIG.username,
-    token: token,
-    transid: transid
-  };
-
-  const response = await axios.get(targetUrl, { params: requestParams });
-  return { transid, data: response.data };
-}
-
-// 1. جلب الباقات المتاحة مع إمكانية الفلترة المباشرة من كولكشن mdarahimpackages
-app.get('/api/packages', async (req, res) => {
-  try {
-    const { provider, numberType, internetType } = req.query;
-    const filter = {};
-    
-    if (provider) filter.provider = provider;
-    if (numberType) filter.numberType = { $in: [numberType, 'الكل'] };
-    if (internetType) filter.internetType = { $in: [internetType, 'الكل'] };
-
-    const packages = await mongoose.connection.db.collection('mdarahimpackages').find(filter).toArray();
-    return res.status(200).json({ status: true, count: packages.length, data: packages });
-  } catch (error) {
-    return res.status(500).json({ status: false, message: error.message });
-  }
-});
-
-// 2. خدمات يمن موبايل (استعلام، فواتير، باقات، سلفة)
-app.get('/api/provider/yemen-mobile', async (req, res) => {
-  try {
-    const { action, mobile, amount, offerkey } = req.query;
-    if (!mobile) return res.status(400).json({ status: false, message: 'رقم الهاتف مطلوب' });
-
-    const result = await sendHirabiRequest('yem', {
-      action: action || 'query',
-      mobile: mobile,
-      amount: amount || 0,
-      offerkey: offerkey || ''
-    });
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 3. شحن يمن موبايل جملة
-app.get('/api/provider/yemen-mobile/gomla', async (req, res) => {
-  try {
-    const { mobile, amount } = req.query;
-    const result = await sendHirabiRequest('mobilegomla', { mobile, num: amount });
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 4. خدمات شركة يو (YOU / MTN)
-app.get('/api/provider/you/bill', async (req, res) => {
-  try {
-    const { isOffer, mobile, num, type, israsid } = req.query;
-    const endpoint = isOffer === 'true' ? 'mtnoffer' : 'mtn';
-    const params = { action: 'bill', mobile, num, type };
-    if (israsid) params.israsid = 1;
-
-    const result = await sendHirabiRequest(endpoint, params);
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 5. شحن شركة يو جملة
-app.get('/api/provider/you/gomla', async (req, res) => {
-  try {
-    const { mobile, amount } = req.query;
-    const result = await sendHirabiRequest('mtngomla', { mobile, num: amount });
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 6. خدمات شركة سبأفون
-app.get('/api/provider/sabaphone', async (req, res) => {
-  try {
-    const { type, region, mobile, num } = req.query;
-    let endpoint = 'sabaphone';
-
-    if (region === 'south') {
-      endpoint = type === 'offer' ? 'sbayoffer' : 'sbay';
-    } else if (type === 'offer') {
-      endpoint = 'sabaoffer';
-    } else if (type === 'units') {
-      endpoint = 'sabaunits';
+    if (adminPass !== ADMIN_SECRET_KEY) {
+        return res.status(401).json({ success: false, message: "كلمة مرور الأدمن غير صحيحة" });
     }
 
-    const result = await sendHirabiRequest(endpoint, { action: 'bill', mobile, num });
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
+    if (!token) {
+        return res.status(400).json({ success: false, message: "يرجى إرسال التوكن" });
+    }
+
+    cachedMdarahimToken = token.trim();
+    console.log("📌 [أم دراهم] تم التحديث اليدوي للتوكن بنجاح.");
+    return res.json({ success: true, message: "تم تحديث توكن أم دراهم بنجاح!" });
 });
 
-// 7. شحن وحدات سبأفون جملة
-app.get('/api/provider/sabaphone/gomla', async (req, res) => {
-  try {
-    const { mobile, amount } = req.query;
-    const result = await sendHirabiRequest('sabagomla', { mobile, num: amount });
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
+app.get('/api/admin/mdarahim/balance', async (req, res) => {
+    const adminPass = req.headers['x-admin-pass'] || req.query.adminPass;
+
+    if (adminPass !== ADMIN_SECRET_KEY) {
+        return res.status(401).json({ success: false, message: "كلمة مرور الأدمن غير صحيحة" });
+    }
+
+    try {
+        if (!cachedMdarahimToken) {
+            await fetchMdarahimToken();
+        }
+
+        if (!cachedMdarahimToken) {
+            return res.status(500).json({ success: false, message: "تعذر الحصول على توكن أم دراهم" });
+        }
+
+        const response = await axios.get(`${MDARAHIM_BASE_URL}/api/ac/v1/getbalance`, {
+            headers: {
+                'Authorization': `Bearer ${cachedMdarahimToken}`,
+                'Accept': 'application/json'
+            },
+            timeout: 20000
+        });
+
+        return res.json({ success: true, balanceData: response.data });
+    } catch (error) {
+        console.error("❌ خطأ في جلب رصيد أم دراهم:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "حدث خطأ أثناء الاستعلام عن رصيد أم دراهم",
+            error: error.message
+        });
+    }
 });
 
-// 8. خدمات شركة واي (Why)
-app.get('/api/provider/why', async (req, res) => {
-  try {
-    const { actionType, mobile, num, rasid, packageid } = req.query;
-    const params = { action: 'bill', mobile, num };
-    if (rasid) params.rasid = rasid;
-    if (packageid) params.packageid = packageid;
+// ==========================================
+// 🚀 تنفيذ شحن باقات أم دراهم
+// ==========================================
+app.post('/api/mdarahim/packages', async (req, res) => {
+    const { phone, price, serviceId, offerId, psi, PSI, mobileNumber, serviceName, act, ACT, actionType, AC } = req.body;
 
-    const result = await sendHirabiRequest('why', params);
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
+    const targetPhoneOrNumber = mobileNumber || req.body.number;
+    const finalServiceId = offerId || serviceId;
+
+    if (!phone || !finalServiceId || !targetPhoneOrNumber) {
+        return res.status(400).json({ success: false, message: "بيانات الطلب ناقصة (رقم الحساب، الباقة، أو الرقم المستهدف مفقود)" });
+    }
+
+    const itemPrice = price ? Number(price) : 0;
+
+    try {
+        let user = null;
+        if (itemPrice > 0) {
+            user = await User.findOneAndUpdate(
+                { phone, bal: { $gte: itemPrice } },
+                { $inc: { bal: -itemPrice } },
+                { new: true }
+            );
+
+            if (!user) {
+                return res.json({ success: false, message: "رصيدك الحالي غير كافٍ" });
+            }
+        } else {
+            user = await User.findOne({ phone });
+        }
+
+        const referenceId = Math.floor(10000000 + Math.random() * 90000000).toString();
+        const finalOfferId = String(finalServiceId);
+        const finalPsi = Number(psi || PSI || 7);
+        const finalAct = Number(ACT || act || actionType || 1);
+        const finalAc = Number(AC || 1);
+
+        const newTxn = new Transaction({
+            userId: user ? user._id : null,
+            phone,
+            type: 'package',
+            targetId: String(targetPhoneOrNumber),
+            serviceId: finalOfferId,
+            serviceName: serviceName || 'باقات أم دراهم',
+            price: itemPrice,
+            referenceId: referenceId
+        });
+        await newTxn.save();
+
+        try {
+            if (!cachedMdarahimToken) {
+                await fetchMdarahimToken();
+            }
+
+            if (!cachedMdarahimToken) {
+                throw new Error("فشل الحصول على توكن صالح لإتمام العملية");
+            }
+
+            const payload = {
+                "AC": finalAc,
+                "ACT": finalAct,
+                "PSI": finalPsi,
+                "NUM": String(targetPhoneOrNumber),
+                "OFFER_ID": finalOfferId,
+                "TRANID": referenceId
+            };
+
+            if (itemPrice > 0) {
+                payload.AMT = itemPrice;
+            }
+
+            console.log("📤 [أم دراهم] البيانات المرسلة للمزود:", payload);
+
+            let response;
+            try {
+                response = await axios.post(`${MDARAHIM_BASE_URL}/api/ac/v1/do`, payload, {
+                    headers: {
+                        'Authorization': `Bearer ${cachedMdarahimToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    timeout: 45000
+                });
+            } catch (apiErr) {
+                if (apiErr.response && apiErr.response.status === 401) {
+                    console.log("🔄 [أم دراهم] التوكن منتهي الصلاحية، جاري إعادة التجديد...");
+                    await fetchMdarahimToken();
+                    response = await axios.post(`${MDARAHIM_BASE_URL}/api/ac/v1/do`, payload, {
+                        headers: {
+                            'Authorization': `Bearer ${cachedMdarahimToken}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        timeout: 45000
+                    });
+                } else {
+                    console.error("❌ [أم دراهم] رد السيرفر عند الخطأ:", apiErr.response?.data || apiErr.message);
+                    throw apiErr;
+                }
+            }
+
+            const result = response.data;
+
+            if (result && (Number(result.RC) === 1 || result.status === true || result.status === "true")) {
+                newTxn.status = 'ناجحة ✅';
+                await newTxn.save();
+
+                const nTitle = "نجاح عملية التسديد ⚡";
+                const nBody = `تم شحن وتسديد ${serviceName || 'الخدمة'} للرقم ${targetPhoneOrNumber} بنجاح.`;
+                await new Message({ receiver: phone, title: nTitle, body: nBody }).save();
+                sendPushNotification(phone, nTitle, nBody);
+
+                return res.json({ success: true, currentBal: user ? user.bal : 0, response: result });
+            } else {
+                if (user && itemPrice > 0) {
+                    await User.findByIdAndUpdate(user._id, { $inc: { bal: itemPrice } });
+                }
+                newTxn.status = 'فاشلة ❌';
+                newTxn.errorCode = String(result ? result.RC : 'UNKNOWN');
+                await newTxn.save();
+
+                let failureMsg = result ? (result.RD || result.message || "رفض الطلب من المزود") : "استجابة غير صالحة";
+                if (failureMsg.includes("رصيدك الحالي غير كافي") || failureMsg.includes("غير كافي")) {
+                    failureMsg = "رصيد الوكيل غير كافي، يرجى التواصل مع الدعم الفني";
+                }
+
+                return res.json({ success: false, message: failureMsg, providerDetails: result });
+            }
+
+        } catch (error) {
+            if (user && itemPrice > 0) {
+                await User.findByIdAndUpdate(user._id, { $inc: { bal: itemPrice } });
+            }
+            newTxn.status = 'معلقة ⚠️';
+            await newTxn.save();
+            return res.json({
+                success: false,
+                message: "خطأ في الاتصال بالمزود، تم إعادة الرصيد لحسابك.",
+                error: error.response?.data || error.message
+            });
+        }
+
+    } catch (dbError) {
+        return res.status(500).json({ success: false, message: "خطأ داخلي في قاعدة البيانات" });
+    }
 });
 
-// 9. خدمات يمن فورجي (Yemen 4G)
-app.get('/api/provider/yem4g', async (req, res) => {
-  try {
-    const { action, mobile, amount } = req.query;
-    const result = await sendHirabiRequest('yem4g', {
-      action: action || 'query',
-      mobile,
-      amount: amount || 0
-    });
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
+// ==========================================
+// ⚡ مسار Action لخدمات أم دراهم المباشرة
+// ==========================================
+app.post('/api/mdarahim/action', async (req, res) => {
+    const requestBody = req.body;
+    if (!requestBody || !requestBody.AC) {
+        return res.status(400).json({ success: false, message: "بيانات الطلب غير مكتملة، يجب إرسال AC" });
+    }
 
-// 10. خدمات الهاتف الثابت والإنترنت المنزلي (Post / ADSL)
-app.get('/api/provider/post-adsl', async (req, res) => {
-  try {
-    const { action, mobile, amount, type } = req.query;
-    const result = await sendHirabiRequest('post', {
-      action: action || 'query',
-      mobile,
-      amount: amount || 0,
-      type: type || 'adsl'
-    });
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
+    try {
+        if (!cachedMdarahimToken) {
+            await fetchMdarahimToken();
+        }
 
-// 11. خدمات عدن نت (Aden Net)
-app.get('/api/provider/adenet', async (req, res) => {
-  try {
-    const { action, mobile, num } = req.query;
-    const result = await sendHirabiRequest('adenet', {
-      action: action || 'query',
-      mobile,
-      num: num || 0
-    });
-    return res.json({ success: true, ...result });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 12. مستقبل الإشعارات والتحديثات الرجعية (Webhook Callback)
-app.get('/api/webhook/callback', (req, res) => {
-  console.log('تنبيه callback من سيرفر الحرابي:', req.query);
-  return res.send('OK');
+        const response = await axios.post(`${MDARAHIM_BASE_URL}/api/ac/v1/do`, requestBody, {
+            headers: {
+                'Authorization': `Bearer ${cachedMdarahimToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            timeout: 35000
+        });
+        return res.json({ success: true, result: response.data });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "حدث خطأ أثناء الاتصال بسيرفر أم دراهم", error: error.message });
+    }
 });
 
 // ==========================================
@@ -560,6 +649,7 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// مسار جلب المستخدم القديم (للتوافق)
 app.get('/api/auth/user/:phone', async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.params.phone });
@@ -567,6 +657,7 @@ app.get('/api/auth/user/:phone', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// 🛠️ المسار المضاف خصيصاً لحل مشكلة عدم تحديث الرصيد وإقلاع التطبيق (Endpoint Mismatch)
 app.get('/api/user/:phone', async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.params.phone });
@@ -612,7 +703,7 @@ app.get('/api/messages/:phone', async (req, res) => {
 });
 
 // ==========================================
-// 🕹️ مسارات Mega Center والويب هوك للألعاب
+// 🕹️ مسارات Mega Center والويب هوك
 // ==========================================
 let cachedServices = null;
 let lastFetchTime = 0;
@@ -744,6 +835,69 @@ app.post('/api/mega-webhook', async (req, res) => {
 });
 
 // ==========================================
+// 📦 مسار جلب الباقات المباشر للواجهة
+// ==========================================
+app.get('/api/packages', async (req, res) => {
+    try {
+        const dbPackages = await MdarahimPackage.find({}).sort({ price: 1 });
+
+        if (!dbPackages || dbPackages.length === 0) {
+            return res.status(200).json({
+                success: true,
+                packages: [],
+                message: "لا توجد باقات مخزنة حالياً في قاعدة البيانات"
+            });
+        }
+
+        const formattedPackages = dbPackages.map(pkg => {
+            const doc = pkg._doc || pkg;
+            let netKey = 'YM';
+
+            const provider = (doc.provider || '').toLowerCase();
+            const typeStr = (doc.type || '').toLowerCase();
+            const serviceName = (doc.serviceName || '').toLowerCase();
+
+            if (provider === 'you' || provider.includes('you') || typeStr.includes('you') || typeStr.includes('يو') || serviceName.includes('يو')) {
+                netKey = 'YOU';
+            } else if (provider === 'sabafon' || provider.includes('saba') || typeStr.includes('saba') || typeStr.includes('سبأفون') || serviceName.includes('سبأفون')) {
+                netKey = 'SABA';
+            } else if (provider === 'y' || provider.includes('wye') || typeStr.includes('واي') || serviceName.includes('واي')) {
+                netKey = 'WYE';
+            } else if (provider.includes('tele') || typeStr.includes('ثابت')) {
+                netKey = 'TELE';
+            }
+
+            return {
+                _id: doc._id,
+                serviceId: doc.offerId || doc.serviceId,
+                title: doc.name,
+                price: doc.price,
+                psi: doc.psi || 46,
+                net: netKey,
+                provider: doc.provider || '',
+                numberType: doc.numberType || '',
+                type: doc.type || '',
+                internetType: doc.internetType || ''
+            };
+        });
+
+        return res.status(200).json({
+            success: true,
+            count: formattedPackages.length,
+            packages: formattedPackages
+        });
+
+    } catch (error) {
+        console.error("❌ خطأ في جلب الباقات من قاعدة البيانات:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "حدث خطأ أثناء قراءة البيانات من السيرفر",
+            error: error.message
+        });
+    }
+});
+
+// ==========================================
 // 💼 مسارات لوحة التحكم والإدارة (Admin APIs)
 // ==========================================
 app.get('/api/admin/stats', async (req, res) => {
@@ -861,7 +1015,7 @@ app.get('/api/admin/ads', async (req, res) => {
 });
 
 app.post('/api/admin/ad/add', async (req, res) => {
-    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.body.adminPass !== ADMIN_SECRET_KEY ? res.status(401).json({ success: false }) : null;
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
     try {
         const embed = makeEmbedUrl(req.body.videoUrl);
         await Ad.updateMany({}, { active: false });
@@ -942,6 +1096,29 @@ app.post('/api/admin/settings/update', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+app.post('/api/admin/mdarahim/save-packages', async (req, res) => {
+    const { adminPass, packages } = req.body;
+
+    if (adminPass !== ADMIN_SECRET_KEY) {
+        return res.status(401).json({ success: false, message: "كلمة مرور الأدمن غير صحيحة" });
+    }
+
+    if (!Array.isArray(packages) || packages.length === 0) {
+        return res.status(400).json({ success: false, message: "يجب إرسال مصفوفة باقات صحيحة" });
+    }
+
+    try {
+        await MdarahimPackage.deleteMany({});
+        await MdarahimPackage.insertMany(packages);
+
+        console.log(`📌 [أم دراهم] تم تحديث وحفظ (${packages.length}) باقة في قاعدة البيانات بنجاح.`);
+        return res.json({ success: true, message: `تم حفظ ${packages.length} باقة بنجاح في النظام!` });
+    } catch (error) {
+        console.error("❌ خطأ في حفظ الباقات:", error.message);
+        return res.status(500).json({ success: false, message: "حدث خطأ أثناء حفظ الباقات في قاعدة البيانات", error: error.message });
+    }
+});
+
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
@@ -951,4 +1128,5 @@ app.get('/admin', (req, res) => {
 // ==========================================
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
+    initializeMdarahimAuth();
 });

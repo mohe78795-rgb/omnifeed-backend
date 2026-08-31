@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+#<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>تموينات أبو حسين | Premium Platform</title>
     
-    <!-- 📦 المكتبات وخط Tajawal العربي الجذاب وخط فخم للعناوين -->
+    <!-- المكتبات والخطوط -->
     <script src="assets/styles/tailwind.js"></script>
     <link rel="stylesheet" href="assets/styles/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@#&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
     <style>
@@ -20,7 +20,6 @@
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
-        /* خط مميز وراقي ومضيء لاسم المتجر */
         .glow-title {
             font-family: 'Playfair Display', serif;
             text-shadow: 0 0 10px rgba(197, 168, 98, 0.6), 0 0 20px rgba(197, 168, 98, 0.3);
@@ -40,73 +39,107 @@
             transition: border-color 0.2s;
         }
         .royal-input:focus { border-color: #c5a862; }
-        .quick-nav-btn {
-            background-color: #121418;
-            border: 1px solid #1d2127;
-            border-radius: 1rem;
-            padding: 0.75rem 0.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.35rem;
-            transition: all 0.2s;
-        }
-        .quick-nav-btn:active { transform: scale(0.95); }
-        .quick-nav-btn .icon-wrap {
-            width: 2.5rem; height: 2.5rem; border-radius: 0.75rem;
-            background-color: rgba(197, 168, 98, 0.1);
-            border: 1px solid rgba(197, 168, 98, 0.2);
-            display: flex; align-items: center; justify-content: center; font-size: 0.875rem;
-        }
         .cyber-nav {
             background-color: rgba(13, 15, 17, 0.95);
             backdrop-filter: blur(12px);
         }
         .nav-item {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 0.25rem; color: #6b7280; font-size: 10px; font-weight: 700; transition: color 0.2s;
+            gap: 0.25rem; color: #6b7280; font-size: 9px; font-weight: 700; transition: color 0.2s;
         }
         .nav-item i { font-size: 1.15rem; }
         .nav-item.active { color: #c5a862; }
-        .btn-payment {
-            width: 100%; padding: 1rem; border-radius: 0.75rem; font-weight: 900; font-size: 0.875rem;
-            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); transition: transform 0.1s;
-        }
-        .btn-payment:active { transform: scale(0.95); }
-        .btn-wallet { background-color: #c5a862; color: #000; }
-        .btn-whatsapp { background-color: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; }
-        .btn-cod { background-color: #121418; border: 1px solid #1d2127; color: #ffffff; }
 
-        @keyframes flyToCart {
-            0% { transform: scale(1) translateY(0); opacity: 1; }
-            50% { transform: scale(0.6) translateY(-100px) rotate(15deg); opacity: 0.8; }
-            100% { transform: scale(0.1) translateY(300px) rotate(45deg); opacity: 0; }
+        .currency-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background-color: #121418;
+            padding: 0.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid #1d2127;
         }
-        .flying-item {
-            position: fixed; z-index: 9999; width: 50px; height: 50px; object-fit: cover;
-            border-radius: 12px; border: 2px solid #c5a862; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            animation: flyToCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        .currency-tabs .tab {
+            flex: 1;
+            padding: 0.5rem 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #9ca3af;
+            border-radius: 0.5rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .currency-tabs .tab.active {
+            background-color: #c5a862;
+            color: #000000;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 3500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: #0d0f11;
+            border: 2px solid #1d2127;
+            border-radius: 1.5rem;
+            padding: 1.25rem;
+            width: 100%;
+            max-width: 24rem;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* كلاس انيميشن ظهور الخدمات والمحرك */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* تحريك بطاقة الإدخال للمنتصف وتسهيل انتقالها للأعلى */
+        #mainHeroContainer {
+            transition: all 0.5s ease-in-out;
+        }
+        #mainHeroContainer.centered-mode {
+            min-h: calc(100vh - 160px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        #mainHeroContainer.top-mode {
+            min-h: 0;
+            display: block;
+            padding-top: 0;
+            padding-bottom: 0;
         }
     </style>
 </head>
 <body class="min-h-screen pb-32 select-none">
 
-    <!-- 🔊 أصوات النظام -->
+    <!-- أصوات النظام -->
     <audio id="snd-click" src="assets/styles/click.mp3" preload="auto"></audio>
     <audio id="snd-cashier" src="assets/styles/cashier.mp3" preload="auto"></audio>
     <audio id="snd-notification" src="assets/styles/notification.mp3" preload="auto"></audio>
     <audio id="snd-drop" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-    <!-- شاشة الترحيب -->
-    <div id="splash" class="fixed inset-0 z-[3000] bg-[#08090a] flex items-center justify-center">
-        <div class="text-center space-y-2 animate-pulse">
-            <h1 class="text-4xl font-black text-[#c5a862] tracking-tight">أبو حسين</h1>
-            <p class="text-[9px] text-gray-600 tracking-widest font-bold">SYSTEM V4.0 PREMIUM</p>
-        </div>
-    </div>
-
-    <!-- شاشة تسجيل الدخول وإنشاء حساب -->
+    <!-- شاشة تسجيل الدخول -->
     <div id="auth-screen" class="fixed inset-0 z-[2000] hidden overflow-y-auto flex items-center justify-center p-6 bg-black/95">
         <div class="w-full max-w-md bg-[#0d0f11] border-2 border-[#1d2127] p-8 rounded-[2rem] space-y-6 shadow-2xl">
             <div class="text-center space-y-1">
@@ -136,11 +169,10 @@
     </div>
 
     <!-- الهيكل الرئيسي للتطبيق -->
-    <div id="app-layout" class="hidden pt-20 px-4 space-y-1 w-full mx-auto relative min-h-screen flex flex-col justify-between max-w-md">
+    <div id="app-layout" class="pt-20 px-4 space-y-1 w-full mx-auto relative min-h-screen flex flex-col justify-between max-w-md">
         
-        <!-- الهيدر العلوي المكتمل -->
+        <!-- الهيدر العلوي -->
         <header class="fixed top-0 left-0 right-0 z-[1000] px-4 py-3 bg-[#0d0f11]/95 backdrop-blur-md flex justify-between items-center border-b border-zinc-900/80 max-w-md mx-auto">
-            <!-- زر الجرس وبجانبه الرصيد المصغر بدون بطاقات -->
             <div class="flex items-center gap-2.5">
                 <button onclick="changeView('real-notifications', this)" class="relative w-9 h-9 bg-zinc-900/90 border border-zinc-800 rounded-xl flex items-center justify-center hover:bg-zinc-800 active:scale-95 transition-all">
                     <i class="fa-solid fa-bell text-[#c5a862] text-sm"></i>
@@ -152,7 +184,6 @@
                 </div>
             </div>
 
-            <!-- اسم المتجر في المنتصف (مضيء وراقي) وعبارة بالإنجليزية تحته -->
             <div class="text-center flex flex-col items-center flex-1 px-1">
                 <h1 class="text-sm font-black text-[#c5a862] glow-title leading-tight">تموينات أبو حسين</h1>
                 <span class="text-[8px] text-zinc-400 font-mono tracking-widest uppercase block">Tamwinat Abu Hussain</span>
@@ -161,36 +192,172 @@
             <div class="w-16"></div>
         </header>
 
-        <!-- الشاشة الرئيسية -->
-        <div id="view-home" class="view-content space-y-5 pt-4">
-            <div id="ad-video-container" class="hidden w-full min-h-[180px] rounded-2xl overflow-hidden border border-[#1d2127] bg-[#0d0f11] relative shadow-lg">
-                <video id="ad-video-player" class="w-full h-full object-cover" autoplay muted loop playsinline></video>
-                <button id="ad-mute-btn" onclick="toggleAdMute()" class="absolute bottom-3 left-3 bg-black/80 text-white p-2.5 rounded-full z-10">
-                    <i id="ad-mute-icon" class="fa-solid fa-volume-xmark text-xs text-[#c5a862]"></i>
-                </button>
-            </div>
-            
-            <div class="grid grid-cols-4 gap-2.5">
-                <button class="quick-nav-btn"><div class="icon-wrap"><i class="fa-solid fa-heart text-[#c5a862]"></i></div><span>المفضلات</span></button>
-                <button onclick="changeView('orders', this)" class="quick-nav-btn"><div class="icon-wrap"><i class="fa-solid fa-clipboard-list text-[#c5a862]"></i></div><span>سجل الطلبات</span></button>
-                <button class="quick-nav-btn"><div class="icon-wrap"><i class="fa-solid fa-truck-fast text-[#c5a862]"></i></div><span>تتبع</span></button>
-                <button type="button" onclick="changeView('amdrahem', this)" class="quick-nav-btn border border-[#c5a862]/40 bg-gradient-to-br from-[#121418] to-[#1a1d24]">
-                    <div class="icon-wrap active-layout !bg-[#c5a862] !text-black animate-pulse"><i class="fa-solid fa-bolt text-sm"></i></div>
-                    <span class="font-black text-[#c5a862]">شحن فوري</span>
-                </button>
-            </div>
+        <!-- الشاشة الرئيسية المعدلة -->
+        <div id="view-home" class="view-content space-y-4 pt-1">
+            <main class="w-full max-w-md px-1 space-y-4 pb-10">
 
-            <!-- محرك البحث العام -->
-            <section class="relative">
-                <span class="absolute inset-y-0 right-4 flex items-center pr-1"><i class="fa-solid fa-magnifying-glass text-[#c5a862] text-sm"></i></span>
-                <input type="text" id="search-input" oninput="searchLocalAndApi(this.value)" placeholder="ابحث عن المواد والتموينات..." class="w-full bg-[#121418] text-xs text-white placeholder-zinc-500 pr-10 pl-4 py-3.5 rounded-xl border border-zinc-800 text-right">
-            </section>
+                <!-- الحاوية الرئيسية لإدخال الرقم (تبدأ متمركزة في المنتصف) -->
+                <div id="mainHeroContainer" class="centered-mode">
+                    
+                    <!-- واجهة الترحيب وشعارات الشبكات -->
+                    <div id="emptyWelcomeState" class="space-y-3.5 pt-1 mb-3">
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent flex-1"></div>
+                            <div class="text-center bg-[#121418] px-3 py-1 rounded-full border border-[#1d2127] shadow-sm">
+                                <h2 class="text-xs font-black text-[#c5a862] tracking-wide">تسديد شبكات الاتصالات</h2>
+                                <span class="text-[9px] font-extrabold text-emerald-400 block">اليمنية</span>
+                            </div>
+                            <div class="h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent flex-1"></div>
+                        </div>
 
-            <div class="flex justify-between items-center px-1"><h2 class="text-xs font-bold text-zinc-400">اقسام التسوق الرئيسية</h2></div>
-            <div id="categories-list" class="grid grid-cols-3 gap-2"></div>
+                        <!-- صف شعارات شبكات الاتصالات -->
+                        <div class="flex justify-center items-center gap-2 flex-wrap px-1">
+                            <div class="w-8 h-8 rounded-full border border-zinc-700 bg-white p-0.5 shadow-sm overflow-hidden hover:scale-105 transition cursor-pointer" onclick="filterByNetwork('yemen_mobile')"><img src="https://i.postimg.cc/BZrr0yD7/images-2026-07-06T163911-011.jpg" class="w-full h-full object-contain"></div>
+                            <div class="w-8 h-8 rounded-full border border-amber-500/80 bg-gradient-to-br from-amber-500/20 to-amber-700/30 p-0.5 shadow-sm flex items-center justify-center font-black text-[8px] text-amber-300 hover:scale-105 transition cursor-pointer" onclick="filterByNetwork('you')">YOU</div>
+                            <div class="w-8 h-8 rounded-full border border-zinc-700 bg-white p-0.5 shadow-sm overflow-hidden hover:scale-105 transition cursor-pointer" onclick="filterByNetwork('sabafon')"><img src="https://i.postimg.cc/44DDgMtS/tnzyl-(2).jpg" class="w-full h-full object-contain"></div>
+                            <div class="w-8 h-8 rounded-full border border-zinc-700 bg-white p-0.5 shadow-sm overflow-hidden hover:scale-105 transition cursor-pointer" onclick="filterByNetwork('yem')"><img src="https://i.postimg.cc/9fgkNNCF/ev4KBYC3-400x400.png" class="w-full h-full object-contain"></div>
+                            <div class="w-8 h-8 rounded-full border border-orange-500/80 bg-gradient-to-br from-orange-500/20 to-orange-700/30 flex items-center justify-center font-bold text-[8px] text-orange-400 hover:scale-105 transition cursor-pointer" onclick="filterByNetwork('hatefi')">هاتفي</div>
+                            <div class="w-8 h-8 rounded-full border border-cyan-500/80 bg-gradient-to-br from-cyan-500/20 to-cyan-700/30 flex items-center justify-center font-bold text-[8px] text-cyan-300 hover:scale-105 transition cursor-pointer" onclick="filterByNetwork('yemen_net')">يمن نت</div>
+                            <div class="w-8 h-8 rounded-full border border-sky-500/80 bg-gradient-to-br from-sky-500/20 to-sky-700/30 flex items-center justify-center font-bold text-[8px] text-sky-300 hover:scale-105 transition cursor-pointer" onclick="filterByNetwork('aden_net')">عدن نت</div>
+                            <div class="w-8 h-8 rounded-full border border-blue-500/80 bg-gradient-to-br from-blue-500/20 to-blue-700/30 flex items-center justify-center font-bold text-[8px] text-blue-300 hover:scale-105 transition cursor-pointer" onclick="filterByNetwork('4g')">4G</div>
+                        </div>
+
+                        <div class="flex items-center justify-between px-1 pt-1">
+                            <span class="text-[10px] font-semibold text-slate-400">يرجى إدخال الرقم للبدء</span>
+                            <p class="text-xs font-black text-slate-200">ادخل رقم الهاتف :</p>
+                        </div>
+                    </div>
+
+                    <!-- صندوق إدخال رقم الهاتف مع زر جهات الاتصال -->
+                    <div class="bg-[#121418] rounded-2xl shadow-xl p-3 border border-[#1d2127] flex items-center justify-between relative overflow-hidden">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <button onclick="pickContactFromDevice()" title="اختيار من جهات الاتصال" class="w-9 h-9 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-[#c5a862] border border-zinc-800 shadow-sm active:scale-95 transition">
+                                <i class="fa-solid fa-address-book text-base"></i>
+                            </button>
+                            <button id="clearBtn" onclick="clearInput()" class="text-rose-400 font-black text-xs bg-rose-950/40 hover:bg-rose-900/60 rounded-full w-6 h-6 flex items-center justify-center transition hidden">✕</button>
+                        </div>
+
+                        <div class="flex-1 mx-3">
+                            <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold px-0.5 mb-1">
+                                <span id="charCount" class="bg-zinc-900 px-1.5 py-0.5 rounded-md text-slate-300">0</span>
+                                <span id="phoneInputLabel">رقم الهاتف</span>
+                            </div>
+                            <div id="phoneInputBorder" class="flex items-center justify-end border-b-2 border-zinc-700 focus-within:border-[#c5a862] transition-colors pb-1">
+                                <input type="tel" id="mobileNumber" placeholder="7XXXXXXXX" maxlength="9" oninput="handlePhoneChange(this.value)" class="font-extrabold text-white outline-none text-base bg-transparent text-right w-full tracking-wider">
+                                <span class="text-xs text-slate-400 font-bold ml-1.5 bg-zinc-900 px-1.5 py-0.5 rounded">+967</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <div id="companyLogoBadge" class="w-11 h-11 rounded-xl bg-zinc-900 flex items-center justify-center border border-zinc-800 overflow-hidden shadow-inner p-1 transition-all">
+                                <i id="phoneDefaultIcon" class="fa-solid fa-phone text-slate-400 text-sm"></i>
+                                <img id="networkImg" src="" alt="Logo" class="object-contain w-full h-full rounded-lg hidden">
+                            </div>
+                            <i id="heartIcon" class="fa-solid fa-heart text-rose-500 text-base active:scale-125 transition-transform cursor-pointer"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الحاوية الديناميكية (محرك البحث + الأقسام والباقات) تظهر أسفل الرقم بعد تسجيله -->
+                <div id="servicesContainer" class="space-y-4 hidden animate-fade-in">
+
+                    <!-- محرك البحث بالأسفل تحت بطاقة إدخال الرقم -->
+                    <div class="relative w-full">
+                        <div class="flex items-center bg-[#121418] border border-[#1d2127] rounded-2xl px-3 py-2.5 shadow-sm focus-within:border-[#c5a862] transition-all">
+                            <i class="fa-solid fa-magnifying-glass text-[#c5a862] text-sm ml-2"></i>
+                            <input type="text" id="globalSearchInput" oninput="handleGlobalSearch(this.value)" placeholder="ابحث عن باقة، فئة شحن، أو خدمة..." class="w-full text-right text-xs font-bold text-white outline-none bg-transparent placeholder-slate-500">
+                            <button id="clearSearchBtn" onclick="clearGlobalSearch()" class="text-slate-400 hover:text-white font-bold text-xs bg-zinc-800 rounded-full w-5 h-5 flex items-center justify-center hidden transition">✕</button>
+                        </div>
+                        
+                        <!-- قائمة نتائج البحث المنسدلة التفاعلية -->
+                        <div id="searchResultsDropdown" class="absolute top-full right-0 left-0 mt-1.5 bg-[#0d0f11] border border-[#1d2127] rounded-2xl shadow-xl z-30 hidden max-h-60 overflow-y-auto divide-y divide-zinc-800">
+                            <!-- يتم ملء النتائج هنا ديناميكياً عبر JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- شريط التبويبات الرئيسي -->
+                    <div id="mainTabsBar" class="grid grid-cols-5 gap-1 bg-zinc-900 p-1.5 rounded-2xl text-center text-xs font-black shadow-inner border border-zinc-800">
+                        <button onclick="changeMainTab('rial', this)" class="sub-tab py-2 rounded-xl text-slate-400 transition active:scale-95">ريال</button>
+                        <button onclick="changeMainTab('gomla', this)" class="sub-tab py-2 rounded-xl text-slate-400 transition active:scale-95">جملة</button>
+                        <button onclick="changeMainTab('packages', this)" id="packagesMainTabBtn" class="sub-tab py-2 rounded-xl shadow-md transition text-black bg-[#c5a862] active:scale-95">باقات</button>
+                        <button onclick="changeMainTab('bill', this)" class="sub-tab py-2 rounded-xl text-slate-400 transition active:scale-95">فوري</button>
+                        <button onclick="changeMainTab('balance', this)" class="sub-tab py-2 rounded-xl text-slate-400 transition active:scale-95">رصيد</button>
+                    </div>
+
+                    <!-- شريط الفلاتر الفرعية -->
+                    <div id="subFilterRow" class="hidden"></div>
+
+                    <!-- قسم الباقات الديناميكي -->
+                    <div id="packagesSection" class="space-y-3">
+                        <div id="dynamicCompanyView" class="space-y-2.5">
+                            <div class="bg-[#121418] p-6 rounded-2xl text-center border border-[#1d2127] shadow-sm">
+                                <div class="w-8 h-8 border-4 border-[#c5a862] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                <p class="text-xs font-bold text-slate-400">جاري تحميل الباقات...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قسم تسديد الرصيد المباشر -->
+                    <div id="balanceSection" class="space-y-3 hidden">
+                        <div class="bg-[#121418] rounded-2xl p-4 border border-[#1d2127] shadow-sm space-y-2">
+                            <label class="block text-xs font-bold text-slate-200">* ادخل المبلغ</label>
+                            <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 focus-within:border-[#c5a862] transition">
+                                <input type="number" id="directBalanceInput" oninput="updateBalanceNet(this.value)" placeholder="المبلغ" class="w-full text-right font-extrabold text-white outline-none text-base bg-transparent">
+                                <span class="text-slate-400 mr-2 font-bold">💲</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#121418] rounded-2xl p-4 border border-[#1d2127] shadow-sm space-y-2">
+                            <label class="block text-xs font-bold text-slate-400">صافي الرصيد بعد خصم الضريبه</label>
+                            <div class="flex items-center bg-zinc-900/70 border border-zinc-800 rounded-xl px-3 py-2.5">
+                                <input type="text" id="directBalanceNet" readonly placeholder="0.00" class="w-full text-right font-extrabold text-[#c5a862] outline-none text-base bg-transparent">
+                                <span class="text-slate-400 mr-2 font-bold">💲</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 pt-1">
+                            <button onclick="queryPhoneNumber()" class="bg-gradient-to-r from-amber-500/80 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-extrabold py-3.5 rounded-2xl text-sm shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-magnifying-glass"></i> استعلام
+                            </button>
+                            <button id="payBalanceBtn" onclick="payDirectBalance()" class="bg-[#c5a862] text-black font-extrabold py-3.5 rounded-2xl text-sm shadow-md active:scale-95 transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-credit-card"></i> تسديد
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- قسم الشحن الفوري السريع -->
+                    <div id="billSection" class="space-y-3 hidden">
+                        <div class="bg-[#121418] p-4 rounded-2xl border border-[#1d2127] shadow-sm text-center">
+                            <h4 class="text-xs font-black text-slate-200 mb-3">فئات الشحن الفوري المتوفرة للرقم</h4>
+                            <div id="quickCardsContainer" class="grid grid-cols-3 gap-2.5"></div>
+                        </div>
+                    </div>
+
+                    <!-- قسم شحن الجملة والريال -->
+                    <div id="gomlaSection" class="space-y-3 hidden">
+                        <div class="bg-[#121418] rounded-2xl p-4 border border-[#1d2127] shadow-sm space-y-2">
+                            <label id="quantityLabel" class="block text-xs font-bold text-slate-200">* ادخل الكمية (ريال)</label>
+                            <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 focus-within:border-[#c5a862] transition">
+                                <input type="number" id="gomlaQty" placeholder="الكمية" class="w-full text-right font-extrabold text-white outline-none text-base bg-transparent">
+                                <span class="text-slate-400 mr-2 font-bold">💲</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 pt-1">
+                            <button onclick="queryPhoneNumber()" class="bg-gradient-to-r from-amber-500/80 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-extrabold py-3.5 rounded-2xl text-sm shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-magnifying-glass"></i> استعلام
+                            </button>
+                            <button id="submitGomlaBtn" onclick="submitGomla()" class="bg-[#c5a862] text-black font-extrabold py-3.5 rounded-2xl text-sm shadow-md active:scale-95 transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-paper-plane"></i> تسديد
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
         </div>
 
-        <!-- شاشة عرض منتجات القسم بالعرض الشبكي -->
+        <!-- شاشة عرض المنتجات -->
         <div id="view-products" class="view-content hidden space-y-4">
             <div class="flex items-center justify-between bg-[#121418] p-3 rounded-2xl border border-[#1d2127]">
                 <div class="flex items-center gap-3">
@@ -202,55 +369,10 @@
             <div id="products-list" class="grid grid-cols-2 gap-3"></div>
         </div>
 
-        <!-- 📱 شاشة الشحن الفوري للشرائح والاتصالات -->
-        <div id="view-amdrahem" class="view-content hidden space-y-4 pt-2">
-            <div class="p-4 bg-slate-800/90 border border-slate-700/60 rounded-2xl text-center shadow-lg space-y-1">
-                <h2 class="text-sm font-black text-[#c5a862]">📱 تسديد الباقات والخدمات الاتصالات</h2>
-                <p class="text-[10px] text-gray-400">أدخل رقم الهاتف لتظهر لك باقات الشبكة المخصصة تلقائياً</p>
-            </div>
-
-            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-lg space-y-2">
-                <div class="flex justify-between items-center">
-                    <label for="phoneInput" class="block text-xs font-medium text-slate-300">أدخل رقم الهاتف للتسديد</label>
-                    <button type="button" onclick="pickContactFromDevice()" class="text-[10px] bg-[#c5a862]/20 hover:bg-[#c5a862]/30 text-[#c5a862] px-2.5 py-1 rounded-lg border border-[#c5a862]/30 font-bold flex items-center gap-1 transition">
-                        <i class="fa-solid fa-address-book"></i> جهات الاتصال
-                    </button>
-                </div>
-                <div class="relative flex items-center">
-                    <input type="tel" id="phoneInput" maxlength="9" placeholder="XXX XXX XXX" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pr-4 pl-32 text-right font-mono text-lg font-black tracking-wider text-[#c5a862] focus:outline-none focus:border-[#c5a862] placeholder-slate-600" />
-                    <div id="netBadgeContainer" class="absolute left-2 flex items-center gap-1.5 bg-slate-800 px-2 py-1 rounded-lg border border-slate-700 hidden">
-                        <span id="netBadgeName" class="text-[10px] text-slate-200 font-bold">الشبكة</span>
-                        <img id="netLogo" class="w-4 h-4 object-contain" src="" alt="">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="recentNumbersSection" class="hidden space-y-1">
-                <span class="text-[10px] text-zinc-400 font-bold block">🔄 أرقام تم التسديد لها مؤخراً:</span>
-                <div id="recentNumbersList" class="flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
-            </div>
-
-            <div class="space-y-3">
-                <div class="relative">
-                    <span class="absolute inset-y-0 right-3.5 flex items-center pointer-events-none"><i class="fa-solid fa-magnifying-glass text-slate-500 text-xs"></i></span>
-                    <input type="text" id="searchInput" class="w-full bg-[#121418] text-xs text-white placeholder-zinc-500 pr-9 pl-4 py-3 rounded-xl border border-[#1d2127] focus:outline-none focus:border-[#c5a862] text-right" placeholder="🔍 ابحث عن اسم الباقة أو السعر..." oninput="filterPackages()">
-                </div>
-
-                <!-- حاوية الفلاتر الديناميكية (تتغير حسب الشبكة المدخلة) -->
-                <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none" id="filterTagsContainer">
-                    <button onclick="setPackageTag('ALL', this)" class="tag-btn bg-[#c5a862] text-slate-950 text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap shadow-md transition">الكل</button>
-                </div>
-            </div>
-
-            <div id="packagesContainer" class="grid grid-cols-2 gap-3"></div>
-            <div id="alertBox" class="text-xs text-center font-bold text-red-400 py-2 hidden"></div>
-        </div>
-
-        <!-- 🎮 شاشة شحن الالعاب والبرامج -->
+        <!-- شاشة السداد -->
         <div id="view-games" class="view-content hidden space-y-4">
             <div class="p-3 bg-[#121418] border border-[#1d2127] rounded-2xl text-center">
-                <h2 class="text-xs font-black text-[#c5a862]">شحن الالعاب والبرامج والاشتراكات</h2>
+                <h2 class="text-xs font-black text-[#c5a862]">شحن الألعاب والبرامج والاشتراكات</h2>
             </div>
             <div class="relative">
                 <span class="absolute inset-y-0 right-4 flex items-center pr-1"><i class="fa-solid fa-magnifying-glass text-[#c5a862] text-sm"></i></span>
@@ -259,7 +381,7 @@
             <div id="mega-services-list" class="grid grid-cols-2 gap-3"></div>
         </div>
 
-        <!-- 🔔 مركز الإشعارات (الجرس) -->
+        <!-- مركز الإشعارات -->
         <div id="view-real-notifications" class="view-content hidden space-y-4 pt-2">
             <div class="p-3 bg-[#121418] border border-[#1d2127] rounded-2xl flex items-center justify-between">
                 <h3 class="text-xs font-black text-white">مركز الإشعارات والتنبيهات العامة</h3>
@@ -267,7 +389,7 @@
             <div id="notifications-list" class="space-y-3"></div>
         </div>
 
-        <!-- 💬 شاشة الرسائل والدعم الفني -->
+        <!-- شاشة الرسائل والدعم الفني -->
         <div id="view-notifications" class="view-content hidden flex flex-col h-[calc(100vh-160px)] space-y-2">
             <div class="p-3 bg-[#121418] border border-[#1d2127] rounded-2xl flex justify-between items-center shadow-md">
                 <div class="flex items-center gap-3">
@@ -277,7 +399,7 @@
                         <p class="text-[10px] text-emerald-400 font-bold">متصل الآن - استجابة فورية</p>
                     </div>
                 </div>
-                <a href="https://wa.me/967737528057" target="_blank" class="bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                <a href="https://wa.me/967735429057" target="_blank" class="bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5">
                     <i class="fab fa-whatsapp text-sm"></i> الواتساب
                 </a>
             </div>
@@ -299,35 +421,33 @@
             </div>
         </div>
 
-        <!-- 🧾 سجل الفواتير والطلبات -->
+        <!-- سجل الفواتير والطلبات -->
         <div id="view-orders" class="view-content hidden space-y-6">
             <h2 class="text-xl font-black text-white">سجل الفواتير والعمليات</h2>
             <div id="orders-list" class="space-y-4"></div>
         </div>
 
-        <!-- 🛍️ سلة التسوق وطرق الدفع -->
-        <div id="view-cart" class="view-content hidden space-y-6">
-            <h2 class="text-xl font-black text-white">حقيبة التسوق الحالية</h2>
-            <div id="cart-list" class="space-y-3"></div>
-            <div class="p-5 bg-[#121418] rounded-2xl border flex justify-between items-center">
-                <span class="text-sm text-gray-400 font-bold">الإجمالي الكلي للسلة:</span>
-                <span id="cart-total" class="text-xl font-black text-[#c5a862] font-mono">0 YER</span>
-            </div>
-            
-            <div class="space-y-2.5">
-                <button onclick="processOrder('wallet')" class="btn-payment btn-wallet">
-                    <i class="fas fa-wallet"></i> <span>تأكيد الدفع من المحفظة</span>
-                </button>
-                <button onclick="processOrder('whatsapp')" class="btn-payment btn-whatsapp">
-                    <i class="fab fa-whatsapp"></i> <span>طلب سريع عبر الواتساب</span>
-                </button>
-                <button onclick="processOrder('cod')" class="btn-payment btn-cod">
-                    <i class="fas fa-truck-moving"></i> <span>الدفع عند الاستلام (مع تتبع موقع GPS)</span>
+        <!-- واجهة تغذية الحساب -->
+        <div id="view-cart" class="view-content hidden space-y-5 pt-2">
+            <div class="flex justify-between items-center bg-[#121418] p-3 rounded-2xl border border-[#1d2127]">
+                <h1 class="text-sm font-black text-[#c5a862]">تغذية الحساب</h1>
+                <button class="w-9 h-9 bg-zinc-900 border border-zinc-800 rounded-xl flex items-center justify-center hover:bg-zinc-800 active:scale-95 transition">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 </button>
             </div>
+
+            <div class="currency-tabs">
+                <button class="tab" onclick="selectCurrency(this)">ريال سعودي</button>
+                <button class="tab active" onclick="selectCurrency(this)">ريال يمني</button>
+                <button class="tab" onclick="selectCurrency(this)">دولار امريكي</button>
+            </div>
+
+            <button class="w-full overflow-hidden rounded-2xl border-2 border-[#1d2127] hover:border-[#c5a862] transition-all active:scale-98 shadow-lg" onclick="openDepositModal()">
+                <img src="https://i.postimg.cc/xdQjSvHH/Screenshot-2026-08-28-16-46-23-481-com-megatec-center.png" alt="إيداع مباشر عبر جوالي" class="w-full h-auto block object-cover">
+            </button>
         </div>
 
-        <!-- 👤 شاشة حساب المستخدم -->
+        <!-- شاشة حساب المستخدم -->
         <div id="view-account" class="view-content hidden space-y-6">
             <div class="p-6 bg-[#121418] rounded-2xl border text-center space-y-4">
                 <div class="w-16 h-16 bg-[#c5a862] text-black text-2xl font-black rounded-xl mx-auto flex items-center justify-center" id="acc-avatar-large">م</div>
@@ -343,14 +463,68 @@
         <nav class="fixed bottom-0 left-0 right-0 h-20 cyber-nav grid grid-cols-6 items-center z-[500] px-1 border-t border-[#c5a862]/20 max-w-md mx-auto">
             <button onclick="changeView('home', this)" class="nav-item active"><i class="fas fa-home"></i><span>الرئيسية</span></button>
             <button onclick="changeView('games', this)" class="nav-item"><i class="fas fa-money-check-alt"></i><span>السداد</span></button>
-            <button onclick="changeView('cart', this)" class="nav-item relative"><i class="fas fa-shopping-bag"></i><span id="cart-dot" class="absolute -top-2.5 -right-2.5 bg-[#c5a862] text-black text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center hidden">0</span><span>السلة</span></button>
+            <button onclick="changeView('cart', this)" class="nav-item relative"><i class="fas fa-wallet text-[#c5a862]"></i><span>تغذية الحساب</span></button>
             <button onclick="changeView('orders', this)" class="nav-item"><i class="fas fa-receipt"></i><span>فواتيري</span></button>
             <button onclick="changeView('notifications', this)" class="nav-item relative"><i class="fas fa-comments"></i><span id="msg-dot" class="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span><span>الرسائل</span></button>
             <button onclick="changeView('account', this)" class="nav-item"><i class="fas fa-user-circle"></i><span>حسابي</span></button>
         </nav>
     </div>
 
-    <!-- نافذة تأكيد شحن الاتصالات والشرايح-->
+    <!-- النافذة المنبثقة الإيداع (Modal) -->
+    <div class="modal-overlay" id="myModal">
+        <div class="modal-content space-y-4">
+            <button class="absolute top-3 left-3 w-8 h-8 bg-zinc-800 text-zinc-400 hover:text-white rounded-full flex items-center justify-center text-xs font-bold transition" onclick="closeDepositModal()">✕</button>
+
+            <div class="flex justify-between items-center pt-1 border-b border-zinc-800 pb-3">
+                <div class="space-y-0.5">
+                    <h3 class="text-sm font-black text-[#c5a862]">جوالي</h3>
+                    <p class="text-[10px] text-gray-400">قم بتغذية حسابك مباشرة من رصيدك في محفظة جوالي</p>
+                </div>
+                <div class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black rounded-lg">جوالي</div>
+            </div>
+
+            <div class="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-3 rounded-xl">
+                <button class="bg-[#c5a862] text-black px-2.5 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition flex items-center gap-1" onclick="copyReceiverNumber()">
+                    <span>📋</span>
+                    <span>نسخ</span>
+                </button>
+                <span id="receiverNumberText" class="text-xs font-bold text-slate-200 font-mono">رقم المستلم : 735429057 - محمد موسى</span>
+            </div>
+
+            <div class="flex gap-2">
+                <div class="bg-zinc-900 border border-zinc-800 p-2.5 rounded-xl flex flex-col justify-center items-center" style="flex: 1.2;">
+                    <span class="text-xs font-bold text-white">ريال يمني</span>
+                    <span class="text-[10px] text-gray-500">العملة</span>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl flex items-center gap-2" style="flex: 1.8;">
+                    <input type="number" id="amountInput" placeholder="المبلغ" oninput="validateForm()" class="w-full bg-transparent text-xs text-white placeholder-zinc-500 font-mono focus:outline-none text-right">
+                    <span class="text-sm">💰</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-center text-[10px]">
+                <div class="bg-zinc-900/60 border border-zinc-800 p-2 rounded-xl text-gray-400 flex flex-col items-center">
+                    اقل مبلغ
+                    <span class="text-emerald-400 font-bold font-mono mt-0.5">📉 1 💰</span>
+                </div>
+                <div class="bg-[#121418] border border-zinc-800 p-2 rounded-xl text-gray-400 flex flex-col items-center">
+                    اقصى مبلغ
+                    <span class="text-amber-400 font-bold font-mono mt-0.5">📈 500000 💰</span>
+                </div>
+            </div>
+
+            <input type="text" id="senderInput" placeholder="رقم المرسل (مثال: 73xxxxxxx)" oninput="validateForm()" class="royal-input text-xs font-mono">
+
+            <div class="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl text-[10px] text-amber-300">
+                <span>سيتم إضافة المبلغ إلى رصيدك فور تأكيد الحوالة</span>
+                <span class="text-sm">💳</span>
+            </div>
+
+            <button id="submitBtn" onclick="verifyAndRecharge()" disabled class="w-full bg-[#c5a862] disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-black py-3.5 rounded-xl text-xs shadow-lg transition active:scale-95">تأكيد وشحن الرصيد</button>
+        </div>
+    </div>
+
+    <!-- نافذة تأكيد شحن الاتصالات والشرايح -->
     <div id="confirmModal" class="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="modal-card w-full max-w-sm bg-[#0d0f11] border-2 border-[#1d2127] rounded-2xl p-5 space-y-4 shadow-2xl text-right">
             <div class="text-center pb-2 border-b border-zinc-800">
@@ -376,12 +550,12 @@
             </div>
             <div class="flex gap-2 pt-2">
                 <button class="confirm-btn flex-1 bg-[#c5a862] text-black font-black py-3 rounded-xl text-xs active:scale-95 transition shadow-lg" id="btnConfirm" onclick="executeTopup()">✔️ تأكيد الدفع</button>
-                <button class="cancel-btn bg-zinc-800 text-zinc-300 font-bold px-4 py-3 rounded-xl text-xs active:scale-95 transition" onclick="closeModal()">إلغاء</button>
+                <button class="cancel-btn bg-zinc-800 text-zinc-300 font-bold px-4 py-3 rounded-xl text-xs active:scale-95 transition" onclick="closeConfirmModal()">إلغاء</button>
             </div>
         </div>
     </div>
 
-    <!-- نافذة شحن الالعاب والبرامج والاشتراكات -->
+    <!-- نافذة شحن الألعاب والبرامج -->
     <div id="mega-modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[2500] hidden opacity-0 transition-opacity duration-300" onclick="closeMegaModal()"></div>
     <div id="mega-bottom-sheet" class="fixed -bottom-full left-0 right-0 z-[2600] bg-[#0d0f11] border-t-2 border-[#c5a862] rounded-t-[2rem] p-6 transition-all duration-300 hidden space-y-4 max-w-md mx-auto">
         <div class="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-2"></div>
@@ -394,17 +568,169 @@
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-28 left-6 right-6 z-[4000] bg-[#c5a862] text-black px-5 py-4 rounded-xl text-xs font-black shadow-2xl text-center hidden animate-bounce"></div>
+    <!-- رسالة إشعار التوست -->
+    <div id="toastMsg" class="fixed bottom-28 left-6 right-6 z-[4000] bg-[#c5a862] text-black px-5 py-3 rounded-xl text-xs font-black shadow-2xl text-center hidden">تم نسخ رقم المستلم بنجاح!</div>
 
     <script src="script.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('SW Active! Scope:', reg.scope))
-        .catch(err => console.error('SW Error:', err));
-    });
-  }
-</script>
+    <script>
+        // التفاعل مع إدخال رقم الهاتف وإظهار أقسام التسديد ومحرك البحث
+        function handlePhoneChange(val) {
+            const heroContainer = document.getElementById('mainHeroContainer');
+            const servicesContainer = document.getElementById('servicesContainer');
+            const countElem = document.getElementById('charCount');
+            const clearBtn = document.getElementById('clearBtn');
+            const networkImg = document.getElementById('networkImg');
+            const defaultIcon = document.getElementById('phoneDefaultIcon');
+
+            countElem.innerText = val.length;
+
+            if (val.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            // بمجرد البدء بإدخال أي رقم (أو عند اكتمال الرقم)
+            if (val.length > 0) {
+                // رفع البطاقة للأعلى
+                heroContainer.classList.remove('centered-mode');
+                heroContainer.classList.add('top-mode');
+            } else {
+                // إعادة البطاقة للمنتصف إذا أفرغ المستخدم الحقل
+                heroContainer.classList.remove('top-mode');
+                heroContainer.classList.add('centered-mode');
+            }
+
+            // عند استكمال أدنى حد لأرقام الهاتف اليمنية (مثلاً 9 أرقام) تظهر باقي الخدمات ومحرك البحث
+            if (val.length >= 9) {
+                servicesContainer.classList.remove('hidden');
+                
+                // التعرّف التلقائي البسيط على الشبكة
+                if (val.startsWith('77') || val.startsWith('78')) {
+                    networkImg.src = "https://i.postimg.cc/BZrr0yD7/images-2026-07-06T163911-011.jpg";
+                    networkImg.classList.remove('hidden');
+                    defaultIcon.classList.add('hidden');
+                } else if (val.startsWith('73')) {
+                    networkImg.src = "https://i.postimg.cc/44DDgMtS/tnzyl-(2).jpg";
+                    networkImg.classList.remove('hidden');
+                    defaultIcon.classList.add('hidden');
+                } else if (val.startsWith('71')) {
+                    networkImg.src = "https://i.postimg.cc/9fgkNNCF/ev4KBYC3-400x400.png";
+                    networkImg.classList.remove('hidden');
+                    defaultIcon.classList.add('hidden');
+                }
+            } else {
+                servicesContainer.classList.add('hidden');
+                networkImg.classList.add('hidden');
+                defaultIcon.classList.remove('hidden');
+            }
+        }
+
+        function clearInput() {
+            const input = document.getElementById('mobileNumber');
+            input.value = '';
+            handlePhoneChange('');
+        }
+
+        function changeMainTab(tabName, btn) {
+            const tabs = document.querySelectorAll('#mainTabsBar .sub-tab');
+            tabs.forEach(t => {
+                t.classList.remove('bg-[#c5a862]', 'text-black', 'shadow-md');
+                t.classList.add('text-slate-400');
+            });
+
+            btn.classList.add('bg-[#c5a862]', 'text-black', 'shadow-md');
+            btn.classList.remove('text-slate-400');
+
+            // إخفاء كافة الأقسام
+            document.getElementById('packagesSection').classList.add('hidden');
+            document.getElementById('balanceSection').classList.add('hidden');
+            document.getElementById('billSection').classList.add('hidden');
+            document.getElementById('gomlaSection').classList.add('hidden');
+
+            // إظهار القسم المختار
+            if (tabName === 'packages') {
+                document.getElementById('packagesSection').classList.remove('hidden');
+            } else if (tabName === 'balance') {
+                document.getElementById('balanceSection').classList.remove('hidden');
+            } else if (tabName === 'bill') {
+                document.getElementById('billSection').classList.remove('hidden');
+            } else if (tabName === 'gomla' || tabName === 'rial') {
+                document.getElementById('gomlaSection').classList.remove('hidden');
+            }
+        }
+
+        // فتح وإغلاق نافذة الإيداع المباشر (جوالي)
+        function openDepositModal() {
+            document.getElementById('myModal').classList.add('active');
+        }
+
+        function closeDepositModal() {
+            document.getElementById('myModal').classList.remove('active');
+        }
+
+        // إغلاق نافذة تأكيد الاتصالات
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        // نسخ رقم حساب المستلم
+        function copyReceiverNumber() {
+            const receiverText = "735429057";
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(receiverText).then(() => {
+                    showToastMsg("تم نسخ رقم المستلم بنجاح!");
+                });
+            } else {
+                const tempInput = document.createElement("input");
+                tempInput.value = receiverText;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                showToastMsg("تم نسخ رقم المستلم بنجاح!");
+            }
+        }
+
+        function showToastMsg(msg) {
+            const toast = document.getElementById('toastMsg');
+            toast.innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        function selectCurrency(btn) {
+            const tabs = document.querySelectorAll('.currency-tabs .tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function validateForm() {
+            const amount = document.getElementById('amountInput').value;
+            const sender = document.getElementById('senderInput').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (amount && amount >= 1 && amount <= 500000 && sender.trim().length >= 7) {
+                submitBtn.removeAttribute('disabled');
+            } else {
+                submitBtn.setAttribute('disabled', 'disabled');
+            }
+        }
+
+        function verifyAndRecharge() {
+            showToastMsg("تم إرسال طلب شحن الرصيد بنجاح!");
+            closeDepositModal();
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Active! Scope:', reg.scope))
+                    .catch(err => console.error('SW Error:', err));
+            });
+        }
+    </script>
 </body>
 </html>

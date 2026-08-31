@@ -154,10 +154,6 @@ const AppSetting = mongoose.model('AppSetting', new mongoose.Schema({
     appVersion: { type: String, default: "1.0.0" }
 }), 'appsettings');
 
-// --- موديل باقات نظام الحرابي الجديد ---
-const packageSchema = new mongoose.Schema({}, { strict: false, collection: 'packages' });
-const Package = mongoose.model('Package', packageSchema);
-
 // ==========================================
 // 📦 مسارات إدارة منتجات الكاشير والمخزون (POS Items API)
 // ==========================================
@@ -349,11 +345,12 @@ async function sendHirabiRequest(endpoint, params) {
   return { transid, data: response.data };
 }
 
-// 1. مسار جلب الباقات المحدث (يقوم بالجلب المباشر من كولكشن mdarahimpackages)
+// 1. جلب الباقات المتاحة مع إمكانية الفلترة المباشرة من كولكشن mdarahimpackages
 app.get('/api/packages', async (req, res) => {
   try {
     const { provider, numberType, internetType } = req.query;
     const filter = {};
+    
     if (provider) filter.provider = provider;
     if (numberType) filter.numberType = { $in: [numberType, 'الكل'] };
     if (internetType) filter.internetType = { $in: [internetType, 'الكل'] };
@@ -363,7 +360,176 @@ app.get('/api/packages', async (req, res) => {
   } catch (error) {
     return res.status(500).json({ status: false, message: error.message });
   }
-}); } catch (e) { res.status(500).json([]); }
+});
+
+// 2. خدمات يمن موبايل (استعلام، فواتير، باقات، سلفة)
+app.get('/api/provider/yemen-mobile', async (req, res) => {
+  try {
+    const { action, mobile, amount, offerkey } = req.query;
+    if (!mobile) return res.status(400).json({ status: false, message: 'رقم الهاتف مطلوب' });
+
+    const result = await sendHirabiRequest('yem', {
+      action: action || 'query',
+      mobile: mobile,
+      amount: amount || 0,
+      offerkey: offerkey || ''
+    });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. شحن يمن موبايل جملة
+app.get('/api/provider/yemen-mobile/gomla', async (req, res) => {
+  try {
+    const { mobile, amount } = req.query;
+    const result = await sendHirabiRequest('mobilegomla', { mobile, num: amount });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4. خدمات شركة يو (YOU / MTN)
+app.get('/api/provider/you/bill', async (req, res) => {
+  try {
+    const { isOffer, mobile, num, type, israsid } = req.query;
+    const endpoint = isOffer === 'true' ? 'mtnoffer' : 'mtn';
+    const params = { action: 'bill', mobile, num, type };
+    if (israsid) params.israsid = 1;
+
+    const result = await sendHirabiRequest(endpoint, params);
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 5. شحن شركة يو جملة
+app.get('/api/provider/you/gomla', async (req, res) => {
+  try {
+    const { mobile, amount } = req.query;
+    const result = await sendHirabiRequest('mtngomla', { mobile, num: amount });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 6. خدمات شركة سبأفون
+app.get('/api/provider/sabaphone', async (req, res) => {
+  try {
+    const { type, region, mobile, num } = req.query;
+    let endpoint = 'sabaphone';
+
+    if (region === 'south') {
+      endpoint = type === 'offer' ? 'sbayoffer' : 'sbay';
+    } else if (type === 'offer') {
+      endpoint = 'sabaoffer';
+    } else if (type === 'units') {
+      endpoint = 'sabaunits';
+    }
+
+    const result = await sendHirabiRequest(endpoint, { action: 'bill', mobile, num });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7. شحن وحدات سبأفون جملة
+app.get('/api/provider/sabaphone/gomla', async (req, res) => {
+  try {
+    const { mobile, amount } = req.query;
+    const result = await sendHirabiRequest('sabagomla', { mobile, num: amount });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 8. خدمات شركة واي (Why)
+app.get('/api/provider/why', async (req, res) => {
+  try {
+    const { actionType, mobile, num, rasid, packageid } = req.query;
+    const params = { action: 'bill', mobile, num };
+    if (rasid) params.rasid = rasid;
+    if (packageid) params.packageid = packageid;
+
+    const result = await sendHirabiRequest('why', params);
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 9. خدمات يمن فورجي (Yemen 4G)
+app.get('/api/provider/yem4g', async (req, res) => {
+  try {
+    const { action, mobile, amount } = req.query;
+    const result = await sendHirabiRequest('yem4g', {
+      action: action || 'query',
+      mobile,
+      amount: amount || 0
+    });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10. خدمات الهاتف الثابت والإنترنت المنزلي (Post / ADSL)
+app.get('/api/provider/post-adsl', async (req, res) => {
+  try {
+    const { action, mobile, amount, type } = req.query;
+    const result = await sendHirabiRequest('post', {
+      action: action || 'query',
+      mobile,
+      amount: amount || 0,
+      type: type || 'adsl'
+    });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 11. خدمات عدن نت (Aden Net)
+app.get('/api/provider/adenet', async (req, res) => {
+  try {
+    const { action, mobile, num } = req.query;
+    const result = await sendHirabiRequest('adenet', {
+      action: action || 'query',
+      mobile,
+      num: num || 0
+    });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 12. مستقبل الإشعارات والتحديثات الرجعية (Webhook Callback)
+app.get('/api/webhook/callback', (req, res) => {
+  console.log('تنبيه callback من سيرفر الحرابي:', req.query);
+  return res.send('OK');
+});
+
+// ==========================================
+// 🌐 مسارات العميل الأساسية والمصادقة
+// ==========================================
+app.post('/api/register-token', async (req, res) => {
+    const { token, user_id } = req.body;
+    if (!token || !user_id) return res.status(400).json({ success: false, message: "بيانات ناقصة" });
+    try {
+        await DeviceToken.findOneAndUpdate({ token }, { phone: user_id, token }, { upsert: true, new: true });
+        res.json({ success: true, message: "تم تسجيل جهازك بنجاح" });
+    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+app.get('/api/categories', async (req, res) => {
+    try { res.json(await Category.find({})); } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/products', async (req, res) => {
@@ -695,7 +861,7 @@ app.get('/api/admin/ads', async (req, res) => {
 });
 
 app.post('/api/admin/ad/add', async (req, res) => {
-    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.status(401).json({ success: false });
+    if (req.body.adminPass !== ADMIN_SECRET_KEY) return res.body.adminPass !== ADMIN_SECRET_KEY ? res.status(401).json({ success: false }) : null;
     try {
         const embed = makeEmbedUrl(req.body.videoUrl);
         await Ad.updateMany({}, { active: false });
@@ -786,4 +952,3 @@ app.get('/admin', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل بنجاح على المنفذ ${PORT}`);
 });
-

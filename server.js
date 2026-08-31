@@ -349,13 +349,31 @@ async function sendHirabiRequest(endpoint, params) {
   return { transid, data: response.data };
 }
 
-// 1. جلب الباقات المتاحة من كولكشن packages الجديد
+// 1. مسار جلب الباقات المحدث (يقوم بالجلب المباشر من كولكشن mdarahimpackages)
 app.get('/api/packages', async (req, res) => {
   try {
-    const packages = await Package.find();
+    const packages = await mongoose.connection.db.collection('mdarahimpackages').find({}).toArray();
     return res.status(200).json({ status: true, count: packages.length, data: packages });
   } catch (error) {
     return res.status(500).json({ status: false, message: error.message });
+  }
+});
+
+// 2. خدمات يمن موبايل (استعلام، فواتير، باقات، سلفة)
+app.get('/api/provider/yemen-mobile', async (req, res) => {
+  try {
+    const { action, mobile, amount, offerkey } = req.query;
+    if (!mobile) return res.status(400).json({ status: false, message: 'رقم الهاتف مطلوب' });
+
+    const result = await sendHirabiRequest('yem', {
+      action: action || 'query',
+      mobile: mobile,
+      amount: amount || 0,
+      offerkey: offerkey || ''
+    });
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

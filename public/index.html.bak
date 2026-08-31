@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>تموينات أبو حسين | Premium Platform</title>
+    <title>ون كارد | OneCard</title>
     
     <!-- المكتبات والخطوط -->
     <script src="assets/styles/tailwind.js"></script>
@@ -734,3 +734,4 @@
     </script>
 </body>
 </html>
+

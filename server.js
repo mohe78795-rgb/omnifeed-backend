@@ -13,7 +13,6 @@ app.use(express.urlencoded({ extended: true }));
 const PUBLIC_DIR = path.join(__dirname, 'public');
 app.use(express.static(PUBLIC_DIR));
 
-// قاعدة بيانات مؤقتة للعملاء
 const users = [
   { name: 'عمر', phone: '333333333', pass: 'ه', bal: 0 },
   { name: 'محمد', phone: '735429057', pass: '123', bal: 0 }
@@ -25,7 +24,6 @@ const usedTransactions = [];
 const REMOTE_ADMIN_URL = "https://0zk30qr9iu.onrender.com/api/admin/user/update-balance";
 const SECURE_ADMIN_PASS = process.env.ADMIN_PASS || "SECURE_ADMIN_PASS_123";
 
-// تنظيف الرقم واستخراج آخر 9 أرقام لتفادي أخطاء فتح الخط (+967 أو 0)
 function cleanPhoneNumber(phone) {
   if (!phone) return '';
   const digitsOnly = phone.toString().replace(/\D/g, '');
@@ -41,7 +39,6 @@ app.post('/api/jawali', (req, res) => {
   try {
     let { amount, sender, raw, transid } = req.body;
 
-    // استخراج دقيق وتلقائي من النص الخام لضمان جودة البيانات
     if (raw && typeof raw === 'string') {
       const extractedAmount = raw.match(/مبلغ\s*([0-9,.]+)/i);
       if (extractedAmount) {
@@ -79,7 +76,7 @@ app.post('/api/jawali', (req, res) => {
   }
 });
 
-// 💳 مطابقة الحوالة وإضافة الرصيد لحساب العميل
+// 💳 مطابقة الحوالة مع اشتراط تطابق المبلغ ورقم الهاتف بدقة
 app.post('/api/user/recharge', async (req, res) => {
   try {
     const { amount, sender } = req.body;
@@ -91,19 +88,22 @@ app.post('/api/user/recharge', async (req, res) => {
     const inputSenderClean = cleanPhoneNumber(sender);
     const inputAmount = Number(amount);
 
-    // البحث عن أحدث حوالة مطابقة للرقم والمبلغ
+    console.log(`🔍 طلب مطابقة من الواجهة -> الرقم: ${inputSenderClean} | المبلغ: ${inputAmount}`);
+
+    // البحث عن أحدث حوالة مطابقة للرقم والمبلغ معاً
     const matchedJawaliTx = jawaliTransactions
       .filter(tx => tx.sender === inputSenderClean && Number(tx.amount) === inputAmount)
       .sort((a, b) => b.createdAt - a.createdAt)[0];
 
     if (!matchedJawaliTx) {
+      console.log("❌ لم يتم العثور على حوالة مطابقة في الذاكرة.");
       return res.status(404).json({ 
         success: false, 
-        message: 'لم يتم العثور على حوالة بهذه البيانات، يرجى التأكد من وصول الرسالة أو صحة المدخلات.' 
+        message: 'لم يتم العثور على حوالة بهذه البيانات، يرجى التأكد من كتابة المبلغ الصحيح والمطابق للرسالة.' 
       });
     }
 
-    // منع استخدام الحوالة أكثر من مرة
+    // منع تكرار استخدام نفس الحوالة
     const isAlreadyUsed = usedTransactions.some(tx => tx.transid === matchedJawaliTx.transid);
     if (isAlreadyUsed) {
       return res.status(400).json({ success: false, message: 'تم استخدام هذه الحوالة وتأكيدها سابقاً!' });
@@ -117,7 +117,7 @@ app.post('/api/user/recharge', async (req, res) => {
 
     const newBalance = user.bal + inputAmount;
 
-    // مراسلة سيرفر الإدارة الخارجي وتحديث الرصيد
+    // إرسال تحديث الرصيد إلى السيرفر الخارجي
     const remoteResponse = await axios.post(REMOTE_ADMIN_URL, {
       adminPass: SECURE_ADMIN_PASS,
       phone: inputSenderClean,
@@ -137,7 +137,7 @@ app.post('/api/user/recharge', async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: `تم اعتماد الحوالة وشحن رصيدك بـ ${inputAmount} ريال بنجاح.`,
+        message: `تم اعتماد الحوالة بمبلغ ${inputAmount} ريال وشحن رصيدك بنجاح.`,
         newBalance: user.bal
       });
     } else {

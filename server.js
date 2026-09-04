@@ -12,15 +12,16 @@ app.use(express.urlencoded({ extended: true }));
 const PUBLIC_DIR = path.join(__dirname, 'public');
 app.use(express.static(PUBLIC_DIR));
 
-// قائمة الحسابات المعتمدة فقط
+// الحساب الوحيد الثابت والمستهدف لإضافة الأرصدة
+const TARGET_ACCOUNT_PHONE = '735429057';
 const users = [
-  { name: 'عمر', phone: '333333333', pass: 'ه', bal: 0 },
-  { name: 'محمد', phone: '735429057', pass: '123', bal: 0 }
+  { name: 'محمد', phone: TARGET_ACCOUNT_PHONE, pass: '123', bal: 0 }
 ];
 
 const jawaliTransactions = [];
 const usedTransactions = [];
 
+// دالة لتنظيف واستخراج آخر 9 أرقام لتفادي أخطاء فتح الخط (+967 أو 0)
 function cleanPhoneNumber(phone) {
   if (!phone) return '';
   const digitsOnly = phone.toString().replace(/\D/g, '');
@@ -36,6 +37,7 @@ app.post('/api/jawali', (req, res) => {
   try {
     let { amount, sender, raw, transid } = req.body;
 
+    // استخراج بيانات الحوالة بدقة من النص الخام عند الحاجة
     if (raw && typeof raw === 'string') {
       const extractedAmount = raw.match(/مبلغ\s*([0-9,.]+)/i);
       if (extractedAmount) {
@@ -64,7 +66,7 @@ app.post('/api/jawali', (req, res) => {
     };
 
     jawaliTransactions.push(newTx);
-    console.log("📩 تم تسجيل الحوالة بنجاح:", newTx);
+    console.log("📩 تم تسجيل الحوالة بنجاح في السيرفر:", newTx);
 
     return res.status(200).json({ status: 'success', message: 'تم حفظ الحوالة بنجاح', data: newTx });
   } catch (error) {
@@ -73,28 +75,21 @@ app.post('/api/jawali', (req, res) => {
   }
 });
 
-// 💳 مطابقة الحوالة والشحن للحسابات المسجلة فقط
+// 💳 المطابقة وإضافة الرصيد تلقائياً لحساب 735429057
 app.post('/api/user/recharge', async (req, res) => {
   try {
     const { amount, sender } = req.body;
 
     if (!sender || !amount) {
-      return res.status(400).json({ success: false, message: 'رقم المرسل والمبلغ مطلوبان' });
+      return res.status(400).json({ success: false, message: 'رقم مرسل الحوالة والمبلغ مطلوبان' });
     }
 
     const inputSenderClean = cleanPhoneNumber(sender);
     const inputAmount = Number(amount);
 
-    // 1. التحقق أولاً من أن الحساب مسجل في النظام
-    const user = users.find(u => cleanPhoneNumber(u.phone) === inputSenderClean);
-    if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'عذراً، هذا الرقم غير مسجل كحساب لدينا في النظام.' 
-      });
-    }
+    console.log(`🔍 طلب مطابقة حوالة من المُرسِل: ${inputSenderClean} بمبلغ: ${inputAmount}`);
 
-    // 2. المطابقة الصارمة للحوالة في الذاكرة (الرقم + المبلغ)
+    // 1. المطابقة الصارمة بين البيانات المدخلة في الواجهة والحوالات القادمة من الأتمتة
     const matchedJawaliTx = jawaliTransactions
       .filter(tx => tx.sender === inputSenderClean && Number(tx.amount) === inputAmount)
       .sort((a, b) => b.createdAt - a.createdAt)[0];
@@ -102,32 +97,39 @@ app.post('/api/user/recharge', async (req, res) => {
     if (!matchedJawaliTx) {
       return res.status(404).json({ 
         success: false, 
-        message: 'لم يتم العثور على حوالة بهذه البيانات، يرجى التأكد من كتابة المبلغ الصحيح والمطابق للرسالة.' 
+        message: 'لم يتم العثور على حوالة بهذه البيانات، يرجى التأكد من رقم المُرسِل والمبلغ الصحيح.' 
       });
     }
 
-    // 3. منع تكرار استخدام الحوالة
+    // 2. منع تكرار الشحن لنفس الحوالة
     const isAlreadyUsed = usedTransactions.some(tx => tx.transid === matchedJawaliTx.transid);
     if (isAlreadyUsed) {
-      return res.status(400).json({ success: false, message: 'تم استخدام هذه الحوالة وتأكيدها سابقاً!' });
+      return res.status(400).json({ success: false, message: 'تم استخدام هذه الحوالة واعتمادها سابقاً!' });
     }
 
-    // 4. إضافة الرصيد لحساب العميل الموجود
-    user.bal += inputAmount;
+    // 3. العثور على الحساب الثابت المستهدف للإيداع
+    const targetUser = users.find(u => cleanPhoneNumber(u.phone) === TARGET_ACCOUNT_PHONE);
+    if (!targetUser) {
+      return res.status(500).json({ success: false, message: 'الحساب الرئيسي غير معرف في السيرفر' });
+    }
 
+    // 4. إضافة المبلغ مباشرة لحساب 735429057
+    targetUser.bal += inputAmount;
+
+    // تعليم الحوالة كمستخدمة
     usedTransactions.push({
       transid: matchedJawaliTx.transid,
-      phone: inputSenderClean,
+      sender: inputSenderClean,
       amount: inputAmount,
       usedAt: new Date()
     });
 
-    console.log(`✅ تم شحن رصيد ${user.name} (${inputSenderClean}) بمبلغ ${inputAmount}. الرصيد الجديد: ${user.bal}`);
+    console.log(`✅ تم اعتماد الحوالة القادمة من ${inputSenderClean} وإضافة ${inputAmount} ريال لحساب ${targetUser.phone}. الرصيد الجديد: ${targetUser.bal}`);
 
     return res.status(200).json({
       success: true,
-      message: `أهلاً ${user.name}، تم اعتماد الحوالة بمبلغ ${inputAmount} ريال وشحن رصيدك بنجاح.`,
-      newBalance: user.bal
+      message: `تمت المطابقة بنجاح! تم إضافة ${inputAmount} ريال إلى حسابك (${targetUser.phone}).`,
+      newBalance: targetUser.bal
     });
 
   } catch (error) {

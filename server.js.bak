@@ -1,5 +1,4 @@
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
 
@@ -13,6 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 const PUBLIC_DIR = path.join(__dirname, 'public');
 app.use(express.static(PUBLIC_DIR));
 
+// قائمة الحسابات المعتمدة فقط
 const users = [
   { name: 'عمر', phone: '333333333', pass: 'ه', bal: 0 },
   { name: 'محمد', phone: '735429057', pass: '123', bal: 0 }
@@ -20,9 +20,6 @@ const users = [
 
 const jawaliTransactions = [];
 const usedTransactions = [];
-
-const REMOTE_ADMIN_URL = "https://0zk30qr9iu.onrender.com/api/admin/user/update-balance";
-const SECURE_ADMIN_PASS = process.env.ADMIN_PASS || "SECURE_ADMIN_PASS_123";
 
 function cleanPhoneNumber(phone) {
   if (!phone) return '';
@@ -34,7 +31,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-// 📩 استقبال إشعار جوالي من الأتمتة
+// 📩 استقبال إشعار جوالي من الأتمتة (Webhook)
 app.post('/api/jawali', (req, res) => {
   try {
     let { amount, sender, raw, transid } = req.body;
@@ -76,7 +73,7 @@ app.post('/api/jawali', (req, res) => {
   }
 });
 
-// 💳 مطابقة الحوالة مع اشتراط تطابق المبلغ ورقم الهاتف بدقة
+// 💳 مطابقة الحوالة والشحن للحسابات المسجلة فقط
 app.post('/api/user/recharge', async (req, res) => {
   try {
     const { amount, sender } = req.body;
@@ -88,64 +85,50 @@ app.post('/api/user/recharge', async (req, res) => {
     const inputSenderClean = cleanPhoneNumber(sender);
     const inputAmount = Number(amount);
 
-    console.log(`🔍 طلب مطابقة من الواجهة -> الرقم: ${inputSenderClean} | المبلغ: ${inputAmount}`);
+    // 1. التحقق أولاً من أن الحساب مسجل في النظام
+    const user = users.find(u => cleanPhoneNumber(u.phone) === inputSenderClean);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'عذراً، هذا الرقم غير مسجل كحساب لدينا في النظام.' 
+      });
+    }
 
-    // البحث عن أحدث حوالة مطابقة للرقم والمبلغ معاً
+    // 2. المطابقة الصارمة للحوالة في الذاكرة (الرقم + المبلغ)
     const matchedJawaliTx = jawaliTransactions
       .filter(tx => tx.sender === inputSenderClean && Number(tx.amount) === inputAmount)
       .sort((a, b) => b.createdAt - a.createdAt)[0];
 
     if (!matchedJawaliTx) {
-      console.log("❌ لم يتم العثور على حوالة مطابقة في الذاكرة.");
       return res.status(404).json({ 
         success: false, 
         message: 'لم يتم العثور على حوالة بهذه البيانات، يرجى التأكد من كتابة المبلغ الصحيح والمطابق للرسالة.' 
       });
     }
 
-    // منع تكرار استخدام نفس الحوالة
+    // 3. منع تكرار استخدام الحوالة
     const isAlreadyUsed = usedTransactions.some(tx => tx.transid === matchedJawaliTx.transid);
     if (isAlreadyUsed) {
       return res.status(400).json({ success: false, message: 'تم استخدام هذه الحوالة وتأكيدها سابقاً!' });
     }
 
-    let user = users.find(u => cleanPhoneNumber(u.phone) === inputSenderClean);
-    if (!user) {
-      user = { name: 'عميل جوالي', phone: inputSenderClean, bal: 0 };
-      users.push(user);
-    }
+    // 4. إضافة الرصيد لحساب العميل الموجود
+    user.bal += inputAmount;
 
-    const newBalance = user.bal + inputAmount;
-
-    // إرسال تحديث الرصيد إلى السيرفر الخارجي
-    const remoteResponse = await axios.post(REMOTE_ADMIN_URL, {
-      adminPass: SECURE_ADMIN_PASS,
+    usedTransactions.push({
+      transid: matchedJawaliTx.transid,
       phone: inputSenderClean,
-      newBalance: newBalance
-    }, {
-      headers: { 'Content-Type': 'application/json' }
+      amount: inputAmount,
+      usedAt: new Date()
     });
 
-    if (remoteResponse.data && remoteResponse.data.success) {
-      user.bal = newBalance;
-      usedTransactions.push({
-        transid: matchedJawaliTx.transid,
-        phone: inputSenderClean,
-        amount: inputAmount,
-        usedAt: new Date()
-      });
+    console.log(`✅ تم شحن رصيد ${user.name} (${inputSenderClean}) بمبلغ ${inputAmount}. الرصيد الجديد: ${user.bal}`);
 
-      return res.status(200).json({
-        success: true,
-        message: `تم اعتماد الحوالة بمبلغ ${inputAmount} ريال وشحن رصيدك بنجاح.`,
-        newBalance: user.bal
-      });
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: remoteResponse.data.message || "فشلت عملية تحديث الرصيد"
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      message: `أهلاً ${user.name}، تم اعتماد الحوالة بمبلغ ${inputAmount} ريال وشحن رصيدك بنجاح.`,
+      newBalance: user.bal
+    });
 
   } catch (error) {
     console.error('❌ خطأ معالجة الشحن:', error.message);

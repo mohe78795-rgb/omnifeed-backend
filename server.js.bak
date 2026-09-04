@@ -9,9 +9,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-// قاعدة بيانات مؤقتة للعملاء
+// ==========================================
+// 1. تحديد وتخديم مجلد الواجهة (public)
+// ==========================================
+const PUBLIC_DIR = path.join(__dirname, 'public');
+app.use(express.static(PUBLIC_DIR));
+
+// قواعد البيانات المؤقتة في الذاكرة
 const users = [
   { name: 'عمر', phone: '333333333', pass: 'ه', bal: 0 },
   { name: 'محمد', phone: '735429057', pass: '123', bal: 0 }
@@ -20,15 +25,20 @@ const users = [
 const jawaliTransactions = [];
 const usedTransactions = [];
 
-// 🔒 بيانات المسؤول محمية داخل السيرفر فقط ومخفية عن العميل
+// 🔒 رمز ورابط الأدمن آمن ومخفي داخل السيرفر
 const REMOTE_ADMIN_URL = "https://0zk30qr9iu.onrender.com/api/admin/user/update-balance";
 const SECURE_ADMIN_PASS = process.env.ADMIN_PASS || "SECURE_ADMIN_PASS_123";
 
+// ==========================================
+// 2. مسار عرض الواجهة الرئيسية تلقائياً
+// ==========================================
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-// مسار استقبال إشعارات جوالي (Webhook)
+// ==========================================
+// 3. مسار استقبال إشعارات جوالي (Webhook)
+// ==========================================
 app.post('/api/jawali', (req, res) => {
   try {
     let { amount, sender, raw, transid } = req.body;
@@ -70,10 +80,11 @@ app.post('/api/jawali', (req, res) => {
   }
 });
 
-// مسار مطابقة الحوالة والشحن المباشر
+// ==========================================
+// 4. مسار مطابقة الحوالة والشحن المباشر
+// ==========================================
 app.post('/api/user/recharge', async (req, res) => {
   try {
-    // يستقبل السيرفر فقط رقم المرسل والمبلغ من العميل
     const { amount, sender } = req.body;
 
     if (!sender || !amount) {
@@ -82,7 +93,7 @@ app.post('/api/user/recharge', async (req, res) => {
 
     const cleanSender = sender.toString().trim();
 
-    // 1. المطابقة البحثية عن أحدث حوالة قادمة بهذا الرقم
+    // البحث عن أحدث حوالة مطابقة
     const matchedJawaliTx = jawaliTransactions
       .filter(tx => tx.sender.includes(cleanSender))
       .sort((a, b) => b.createdAt - a.createdAt)[0];
@@ -91,7 +102,7 @@ app.post('/api/user/recharge', async (req, res) => {
       return res.status(404).json({ success: false, message: 'لم يتم العثور على حوالة بهذه البيانات' });
     }
 
-    // 2. التحقق من منع التكرار
+    // منع تكرار الحوالة
     const isAlreadyUsed = usedTransactions.some(tx => tx.transid === matchedJawaliTx.transid);
     if (isAlreadyUsed) {
       return res.status(400).json({ success: false, message: 'تم استخدام هذه الحوالة من قبل!' });
@@ -99,7 +110,6 @@ app.post('/api/user/recharge', async (req, res) => {
 
     const finalAmount = matchedJawaliTx.amount || Number(amount);
 
-    // البحث عن الحساب المرتبط برقم المرسل
     let user = users.find(u => u.phone === cleanSender);
     if (!user) {
       user = { name: 'عميل جوالي', phone: cleanSender, bal: 0 };
@@ -108,9 +118,9 @@ app.post('/api/user/recharge', async (req, res) => {
 
     const newBalance = user.bal + finalAmount;
 
-    // 3. السيرفر يقوم بحقن كلمة مرور الأدمن الآمنة ومخفية عن العميل
+    // حقن رمز الأدمن من السيرفر مباشرة
     const remoteResponse = await axios.post(REMOTE_ADMIN_URL, {
-      adminPass: SECURE_ADMIN_PASS, // محقونة سيرفر لسيرفر
+      adminPass: SECURE_ADMIN_PASS,
       phone: cleanSender,
       newBalance: newBalance
     }, {
@@ -139,7 +149,7 @@ app.post('/api/user/recharge', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('❌ خطأ الشحن:', error.message);
+    console.error('❌ خطأ المعالجة:', error.message);
     return res.status(500).json({
       success: false,
       message: 'حدث خطأ أثناء معالجة الحوالة',
@@ -148,5 +158,8 @@ app.post('/api/user/recharge', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 السيرفر تعمل بأمان على المنفذ: ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 السيرفر يعمل على: http://localhost:${PORT}`);
+  console.log(`📁 مجلد الواجهة: ${PUBLIC_DIR}`);
+});
 

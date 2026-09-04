@@ -3,279 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تغذية الحساب</title>
+    <title>تغذية الحساب - جوالي</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: #f7f9fc;
-            color: #333;
-            padding: 15px;
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 18px;
-            font-weight: bold;
-            color: #222;
-            flex-grow: 1;
-            text-align: center;
-        }
-
-        .currency-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 10px 0;
-            text-align: center;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            background-color: #eef2f6;
-            color: #555;
-        }
-
-        .tab.active {
-            background-color: #537188;
-            color: #fff;
-            font-weight: bold;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #f7f9fc; padding: 15px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { font-size: 18px; color: #222; }
         .custom-image-card {
-            background: #fff;
-            border: 1px solid #e1eaf0;
-            width: 100%;
-            padding: 20px;
-            cursor: pointer;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: bold;
-            color: #ff5722;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            background: #fff; border: 1px solid #e1eaf0; width: 100%; padding: 20px;
+            cursor: pointer; border-radius: 12px; font-weight: bold; color: #ff5722;
         }
-
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; padding: 15px;
         }
-
-        .modal-content {
-            background: #fff;
-            width: 100%;
-            max-width: 420px;
-            border-radius: 20px;
-            padding: 20px;
-            position: relative;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #333;
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 15px;
-        }
-
-        .point-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 12px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            font-size: 13px;
-        }
-
-        .copy-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .row-inputs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .input-group {
-            flex: 1;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            background: #fff;
-        }
-
-        .input-group input {
-            border: none;
-            outline: none;
-            width: 100%;
-            font-size: 14px;
-            text-align: right;
-        }
-
+        .modal-content { background: #fff; width: 100%; max-width: 400px; border-radius: 20px; padding: 20px; position: relative; }
+        .close-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 18px; cursor: pointer; }
         .operation-input {
-            width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 12px 15px;
-            font-size: 14px;
-            outline: none;
-            margin-bottom: 15px;
-            text-align: right;
+            width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;
+            font-size: 14px; margin-bottom: 12px; text-align: right; outline: none;
         }
-
         .submit-btn {
-            width: 100%;
-            background-color: #e2e8f0;
-            color: #94a3b8;
-            border: none;
-            border-radius: 10px;
-            padding: 14px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: not-allowed;
+            width: 100%; background-color: #e2e8f0; color: #94a3b8; border: none;
+            border-radius: 10px; padding: 14px; font-weight: bold; cursor: not-allowed;
         }
-
-        .submit-btn.active {
-            background-color: #ff5722;
-            color: #fff;
-            cursor: pointer;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            display: none;
-        }
+        .submit-btn.active { background-color: #ff5722; color: #fff; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>تغذية الحساب</h1>
-    </div>
-
-    <div class="currency-tabs">
-        <button class="tab active">ريال يمني</button>
-        <button class="tab">ريال سعودي</button>
-        <button class="tab">دولار امريكي</button>
+        <h1>تغذية الحساب الآلي</h1>
     </div>
 
     <button class="custom-image-card" onclick="openModal()">
-        إيداع مباشر عبر جوالي 💳
+        تأكيد إيداع جوالي 💳
     </button>
 
     <div class="modal-overlay" id="myModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">✕</button>
+            <h3 style="margin-bottom: 15px;">إدخال بيانات التحويل</h3>
 
-            <div class="modal-header">
-                <h3>محفظة جوالي</h3>
-            </div>
-
-            <div class="point-box">
-                <button class="copy-btn" onclick="copyReceiverNumber()">📋</button>
-                <span id="receiverNumberText">رقم المستلم: 735429057 - محمد موسى</span>
-            </div>
-
-            <input type="text" id="userPhoneInput" class="operation-input" value="735429057" placeholder="رقم حسابك (المسجل)" oninput="validateForm()">
-
-            <div class="row-inputs">
-                <div class="input-group" style="flex: 1.8;">
-                    <input type="number" id="amountInput" placeholder="المبلغ" oninput="validateForm()">
-                </div>
-            </div>
-
-            <input type="text" id="senderInput" class="operation-input" placeholder="رقم المرسل (مثال: 73xxxxxxx)" oninput="validateForm()">
+            <!-- العميل يدخل فقط رقم المرسل والمبلغ -->
+            <input type="text" id="senderInput" class="operation-input" placeholder="رقم المرسل (مثال: 735429057)" oninput="validateForm()">
+            <input type="number" id="amountInput" class="operation-input" placeholder="المبلغ (مثال: 5000)" oninput="validateForm()">
 
             <button class="submit-btn" id="submitBtn" onclick="verifyAndRecharge()" disabled>تأكيد وشحن الرصيد</button>
         </div>
     </div>
 
-    <div class="toast" id="toastMsg"></div>
-
     <script>
-        // تحديد الرابط تلقائياً ليعمل محلياً أو بعد الرفع بنفس النطاق
         const SERVER_URL = window.location.origin;
 
-        function openModal() {
-            document.getElementById('myModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('myModal').style.display = 'none';
-        }
-
-        function copyReceiverNumber() {
-            navigator.clipboard.writeText("735429057").then(function() {
-                showToast("تم نسخ رقم المستلم بنجاح!");
-            });
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toastMsg');
-            toast.innerText = msg;
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 2500);
-        }
+        function openModal() { document.getElementById('myModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('myModal').style.display = 'none'; }
 
         function validateForm() {
-            const userPhone = document.getElementById('userPhoneInput').value;
-            const amount = document.getElementById('amountInput').value;
             const sender = document.getElementById('senderInput').value;
+            const amount = document.getElementById('amountInput').value;
             const submitBtn = document.getElementById('submitBtn');
 
-            if (userPhone.trim().length >= 9 && amount && Number(amount) > 0 && sender.trim().length >= 9) {
+            if (sender.trim().length >= 9 && amount && Number(amount) > 0) {
                 submitBtn.classList.add('active');
                 submitBtn.removeAttribute('disabled');
             } else {
@@ -285,12 +74,11 @@
         }
 
         async function verifyAndRecharge() {
-            const userPhone = document.getElementById('userPhoneInput').value;
-            const amount = document.getElementById('amountInput').value;
             const sender = document.getElementById('senderInput').value;
+            const amount = document.getElementById('amountInput').value;
             const submitBtn = document.getElementById('submitBtn');
 
-            submitBtn.innerText = "جاري المطابقة والشحن...";
+            submitBtn.innerText = "جاري المطابقة والتأكيد...";
             submitBtn.setAttribute('disabled', 'true');
 
             try {
@@ -298,7 +86,6 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        userPhone: userPhone.trim(),
                         sender: sender.trim(),
                         amount: amount
                     })
@@ -307,16 +94,14 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    showToast(result.message);
+                    alert(`✅ ${result.message}\nرصيدك الحالي: ${result.newBalance}`);
                     closeModal();
-                    alert(`✅ ${result.message}\nرصيدك الجديد: ${result.newBalance}`);
-                    document.getElementById('amountInput').value = '';
                     document.getElementById('senderInput').value = '';
+                    document.getElementById('amountInput').value = '';
                 } else {
                     alert(result.message || "فشلت عملية التحقق من الحوالة");
                 }
             } catch (error) {
-                console.error("خطأ:", error);
                 alert("تعذر الاتصال بالسيرفر");
             } finally {
                 submitBtn.innerText = "تأكيد وشحن الرصيد";

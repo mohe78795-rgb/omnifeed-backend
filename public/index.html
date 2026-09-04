@@ -2,115 +2,1039 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تغذية الحساب - جوالي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تطبيق الخدمات الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: #f7f9fc; padding: 15px; color: #333; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 18px; color: #222; }
-        .custom-image-card {
-            background: #fff; border: 1px solid #e1eaf0; width: 100%; padding: 18px;
-            cursor: pointer; border-radius: 12px; font-weight: bold; color: #ff5722;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04); text-align: center; font-size: 15px;
-        }
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; padding: 15px; z-index: 1000;
-        }
-        .modal-content { background: #fff; width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; position: relative; }
-        .close-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 18px; cursor: pointer; color: #666; }
-        .modal-title { margin-bottom: 15px; font-size: 16px; font-weight: bold; }
-        .operation-input {
-            width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;
-            font-size: 14px; margin-bottom: 12px; text-align: right; outline: none;
-        }
-        .operation-input:focus { border-color: #ff5722; }
-        .submit-btn {
-            width: 100%; background-color: #e2e8f0; color: #94a3b8; border: none;
-            border-radius: 10px; padding: 14px; font-weight: bold; font-size: 14px; cursor: not-allowed;
-        }
-        .submit-btn.active { background-color: #ff5722; color: #fff; cursor: pointer; }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
+        .theme-ym { --primary: #991b3b; --primary-hover: #801430; --light: #ffedd5; --badge-bg: #fff1f2; }
+        .theme-you { --primary: #f59e0b; --primary-hover: #d97706; --light: #fef3c7; --badge-bg: #fffbeb; }
+        .theme-saba { --primary: #0284c7; --primary-hover: #0369a1; --light: #e0f2fe; --badge-bg: #f0f9ff; }
+        .theme-why { --primary: #7c3aed; --primary-hover: #6d28d9; --light: #ede9fe; --badge-bg: #f5f3ff; }
+        .theme-yem4g { --primary: #0284c7; --primary-hover: #0369a1; --light: #e0f2fe; --badge-bg: #f0f9ff; }
+        .theme-default { --primary: #991b3b; --primary-hover: #801430; --light: #ffedd5; }
     </style>
 </head>
-<body>
+<body id="appBody" class="theme-default flex flex-col items-center min-h-screen pb-12 transition-colors duration-300">
 
-    <div class="header">
-        <h1>تغذية الحساب الآلي</h1>
+    <!-- 1. الشريط العلوي (Header) -->
+    <header id="mainHeader" class="w-full max-w-md bg-[#991b3b] text-white px-4 py-3 shadow-md flex justify-between items-center rounded-b-3xl transition-colors duration-300">
+        <button onclick="refreshBalance()" class="bg-white/20 hover:bg-white/30 p-2 rounded-full transition active:scale-95">
+            <svg id="refreshIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+        </button>
+
+        <div class="flex items-center space-x-2 space-x-reverse cursor-pointer" onclick="toggleBalance()">
+            <span class="text-xs text-white/90">رصيدي</span>
+            <span id="balanceDisplay" class="text-base font-black tracking-wider">*****</span>
+            <svg class="h-4 w-4 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+            </svg>
+        </div>
+
+        <div class="bg-white/20 p-2 rounded-full cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0Z" />
+            </svg>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي للموبايل -->
+    <main class="w-full max-w-md px-3.5 mt-3 space-y-3">
+
+        <!-- واجهة الترحيب وشعارات الشبكات -->
+        <div id="emptyWelcomeState" class="space-y-4 pt-2">
+            <div class="flex items-center justify-center gap-2">
+                <div class="h-[1px] bg-slate-300 flex-1"></div>
+                <div class="text-center">
+                    <h2 class="text-xs font-black text-slate-800">تسديد شبكات الاتصالات</h2>
+                    <span class="text-[10px] font-bold text-slate-500">اليمنية</span>
+                </div>
+                <div class="h-[1px] bg-slate-300 flex-1"></div>
+            </div>
+
+            <!-- صف شعارات شبكات الاتصالات -->
+            <div class="flex justify-center items-center gap-1.5 flex-wrap px-2">
+                <div class="w-7 h-7 rounded-full border border-slate-200 bg-white p-0.5 shadow-sm overflow-hidden"><img src="https://i.postimg.cc/BZrr0yD7/images-2026-07-06T163911-011.jpg" class="w-full h-full object-contain"></div>
+                <div class="w-7 h-7 rounded-full border border-amber-300 bg-amber-100 p-0.5 shadow-sm flex items-center justify-center font-black text-[7px] text-amber-900">YOU</div>
+                <div class="w-7 h-7 rounded-full border border-slate-200 bg-white p-0.5 shadow-sm overflow-hidden"><img src="https://i.postimg.cc/44DDgMtS/tnzyl-(2).jpg" class="w-full h-full object-contain"></div>
+                <div class="w-7 h-7 rounded-full border border-slate-200 bg-white p-0.5 shadow-sm overflow-hidden"><img src="https://i.postimg.cc/9fgkNNCF/ev4KBYC3-400x400.png" class="w-full h-full object-contain"></div>
+                <div class="w-7 h-7 rounded-full border border-orange-200 bg-orange-50 flex items-center justify-center font-bold text-[7px] text-orange-600">هاتفي</div>
+                <div class="w-7 h-7 rounded-full border border-cyan-200 bg-cyan-50 flex items-center justify-center font-bold text-[7px] text-cyan-700">يمن نت</div>
+                <div class="w-7 h-7 rounded-full border border-sky-200 bg-sky-50 flex items-center justify-center font-bold text-[7px] text-sky-700">عدن نت</div>
+                <div class="w-7 h-7 rounded-full border border-blue-200 bg-blue-50 flex items-center justify-center font-bold text-[7px] text-blue-700">4G</div>
+            </div>
+
+            <p class="text-right text-xs font-bold text-slate-700 pt-2 px-1">ادخل رقم الهاتف :</p>
+        </div>
+
+        <!-- 2. صندوق إدخال رقم الهاتف مع زر جهات الاتصال -->
+        <div class="bg-white rounded-2xl shadow-sm p-3 border border-slate-200 flex items-center justify-between">
+            <div class="flex items-center space-x-2 space-x-reverse text-slate-400">
+                <button onclick="pickContactFromPhone()" title="اختيار من جهات الاتصال" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-[#991b3b] border border-slate-200 shadow-sm active:scale-95 transition">
+                    <i class="fa-solid fa-address-book text-base"></i>
+                </button>
+                <button id="clearBtn" onclick="clearInput()" class="text-rose-600 font-black text-xs bg-rose-50 rounded-full w-6 h-6 flex items-center justify-center hidden">✕</button>
+            </div>
+
+            <div class="flex-1 mx-2">
+                <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold px-1">
+                    <span id="charCount">0</span>
+                    <span id="phoneInputLabel">رقم الهاتف</span>
+                </div>
+                <div id="phoneInputBorder" class="flex items-center justify-end border-b-2 border-slate-300 pb-1">
+                    <input type="tel" id="mobileNumber" placeholder="رقم الهاتف" maxlength="9" oninput="handlePhoneChange(this.value)" class="font-extrabold text-slate-800 outline-none text-base bg-transparent text-right w-full tracking-wider">
+                    <span class="text-xs text-slate-500 font-bold ml-1">+967</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <div id="companyLogoBadge" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200 overflow-hidden shadow-inner p-1">
+                    <i id="phoneDefaultIcon" class="fa-solid fa-phone text-slate-400 text-sm"></i>
+                    <img id="networkImg" src="" alt="Logo" class="object-contain w-full h-full rounded-lg hidden">
+                </div>
+                <i id="heartIcon" class="fa-solid fa-heart text-rose-500 text-base"></i>
+            </div>
+        </div>
+
+        <!-- الحاوية الديناميكية التي تظهر فقط بعد إدخال الرقم -->
+        <div id="servicesContainer" class="space-y-3 hidden">
+
+            <!-- 3. شريط التبويبات الرئيسي (رصيد - فوري - باقات - جملة - ريال) -->
+            <div id="mainTabsBar" class="grid grid-cols-5 gap-1 bg-[#ffedd5] p-1.5 rounded-2xl text-center text-xs font-black shadow-inner">
+                <button onclick="changeMainTab('rial', this)" class="sub-tab py-2 rounded-xl text-slate-700 transition">ريال</button>
+                <button onclick="changeMainTab('gomla', this)" class="sub-tab py-2 rounded-xl text-slate-700 transition">جملة</button>
+                <button onclick="changeMainTab('packages', this)" id="packagesMainTabBtn" class="sub-tab py-2 rounded-xl shadow transition text-white bg-[#991b3b]">باقات</button>
+                <button onclick="changeMainTab('bill', this)" class="sub-tab py-2 rounded-xl text-slate-700 transition">فوري</button>
+                <button onclick="changeMainTab('balance', this)" class="sub-tab py-2 rounded-xl text-slate-700 transition">رصيد</button>
+            </div>
+
+            <!-- 4. شريط الفلاتر الفرعية -->
+            <div id="subFilterRow" class="hidden"></div>
+
+            <!-- 5. قسم الباقات الديناميكي -->
+            <div id="packagesSection" class="space-y-3">
+                <div id="dynamicCompanyView" class="space-y-2.5">
+                    <div class="bg-white p-6 rounded-2xl text-center border border-slate-200 shadow-sm">
+                        <div class="w-8 h-8 border-4 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <p class="text-xs font-bold text-slate-500">جاري تحميل الباقات...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. قسم تسديد الرصيد المباشر -->
+            <div id="balanceSection" class="space-y-3 hidden">
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
+                    <label class="block text-xs font-bold text-slate-800">* ادخل المبلغ</label>
+                    <div class="flex items-center bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        <input type="number" id="directBalanceInput" oninput="updateBalanceNet(this.value)" placeholder="المبلغ" class="w-full text-right font-extrabold text-slate-700 outline-none text-base">
+                        <span class="text-slate-400 mr-2 font-bold">💲</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
+                    <label class="block text-xs font-bold text-slate-600">صافي الرصيد بعد خصم الضريبه</label>
+                    <div class="flex items-center bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5">
+                        <input type="text" id="directBalanceNet" readonly placeholder="0.00" class="w-full text-right font-extrabold text-slate-700 outline-none text-base bg-transparent">
+                        <span class="text-slate-400 mr-2 font-bold">💲</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="queryPhoneNumber()" class="bg-[#fed7aa] hover:bg-[#fdba74] text-slate-900 font-extrabold py-3.5 rounded-2xl text-sm shadow flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-magnifying-glass"></i> استعلام
+                    </button>
+                    <button id="payBalanceBtn" onclick="payDirectBalance()" class="bg-[#991b3b] text-white font-extrabold py-3.5 rounded-2xl text-sm shadow flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-credit-card"></i> تسديد
+                    </button>
+                </div>
+            </div>
+
+            <!-- 7. قسم الشحن الفوري السريع -->
+            <div id="billSection" class="space-y-3 hidden">
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-center">
+                    <h4 class="text-xs font-black text-slate-700 mb-2.5">فئات الشحن الفوري المتوفرة للرقم</h4>
+                    <div id="quickCardsContainer" class="grid grid-cols-3 gap-2.5"></div>
+                </div>
+            </div>
+
+            <!-- 8. قسم شحن الجملة والريال -->
+            <div id="gomlaSection" class="space-y-3 hidden">
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
+                    <label id="quantityLabel" class="block text-xs font-bold text-slate-800">* ادخل الكمية (ريال)</label>
+                    <div class="flex items-center bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        <input type="number" id="gomlaQty" placeholder="الكمية" class="w-full text-right font-extrabold text-slate-700 outline-none text-base">
+                        <span class="text-slate-400 mr-2 font-bold">💲</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="queryPhoneNumber()" class="bg-[#fed7aa] hover:bg-[#fdba74] text-slate-900 font-extrabold py-3.5 rounded-2xl text-sm shadow flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-magnifying-glass"></i> استعلام
+                    </button>
+                    <button id="submitGomlaBtn" onclick="submitGomla()" class="bg-[#991b3b] text-white font-extrabold py-3.5 rounded-2xl text-sm shadow flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-paper-plane"></i> تسديد
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- نافذة التحكم بالباقة السفلية (Bottom Sheet) -->
+    <div id="packageBottomSheet" class="fixed inset-0 bg-black/60 z-40 hidden flex items-end justify-center">
+        <div class="bg-white w-full max-w-md rounded-t-3xl p-5 space-y-4 shadow-2xl border-t border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 id="sheetPackageTitle" class="text-base font-black text-slate-800">اسم الباقة</h3>
+                <button onclick="closeBottomSheet()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+            </div>
+
+            <div id="solfaOptionBox" class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <span class="text-xs font-bold text-blue-600">تسديد مبلغ السلفة مع التفعيل</span>
+                <input type="checkbox" id="sheetSolfaCheck" class="w-5 h-5 rounded accent-rose-700">
+            </div>
+
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700">سعر الباقة:</span>
+                <div class="flex items-center gap-1 border border-slate-300 rounded-lg px-3 py-1 bg-white">
+                    <span id="sheetPackagePrice" class="font-black text-sm text-slate-800">0</span>
+                    <span class="text-xs text-slate-500 font-bold">ريال</span>
+                </div>
+            </div>
+
+            <div class="text-[11px] text-slate-500 space-y-1 font-bold">
+                <div class="flex justify-between"><span>الصافي بعد خصم الضريبة:</span><span id="sheetNetPrice" class="text-slate-700">0.00</span></div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <button onclick="triggerOrderFromSheet('direct_balance_activation')" class="w-full bg-slate-100 hover:bg-slate-200 text-blue-800 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 border border-slate-200 transition">
+                    <i class="fa-solid fa-money-bill-wave"></i> تفعيل من الرصيد
+                </button>
+                <button onclick="triggerOrderFromSheet('remove_package')" class="w-full bg-slate-100 hover:bg-rose-50 text-rose-700 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 border border-slate-200 transition">
+                    <i class="fa-solid fa-trash-can"></i> حذف الباقة
+                </button>
+                <button id="sheetConfirmBtn" onclick="triggerOrderFromSheet('pay_and_activate')" class="w-full bg-[#991b3b] text-white font-black py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 shadow transition">
+                    <i class="fa-solid fa-circle-check"></i> تسديد + تفعيل
+                </button>
+            </div>
+        </div>
     </div>
 
-    <button class="custom-image-card" onclick="openModal()">
-        تأكيد إيداع جوالي 💳
-    </button>
+    <!-- نافذة تأكيد الطلب والآلة الحاسبة -->
+    <div id="orderConfirmationModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-3.5 shadow-2xl border border-slate-200 text-center relative">
+            <button onclick="closeConfirmModal()" class="absolute top-3 left-3 w-7 h-7 rounded-full bg-rose-100 text-rose-600 font-bold flex items-center justify-center text-xs">✕</button>
 
-    <div class="modal-overlay" id="myModal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModal()">✕</button>
-            <div class="modal-title">إدخال بيانات التحويل</div>
+            <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mx-auto text-2xl shadow-inner">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h3 class="text-sm font-black text-amber-600">تأكيد الطلب</h3>
 
-            <input type="text" id="senderInput" class="operation-input" placeholder="رقم الهاتف المسجل (مثال: 735429057)" oninput="validateForm()">
-            <input type="number" id="amountInput" class="operation-input" placeholder="مبلغ الحوالة (مثال: 2150)" oninput="validateForm()">
+            <div class="text-[11px] font-bold text-blue-600 text-right">تفاصيل الطلب</div>
+            <div class="grid grid-cols-3 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden text-[10px] text-center divide-x divide-x-reverse divide-slate-200 font-bold">
+                <div class="p-1.5"><span class="text-slate-400 block mb-0.5">الخدمة</span><span id="confirmCompany" class="text-slate-800">--</span></div>
+                <div class="p-1.5"><span class="text-slate-400 block mb-0.5">الصنف</span><span id="confirmCategory" class="text-slate-800">--</span></div>
+                <div class="p-1.5"><span class="text-slate-400 block mb-0.5">رقم الهاتف</span><span id="confirmPhone" class="text-slate-800">--</span></div>
+            </div>
 
-            <button class="submit-btn" id="submitBtn" onclick="verifyAndRecharge()" disabled>تأكيد وشحن الرصيد</button>
+            <div class="text-[11px] font-bold text-blue-600 text-right">تفاصيل التكلفة</div>
+            <div class="grid grid-cols-3 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden text-[10px] text-center divide-x divide-x-reverse divide-slate-200 font-bold">
+                <div class="p-1.5"><span class="text-slate-400 block mb-0.5">المبلغ</span><span id="confirmAmount" class="text-slate-800">0</span></div>
+                <div class="p-1.5"><span class="text-slate-400 block mb-0.5">النوع</span><span id="confirmActionType" class="text-slate-800">تسديد</span></div>
+                <div class="p-1.5"><span class="text-slate-400 block mb-0.5">التكلفة</span><span id="confirmCost" class="text-slate-800">0</span></div>
+            </div>
+
+            <p id="costInWords" class="text-xs font-black text-slate-800 bg-amber-50 py-1 rounded-lg border border-amber-200">* اجمالي التكلفة : --</p>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 space-y-2">
+                <input type="text" id="receivedAmountInput" placeholder="المبلغ المستلم" class="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-center text-xs font-bold outline-none">
+                <div class="grid grid-cols-6 gap-1 text-[11px] font-black">
+                    <button onclick="pressKey('1')" class="bg-white p-1 rounded border shadow-sm">1</button>
+                    <button onclick="pressKey('2')" class="bg-white p-1 rounded border shadow-sm">2</button>
+                    <button onclick="pressKey('3')" class="bg-white p-1 rounded border shadow-sm">3</button>
+                    <button onclick="pressKey('4')" class="bg-white p-1 rounded border shadow-sm">4</button>
+                    <button onclick="pressKey('5')" class="bg-white p-1 rounded border shadow-sm">5</button>
+                    <button onclick="pressKey('6')" class="bg-white p-1 rounded border shadow-sm">6</button>
+                    <button onclick="pressKey('7')" class="bg-white p-1 rounded border shadow-sm">7</button>
+                    <button onclick="pressKey('8')" class="bg-white p-1 rounded border shadow-sm">8</button>
+                    <button onclick="pressKey('9')" class="bg-white p-1 rounded border shadow-sm">9</button>
+                    <button onclick="pressKey('0')" class="bg-white p-1 rounded border shadow-sm">0</button>
+                    <button onclick="pressKey('clear')" class="bg-rose-50 text-rose-600 p-1 rounded border col-span-2 shadow-sm">x</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-1.5 pt-1">
+                <button id="finalSubmitBtn" onclick="sendFinalOrder()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1 shadow">
+                    <i class="fa-solid fa-check"></i> موافق
+                </button>
+                <button onclick="shareViaSMS()" class="bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1 shadow">
+                    <i class="fa-solid fa-envelope"></i> عبر الرسائل
+                </button>
+                <button onclick="shareViaWhatsapp()" class="bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1 shadow">
+                    <i class="fa-brands fa-whatsapp"></i> واتساب
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- بطاقة التنبيه المخصصة الأنيقة (بديلة الـ Alert التقليدي) -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 space-y-4 shadow-2xl border border-slate-100 text-center animate-fade-in">
+            <!-- أيقونة التنبيه الدائرية البرتقالية -->
+            <div id="alertIconContainer" class="w-16 h-16 rounded-full border-4 border-amber-400 bg-amber-50 text-amber-500 flex items-center justify-center mx-auto text-3xl font-black shadow-inner">
+                <i class="fa-solid fa-info"></i>
+            </div>
+            
+            <!-- نص الرسالة -->
+            <div id="alertMessage" class="text-xs font-black text-slate-800 leading-relaxed whitespace-pre-line px-2">
+                نص التنبيه
+            </div>
+
+            <!-- زر موافق الأحمر العريض -->
+            <button onclick="closeCustomAlert()" id="alertConfirmBtn" class="w-full bg-[#d90429] hover:bg-[#b90323] text-white font-black py-3.5 rounded-2xl text-sm shadow active:scale-95 transition">
+                موافق
+            </button>
         </div>
     </div>
 
     <script>
-        const SERVER_URL = window.location.origin;
+        let ALL_PACKAGES = [];
+        let selectedPackage = null;
+        let currentActionExecution = null;
+        let isBalanceOpen = false;
+        let currentCompanyCode = "ym"; 
+        let currentSubFilter = 'all';
 
-        function openModal() { document.getElementById('myModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('myModal').style.display = 'none'; }
+        // دالة التنبيه المخصصة التي تحل محل alert المتصفح
+        function showCustomAlert(msg, type = 'warning') {
+            const modal = document.getElementById('customAlertModal');
+            const msgElem = document.getElementById('alertMessage');
+            const iconContainer = document.getElementById('alertIconContainer');
+            const confirmBtn = document.getElementById('alertConfirmBtn');
 
-        function validateForm() {
-            const sender = document.getElementById('senderInput').value;
-            const amount = document.getElementById('amountInput').value;
-            const submitBtn = document.getElementById('submitBtn');
+            // تنظيف الرسالة من رموز الإيموجي إذا وُجدت لعرض نص منظم
+            msgElem.innerText = msg.replace(/[✅❌⚠️]/g, '').trim();
 
-            if (sender.trim().length >= 9 && amount && Number(amount) > 0) {
-                submitBtn.classList.add('active');
-                submitBtn.removeAttribute('disabled');
+            if (type === 'success') {
+                iconContainer.className = "w-16 h-16 rounded-full border-4 border-emerald-400 bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto text-3xl shadow-inner";
+                iconContainer.innerHTML = '<i class="fa-solid fa-check"></i>';
+                confirmBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl text-sm shadow active:scale-95 transition";
             } else {
-                submitBtn.classList.remove('active');
-                submitBtn.setAttribute('disabled', 'true');
+                iconContainer.className = "w-16 h-16 rounded-full border-4 border-amber-400 bg-amber-50 text-amber-500 flex items-center justify-center mx-auto text-3xl shadow-inner";
+                iconContainer.innerHTML = '<i class="fa-solid fa-info"></i>';
+                confirmBtn.className = "w-full bg-[#d90429] hover:bg-[#b90323] text-white font-black py-3.5 rounded-2xl text-sm shadow active:scale-95 transition";
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('customAlertModal').classList.add('hidden');
+        }
+
+        // تحويل أي استدعاء لـ alert تلقائياً ليفتح البطاقة المخصصة
+        window.alert = function(message) {
+            let type = 'warning';
+            if (typeof message === 'string' && (message.includes('✅') || message.includes('بنجاح'))) {
+                type = 'success';
+            }
+            showCustomAlert(message, type);
+        };
+
+        window.onload = async function() {
+            await fetchPackagesFromServer();
+            refreshBalance(true);
+        };
+
+        // 1. جلب الباقات من السيرفر
+        async function fetchPackagesFromServer() {
+            try {
+                const res = await fetch('/api/packages');
+                const json = await res.json();
+                
+                if (json.success && Array.isArray(json.data)) {
+                    ALL_PACKAGES = json.data
+                        .filter(pkg => pkg && pkg.company && (pkg.name_ar || pkg.name_en) && !pkg.raw_data)
+                        .map(pkg => {
+                            pkg.custom_category = classifyPackage(pkg);
+                            return pkg;
+                        });
+                    console.log(`✅ تم تحميل ${ALL_PACKAGES.length} باقة بنجاح.`);
+                }
+            } catch (err) {
+                console.error("⚠️ خطأ في جلب الباقات:", err);
             }
         }
 
-        async function verifyAndRecharge() {
-            const sender = document.getElementById('senderInput').value;
-            const amount = document.getElementById('amountInput').value;
-            const submitBtn = document.getElementById('submitBtn');
+        // 2. تصنيف الباقات لأقسام منفصلة
+        function classifyPackage(pkg) {
+            const nameAr = (pkg.name_ar || '').toLowerCase();
+            const nameEn = (pkg.name_en || '').toLowerCase();
+            const cat = (pkg.category || '').toLowerCase();
 
-            submitBtn.innerText = "جاري المطابقة والتأكيد...";
-            submitBtn.setAttribute('disabled', 'true');
+            if (cat.includes('شحن فوري') || nameAr.includes('شحن فوري') || nameEn.includes('recharge')) return "شحن فوري";
+            if (nameAr.includes('سوا') || nameEn.includes('sawa')) return "باقات سوا";
+            if (nameAr.includes('هدايا') || nameEn.includes('hadaya')) return "باقات هدايا";
+            if (nameAr.includes('فولتي') || nameEn.includes('volte')) return "باقات فولتي VoLTE";
+            if (nameAr.includes('10 ايام') || nameAr.includes('10 أيام') || cat.includes('10 أيام')) return "باقات الإنترنت 10 ايام";
+            if (nameAr.includes('مودم') || cat.includes('مودم')) return "باقات مودم الإنترنت";
+            if (nameAr.includes('مسارات') || nameAr.includes('سمارت') || nameEn.includes('smart') || nameAr.includes('وفر')) return "باقات مسارات فورجي (Data & Smart)";
+            if ((nameAr.includes('مكس') || nameEn.includes('mix')) && (nameAr.includes('فورجي') || nameEn.includes('4g'))) return "باقات مكس فورجي";
+            if (nameAr.includes('مكس') || nameEn.includes('mix')) return "باقات مزايا";
+            if (nameAr.includes('مزايا') || cat.includes('مزايا')) return "باقات مزايا";
+            if (nameAr.includes('مكالمات') || nameAr.includes('دقيقة') || nameEn.includes('min') || nameAr.includes('كلام')) return "باقات المكالمات";
+            if (nameAr.includes('سعودية') || nameAr.includes('تجوال') || nameEn.includes('roaming') || cat.includes('سعودية')) return "باقات السعودية (التجوال)";
+            if (nameAr.includes('واتساب') || nameEn.includes('whatsapp') || nameAr.includes('فيسبوك') || nameAr.includes('تواصل')) return "باقات التواصل الاجتماعي";
+            if (nameAr.includes('رسائل') || nameAr.includes('رسايل') || nameEn.includes('sms')) return "باقات الرسائل";
+            if (nameAr.includes('فورجي') || nameEn.includes('4g')) return "باقات فورجي";
+            if (nameAr.includes('يابلاش')) return "باقات يابلاش";
+            if (nameAr.includes('سوبرنت') || nameEn.includes('supernet')) return "باقات سوبرنت (إنترنت)";
+            if (cat.includes('إنترنت') || cat.includes('انترنت')) return "باقات الإنترنت الشهرية";
+
+            return pkg.category || "باقات عامة";
+        }
+
+        // 3. التعامل مع إدخال الرقم
+        function handlePhoneChange(val) {
+            document.getElementById('charCount').innerText = val.length;
+            const clearBtn = document.getElementById('clearBtn');
+            const welcomeState = document.getElementById('emptyWelcomeState');
+            const servicesContainer = document.getElementById('servicesContainer');
+            const networkImg = document.getElementById('networkImg');
+            const phoneDefaultIcon = document.getElementById('phoneDefaultIcon');
+
+            if (val.length === 0) {
+                clearBtn.classList.add('hidden');
+                welcomeState.classList.remove('hidden');
+                servicesContainer.classList.add('hidden');
+                networkImg.classList.add('hidden');
+                phoneDefaultIcon.classList.remove('hidden');
+                return;
+            }
+
+            clearBtn.classList.remove('hidden');
+
+            if (val.length >= 2) {
+                welcomeState.classList.add('hidden');
+                servicesContainer.classList.remove('hidden');
+                networkImg.classList.remove('hidden');
+                phoneDefaultIcon.classList.add('hidden');
+
+                const prefix = val.substring(0, 2);
+                if (prefix === '73') {
+                    setCompanyTheme('you', 'https://i.postimg.cc/T2zz6Sms/images-(19).png', '#f59e0b', '#fef3c7');
+                } else if (prefix === '71') {
+                    setCompanyTheme('saba', 'https://i.postimg.cc/44DDgMtS/tnzyl-(2).jpg', '#0284c7', '#e0f2fe');
+                } else if (prefix === '70') {
+                    setCompanyTheme('why', 'https://i.postimg.cc/9fgkNNCF/ev4KBYC3-400x400.png', '#7c3aed', '#ede9fe');
+                } else if (prefix === '10' || prefix === '01') {
+                    setCompanyTheme('yem4g', 'https://i.postimg.cc/BZrr0yD7/images-2026-07-06T163911-011.jpg', '#0284c7', '#e0f2fe');
+                } else {
+                    setCompanyTheme('ym', 'https://i.postimg.cc/BZrr0yD7/images-2026-07-06T163911-011.jpg', '#991b3b', '#ffedd5');
+                }
+
+                renderCompanyLayout();
+                renderQuickCards();
+            }
+        }
+
+        // 4. اختيار جهة اتصال
+        async function pickContactFromPhone() {
+            if ('contacts' in navigator && 'ContactsManager' in window) {
+                try {
+                    const props = ['tel', 'name'];
+                    const opts = { multiple: false };
+                    const contacts = await navigator.contacts.select(props, opts);
+                    if (contacts && contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
+                        applyPhoneNumber(contacts[0].tel[0]);
+                    }
+                } catch (ex) {
+                    console.log('تم إلغاء جهة الاتصال:', ex);
+                }
+            } else {
+                const inputNum = prompt('الرجاء إدخال رقم الهاتف أو لصقه هنا:', '');
+                if (inputNum) applyPhoneNumber(inputNum);
+            }
+        }
+
+        function applyPhoneNumber(raw) {
+            let cleaned = raw.replace(/\D/g, '');
+            if (cleaned.startsWith('967')) cleaned = cleaned.substring(3);
+            if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+            cleaned = cleaned.substring(0, 9);
+            
+            const input = document.getElementById('mobileNumber');
+            input.value = cleaned;
+            handlePhoneChange(cleaned);
+        }
+
+        function setCompanyTheme(code, logoUrl, primaryColor, lightColor) {
+            currentCompanyCode = code;
+            document.getElementById('appBody').className = `theme-${code} flex flex-col items-center min-h-screen pb-12 transition-colors duration-300`;
+            document.getElementById('mainHeader').style.backgroundColor = primaryColor;
+            document.getElementById('networkImg').src = logoUrl;
+            document.getElementById('phoneInputBorder').style.borderColor = primaryColor;
+            document.getElementById('mainTabsBar').style.backgroundColor = lightColor;
+            document.getElementById('payBalanceBtn').style.backgroundColor = primaryColor;
+            document.getElementById('submitGomlaBtn').style.backgroundColor = primaryColor;
+            
+            document.querySelectorAll('.sub-tab').forEach(b => {
+                b.style.backgroundColor = 'transparent';
+                b.style.color = '#334155';
+            });
+            const activeBtn = document.getElementById('packagesMainTabBtn');
+            if (activeBtn) {
+                activeBtn.style.backgroundColor = primaryColor;
+                activeBtn.style.color = '#ffffff';
+            }
+        }
+
+        // 5. بناء واجهات الشركات والقوائم المنسدلة
+        function renderCompanyLayout() {
+            const container = document.getElementById('dynamicCompanyView');
+            const subFilterRow = document.getElementById('subFilterRow');
+            
+            // ================= يمن موبايل =================
+            if (currentCompanyCode === 'ym') {
+                subFilterRow.className = "hidden";
+                const ymPackages = ALL_PACKAGES.filter(p => (p.company || '').includes('Yemen Mobile') && !(p.company || '').includes('4G') && p.custom_category !== 'شحن فوري');
+                
+                const defaultCategories = ["باقات مزايا", "باقات هدايا", "باقات فورجي", "باقات فولتي VoLTE", "باقات الإنترنت الشهرية", "باقات الإنترنت 10 ايام"];
+                const existingCategories = [...new Set(ymPackages.map(p => p.custom_category))];
+                const finalCats = defaultCategories.filter(c => existingCategories.includes(c)).concat(existingCategories.filter(c => !defaultCategories.includes(c)));
+
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-sm grid grid-cols-3 text-center text-[11px] divide-x divide-x-reverse divide-slate-100">
+                        <div><span class="text-slate-400 font-bold block mb-0.5">رصيد الرقم</span><span id="targetPhoneBalance" class="font-black text-slate-800 text-xs">--</span></div>
+                        <div><span class="text-slate-400 font-bold block mb-0.5">نوع الرقم</span><span id="targetPhoneType" class="font-black text-blue-700 text-xs">دفع مسبق | 4G</span></div>
+                        <div class="cursor-pointer" onclick="checkSolfa()"><span class="text-amber-600 font-bold block mb-0.5">فحص السلفة</span><span id="solfaBadgeText" class="text-emerald-600 font-bold text-[10px]">😊 غير متسلف</span></div>
+                    </div>
+
+                    ${finalCats.map((cat, idx) => {
+                        let badgeHtml = '<span class="bg-white text-[#991b3b] text-[10px] font-black px-2 py-0.5 rounded shadow-inner">3G</span>';
+                        if (cat.includes('فورجي')) badgeHtml = '<span class="bg-white text-[#991b3b] text-[10px] font-black px-2 py-0.5 rounded shadow-inner">4G</span>';
+                        if (cat.includes('VoLTE')) badgeHtml = '<span class="bg-white text-[#991b3b] text-[10px] font-black px-2 py-0.5 rounded shadow-inner">4G</span>';
+                        if (cat.includes('الشهرية')) badgeHtml = '<span class="bg-white text-[#991b3b] text-[10px] font-black px-2 py-0.5 rounded shadow-inner">⇅</span>';
+                        if (cat.includes('10')) badgeHtml = '<span class="bg-white text-[#991b3b] text-[10px] font-black px-2 py-0.5 rounded shadow-inner">10 MP</span>';
+
+                        return `
+                            <div class="rounded-2xl overflow-hidden shadow-sm">
+                                <button onclick="toggleAccordion('ym-acc-${idx}', this)" class="w-full bg-[#991b3b] text-white p-3.5 flex justify-between items-center text-xs font-black rounded-2xl active:scale-98 transition">
+                                    <i class="fa-solid fa-chevron-down text-slate-300"></i>
+                                    <span class="text-sm tracking-wide font-extrabold">${cat}</span>
+                                    ${badgeHtml}
+                                </button>
+                                <div id="ym-acc-${idx}" class="p-2 space-y-2 hidden bg-slate-100/70 rounded-2xl mt-1">
+                                    ${renderPackageCards(ymPackages.filter(p => p.custom_category === cat))}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+            }
+
+            // ================= شبكة يو (YOU) =================
+            else if (currentCompanyCode === 'you') {
+                subFilterRow.className = "flex justify-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm text-xs font-bold";
+                subFilterRow.innerHTML = `
+                    <button onclick="applySubFilter('4G', this)" class="sub-flt flex-1 py-1.5 rounded-xl border border-slate-200 transition">4G فورجي</button>
+                    <button onclick="applySubFilter('فوترة', this)" class="sub-flt flex-1 py-1.5 rounded-xl border border-slate-200 transition">فوترة</button>
+                    <button onclick="applySubFilter('دفع مسبق', this)" class="sub-flt flex-1 py-1.5 rounded-xl bg-[#f59e0b] text-white shadow transition">دفع مسبق</button>
+                    <button onclick="applySubFilter('all', this)" class="sub-flt flex-1 py-1.5 rounded-xl border border-slate-200 transition">الكل</button>
+                `;
+
+                let youPackages = ALL_PACKAGES.filter(p => 
+                    ((p.company || '').includes('MTN') || (p.company_ar || '').includes('يو')) && 
+                    p.custom_category !== 'شحن فوري'
+                );
+
+                if (currentSubFilter === '4G') {
+                    youPackages = youPackages.filter(p => (p.name_ar + p.name_en + p.custom_category).toLowerCase().includes('4g') || (p.name_ar).includes('فورجي'));
+                } else if (currentSubFilter === 'فوترة') {
+                    youPackages = youPackages.filter(p => (p.payment_type || '').includes('فوترة'));
+                } else if (currentSubFilter === 'دفع مسبق') {
+                    youPackages = youPackages.filter(p => (p.payment_type || '').includes('دفع مسبق'));
+                }
+
+                const categories = [...new Set(youPackages.map(p => p.custom_category))];
+
+                container.innerHTML = categories.map((cat, idx) => `
+                    <div class="rounded-2xl overflow-hidden border border-amber-200 shadow-sm bg-[#fde68a]/70">
+                        <button onclick="toggleAccordion('you-acc-${idx}', this)" class="w-full text-amber-950 p-3.5 flex justify-between items-center text-xs font-black">
+                            <i class="fa-solid fa-chevron-down text-amber-800"></i>
+                            <span class="text-xs font-bold text-amber-950">${cat}</span>
+                            <div class="w-6 h-6 rounded-full border border-amber-500/50 flex items-center justify-center p-0.5 bg-amber-100 text-[9px] font-black">YOU</div>
+                        </button>
+                        <div id="you-acc-${idx}" class="p-2 space-y-2 hidden bg-amber-50/50">
+                            ${renderPackageCards(youPackages.filter(p => p.custom_category === cat))}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // ================= سبأفون =================
+            else if (currentCompanyCode === 'saba') {
+                subFilterRow.className = "flex justify-center gap-1 bg-white p-1 rounded-2xl border border-slate-200 shadow-sm text-xs font-bold";
+                subFilterRow.innerHTML = `
+                    <button onclick="applySubFilter('جنوب', this)" class="sub-flt flex-1 py-1.5 rounded-xl border border-slate-200">جنوب</button>
+                    <button onclick="applySubFilter('شمال', this)" class="sub-flt flex-1 py-1.5 rounded-xl border border-slate-200">شمال</button>
+                    <button onclick="applySubFilter('فوترة', this)" class="sub-flt flex-1 py-1.5 rounded-xl border border-slate-200">فوترة</button>
+                    <button onclick="applySubFilter('دفع مسبق', this)" class="sub-flt flex-1 py-1.5 rounded-xl bg-[#0284c7] text-white shadow">دفع مسبق</button>
+                `;
+
+                let sabaPackages = ALL_PACKAGES.filter(p => 
+                    ((p.company || '').includes('Sabafon') || (p.company_ar || '').includes('سبأفون')) && 
+                    p.custom_category !== 'شحن فوري'
+                );
+
+                if (currentSubFilter === 'فوترة') sabaPackages = sabaPackages.filter(p => (p.payment_type || '').includes('فوترة'));
+                if (currentSubFilter === 'دفع مسبق') sabaPackages = sabaPackages.filter(p => (p.payment_type || '').includes('دفع مسبق'));
+
+                const categories = [...new Set(sabaPackages.map(p => p.custom_category))];
+
+                container.innerHTML = categories.map((cat, idx) => `
+                    <div class="rounded-2xl overflow-hidden border border-sky-200 shadow-sm bg-[#e0f2fe]">
+                        <button onclick="toggleAccordion('saba-acc-${idx}', this)" class="w-full text-sky-900 p-3.5 flex justify-between items-center text-xs font-black">
+                            <i class="fa-solid fa-chevron-down text-sky-700"></i>
+                            <span class="text-xs font-bold text-sky-900">${cat}</span>
+                            <div class="w-7 h-7 rounded-full bg-white flex items-center justify-center p-0.5 shadow-sm">
+                                <img src="https://i.postimg.cc/44DDgMtS/tnzyl-(2).jpg" class="w-full h-full rounded-full object-contain">
+                            </div>
+                        </button>
+                        <div id="saba-acc-${idx}" class="p-2 space-y-2 hidden bg-sky-50">
+                            ${renderPackageCards(sabaPackages.filter(p => p.custom_category === cat))}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderPackageCards(pkgs) {
+            if (!pkgs || pkgs.length === 0) {
+                return `<p class="text-center text-xs text-slate-400 p-3">لا توجد باقات متوفرة لهذا القسم</p>`;
+            }
+            return pkgs.map(pkg => {
+                const price = pkg.price || pkg.amount || 0;
+                return `
+                    <div onclick='openPackageSheet(${JSON.stringify(pkg).replace(/'/g, "&apos;")})' class="bg-[#fef3c7] hover:bg-[#fde68a] border border-amber-200 rounded-2xl p-3 relative cursor-pointer shadow-sm active:scale-98 transition">
+                        <div class="flex justify-between items-start">
+                            <div class="w-8 h-8 rounded-full border border-amber-300 bg-white p-0.5 shadow-sm">
+                                <img src="${pkg.image_url || document.getElementById('networkImg').src}" class="w-full h-full rounded-full object-contain">
+                            </div>
+                            <div class="text-right flex-1 mr-2">
+                                <h4 class="text-xs font-black text-slate-800">${pkg.name_ar || pkg.name_en || pkg.name}</h4>
+                                <p class="text-[10px] text-slate-600 font-bold">${pkg.payment_type || 'دفع مسبق'} | ${pkg.line_type || 'شريحة'}</p>
+                            </div>
+                        </div>
+                        <div class="text-center my-1.5 font-black text-2xl text-slate-700 tracking-wider">
+                            ${price} <span class="text-xs font-bold text-slate-500">ريال</span>
+                        </div>
+                        <div class="grid grid-cols-4 text-center text-[10px] text-slate-600 border-t border-amber-300/60 pt-2 font-bold">
+                            <div><i class="fa-regular fa-clock text-amber-700 block text-xs mb-0.5"></i>30 يوم</div>
+                            <div><i class="fa-solid fa-phone text-amber-700 block text-xs mb-0.5"></i>مكالمات</div>
+                            <div><i class="fa-regular fa-envelope text-amber-700 block text-xs mb-0.5"></i>رسائل</div>
+                            <div><i class="fa-solid fa-globe text-amber-700 block text-xs mb-0.5"></i>إنترنت</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 6. عرض كروت الشحن الفوري في تبويب "فوري"
+        function renderQuickCards() {
+            const container = document.getElementById('quickCardsContainer');
+            let directRecharges = ALL_PACKAGES.filter(p => {
+                const matchCompany = (currentCompanyCode === 'you' && ((p.company || '').includes('MTN') || (p.company_ar || '').includes('يو'))) ||
+                                     (currentCompanyCode === 'saba' && ((p.company || '').includes('Sabafon') || (p.company_ar || '').includes('سبأفون'))) ||
+                                     (currentCompanyCode === 'ym' && (p.company || '').includes('Yemen Mobile'));
+                return matchCompany && p.custom_category === 'شحن فوري';
+            });
+
+            if (directRecharges.length > 0) {
+                container.innerHTML = directRecharges.map(pkg => {
+                    const amt = pkg.amount || pkg.price;
+                    return `
+                        <div onclick='openPackageSheet(${JSON.stringify(pkg).replace(/'/g, "&apos;")})' class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden text-center cursor-pointer hover:border-amber-500 active:scale-95 transition">
+                            <div class="bg-[${document.getElementById('mainHeader').style.backgroundColor}] text-white py-1.5 font-black text-sm">
+                                فئة ${amt}
+                            </div>
+                            <div class="p-2">
+                                <span class="text-xs font-black text-slate-800 block">${pkg.price} ريال</span>
+                                <span class="text-[9px] text-slate-400 font-bold">شحن مباشر</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                const amounts = [200, 400, 600, 800, 1000, 1200];
+                container.innerHTML = amounts.map(amt => {
+                    const total = Math.round(amt * 1.21);
+                    return `
+                        <div onclick="openOrderModal('شحن فوري فئة ${amt}', ${total}, 'direct_bill')" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden text-center cursor-pointer hover:border-slate-400 active:scale-95 transition">
+                            <div class="bg-[${document.getElementById('mainHeader').style.backgroundColor}] text-white py-1.5 font-black text-base">${amt}</div>
+                            <div class="p-1.5 text-xs font-black text-slate-800">${total} ريال</div>
+                            <div class="bg-[#ffedd5] text-slate-700 text-[10px] font-bold py-0.5">${amt / 25} يوم</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function applySubFilter(filterVal, btn) {
+            document.querySelectorAll('.sub-flt').forEach(b => {
+                b.className = "sub-flt flex-1 py-1.5 rounded-xl border border-slate-200 transition";
+                b.style.backgroundColor = 'transparent';
+                b.style.color = '#334155';
+            });
+            btn.style.backgroundColor = document.getElementById('mainHeader').style.backgroundColor;
+            btn.style.color = '#ffffff';
+            btn.className = "sub-flt flex-1 py-1.5 rounded-xl shadow transition";
+            
+            currentSubFilter = filterVal;
+            renderCompanyLayout();
+        }
+
+        function toggleAccordion(id, btn) {
+            const target = document.getElementById(id);
+            const icon = btn.querySelector('i');
+            target.classList.toggle('hidden');
+            if (icon) {
+                icon.className = target.classList.contains('hidden') ? 'fa-solid fa-chevron-down text-slate-300' : 'fa-solid fa-chevron-up text-slate-300';
+            }
+        }
+
+        function changeMainTab(tabName, btn) {
+            document.querySelectorAll('.sub-tab').forEach(b => {
+                b.style.backgroundColor = 'transparent';
+                b.style.color = '#334155';
+            });
+            btn.style.backgroundColor = document.getElementById('mainHeader').style.backgroundColor;
+            btn.style.color = '#ffffff';
+
+            document.getElementById('packagesSection').classList.add('hidden');
+            document.getElementById('balanceSection').classList.add('hidden');
+            document.getElementById('billSection').classList.add('hidden');
+            document.getElementById('gomlaSection').classList.add('hidden');
+
+            if (tabName === 'packages') {
+                document.getElementById('packagesSection').classList.remove('hidden');
+                if (currentCompanyCode === 'you' || currentCompanyCode === 'saba') {
+                    document.getElementById('subFilterRow').classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('subFilterRow').classList.add('hidden');
+            }
+
+            if (tabName === 'balance') document.getElementById('balanceSection').classList.remove('hidden');
+            if (tabName === 'bill') {
+                document.getElementById('billSection').classList.remove('hidden');
+                renderQuickCards();
+            }
+            if (tabName === 'gomla' || tabName === 'rial') {
+                document.getElementById('gomlaSection').classList.remove('hidden');
+                document.getElementById('quantityLabel').innerText = tabName === 'gomla' ? '* ادخل الكمية' : '* ادخل الكمية (ريال)';
+            }
+        }
+
+        function clearInput() {
+            document.getElementById('mobileNumber').value = '';
+            handlePhoneChange('');
+        }
+
+        function openPackageSheet(pkg) {
+            selectedPackage = pkg;
+            const price = pkg.price || pkg.amount || 0;
+            document.getElementById('sheetPackageTitle').innerText = pkg.name_ar || pkg.name_en || pkg.name;
+            document.getElementById('sheetPackagePrice').innerText = price;
+            document.getElementById('sheetNetPrice').innerText = (price / 1.195).toFixed(2);
+            document.getElementById('sheetConfirmBtn').style.backgroundColor = document.getElementById('mainHeader').style.backgroundColor;
+            document.getElementById('packageBottomSheet').classList.remove('hidden');
+        }
+
+        function closeBottomSheet() {
+            document.getElementById('packageBottomSheet').classList.add('hidden');
+        }
+
+        function triggerOrderFromSheet(actionType) {
+            closeBottomSheet();
+            currentActionExecution = actionType;
+            openOrderModal(
+                selectedPackage.name_ar || selectedPackage.name_en || selectedPackage.name, 
+                selectedPackage.price || selectedPackage.amount || 0,
+                actionType
+            );
+        }
+
+        function openOrderModal(name, price, actionType = 'pay_and_activate') {
+            currentActionExecution = actionType;
+            const phone = document.getElementById('mobileNumber').value;
+            document.getElementById('confirmCompany').innerText = currentCompanyCode.toUpperCase();
+            document.getElementById('confirmCategory').innerText = name;
+            document.getElementById('confirmPhone').innerText = phone;
+            document.getElementById('confirmAmount').innerText = price;
+            document.getElementById('confirmCost').innerText = price;
+
+            let actionNameAr = "تسديد + تفعيل";
+            if (actionType === 'direct_balance_activation') actionNameAr = "تفعيل من الرصيد";
+            if (actionType === 'remove_package') actionNameAr = "حذف الباقة";
+            if (actionType === 'direct_bill') actionNameAr = "شحن رصيد";
+            if (actionType === 'gomla') actionNameAr = "شحن جملة";
+
+            document.getElementById('confirmActionType').innerText = actionNameAr;
+            document.getElementById('costInWords').innerText = `* اجمالي التكلفة : ${price} ريال (${actionNameAr})`;
+            document.getElementById('receivedAmountInput').value = price;
+            document.getElementById('orderConfirmationModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('orderConfirmationModal').classList.add('hidden');
+        }
+
+        function pressKey(key) {
+            const input = document.getElementById('receivedAmountInput');
+            if (key === 'clear') input.value = '';
+            else input.value += key;
+        }
+
+        // ========================================================
+        // 7. الربط الفعلي والتنفيذ عبر مسارات السيرفر (Server APIs)
+        // ========================================================
+
+        // أ) تنفيذ الطلب النهائي وتأكيده
+        async function sendFinalOrder() {
+            const phone = document.getElementById('mobileNumber').value;
+            if (!phone) return alert('الرجاء إدخال رقم الهاتف أولاً');
+
+            const submitBtn = document.getElementById('finalSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> جاري التنفيذ...';
 
             try {
-                const response = await fetch(`${SERVER_URL}/api/user/recharge`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sender: sender.trim(),
-                        amount: amount
-                    })
-                });
+                let url = "";
+                const isSolfa = document.getElementById('sheetSolfaCheck')?.checked ? 'Y' : 'N';
+                const pkgKey = selectedPackage?.package_code || selectedPackage?.offerkey || selectedPackage?.offerid || selectedPackage?.num || selectedPackage?.price;
 
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    alert(`✅ ${result.message}\nرصيدك الحالي: ${result.newBalance} ريال`);
-                    closeModal();
-                    document.getElementById('senderInput').value = '';
-                    document.getElementById('amountInput').value = '';
-                } else {
-                    alert(result.message || "فشلت عملية التحقق من الحوالة");
+                // 1. يمن موبايل
+                if (currentCompanyCode === 'ym') {
+                    if (currentActionExecution === 'direct_balance_activation') {
+                        url = `/api/provider/yemen-mobile?action=billoffer_direct&mobile=${phone}&offerid=${pkgKey}&method=New`;
+                    } else if (currentActionExecution === 'remove_package') {
+                        url = `/api/provider/yemen-mobile?action=billoffer_direct&mobile=${phone}&offerid=${pkgKey}&method=Remove`;
+                    } else {
+                        url = `/api/provider/yemen-mobile?action=billoffer&mobile=${phone}&offerkey=${pkgKey}&method=New&solfa=${isSolfa}`;
+                    }
+                } 
+                // 2. يو YOU
+                else if (currentCompanyCode === 'you') {
+                    url = `/api/provider/you/bill?isOffer=true&mobile=${phone}&num=${pkgKey}`;
+                } 
+                // 3. سبأفون
+                else if (currentCompanyCode === 'saba') {
+                    const isSouth = currentSubFilter === 'جنوب';
+                    url = `/api/provider/sabaphone?type=offer&region=${isSouth ? 'south' : 'north'}&mobile=${phone}&num=${pkgKey}`;
+                } 
+                // 4. واي
+                else if (currentCompanyCode === 'why') {
+                    url = `/api/provider/why?actionType=package&mobile=${phone}&num=${selectedPackage?.price || 0}&packageid=${selectedPackage?.packageid || pkgKey}`;
+                } 
+                // 5. يمن فورجي
+                else if (currentCompanyCode === 'yem4g') {
+                    url = `/api/provider/yem4g?action=bill&mobile=${phone}&amount=${selectedPackage?.price || 0}&type=1`;
                 }
-            } catch (error) {
-                alert("تعذر الاتصال بالسيرفر");
+
+                const res = await fetch(url);
+                const json = await res.json();
+                closeConfirmModal();
+
+                if (json.success && (json.data?.resultCode === "0" || json.data?.resultCode === 0)) {
+                    alert(`✅ تم تنفيذ الطلب بنجاح:\n${json.data?.resultDesc || 'تم تفعيل العملية'}\nرقم المرجع: ${json.data?.sequenceId || json.data?.transid || 'مكتمل'}`);
+                    refreshBalance();
+                } else {
+                    alert(`⚠️ نتيجة العملية: ${json.data?.resultDesc || json.message || json.error || 'فشل تنفيذ الطلب'}`);
+                }
+            } catch (e) {
+                closeConfirmModal();
+                alert(`❌ خطأ في الاتصال بالخادم: ${e.message}`);
             } finally {
-                submitBtn.innerText = "تأكيد وشحن الرصيد";
-                validateForm();
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> موافق';
             }
+        }
+
+        // ب) استعلام عن الرقم (الرصيد - الباقات - السلفة)
+        async function queryPhoneNumber() {
+            const phone = document.getElementById('mobileNumber').value;
+            if (!phone) return alert('الرجاء إدخال رقم الهاتف أولاً');
+
+            try {
+                let url = "";
+                if (currentCompanyCode === 'ym') url = `/api/provider/yemen-mobile?action=query&mobile=${phone}`;
+                else if (currentCompanyCode === 'yem4g') url = `/api/provider/yem4g?action=query&mobile=${phone}`;
+                else if (currentCompanyCode === 'adenet') url = `/api/provider/adenet?action=query&mobile=${phone}`;
+                else url = `/api/provider/yemen-mobile?action=query&mobile=${phone}`;
+
+                const res = await fetch(url);
+                const json = await res.json();
+
+                if (json.success && json.data) {
+                    const d = json.data;
+                    const balance = d.balance || d.remainAmount || '0.00';
+                    const typeStr = d.mobileType === "0" ? "دفع مسبق" : (d.mobileType === "1" ? "فوترة" : "4G");
+
+                    const balanceElem = document.getElementById('targetPhoneBalance');
+                    const typeElem = document.getElementById('targetPhoneType');
+                    if (balanceElem) balanceElem.innerText = balance;
+                    if (typeElem) typeElem.innerText = typeStr;
+
+                    alert(`📱 نتيجة الاستعلام للرقم (${phone}):\nالرصيد: ${balance} ريال\nنوع الخط: ${typeStr}\nالحالة: ${d.resultDesc || 'ناجح'}`);
+                } else {
+                    alert(`⚠️ لم يتم العثور على بيانات للرقم أو حدث خطأ: ${json.error || json.message}`);
+                }
+            } catch (e) {
+                alert(`❌ خطأ في الاستعلام: ${e.message}`);
+            }
+        }
+
+        // ج) فحص السلفة من يمن موبايل
+        async function checkSolfa() {
+            const phone = document.getElementById('mobileNumber').value;
+            if (!phone) return alert('الرجاء إدخال رقم يمن موبايل أولاً');
+
+            const badge = document.getElementById('solfaBadgeText');
+            if (badge) badge.innerText = "جاري الفحص...";
+
+            try {
+                const res = await fetch(`/api/provider/yemen-mobile?action=solfa&mobile=${phone}`);
+                const json = await res.json();
+
+                if (json.success && json.data) {
+                    const isLoan = json.data.status === "1" || json.data.loan_amount > 0;
+                    const msg = isLoan 
+                        ? `⚠️ متسلف: ${json.data.loan_amount} ريال (الوقت: ${json.data.loan_time || '--'})`
+                        : `😊 غير متسلف (لا توجد سلفة)`;
+
+                    if (badge) {
+                        badge.className = isLoan ? "text-rose-600 font-bold text-[10px]" : "text-emerald-600 font-bold text-[10px]";
+                        badge.innerText = msg;
+                    }
+                    alert(`🔍 حالة السلفة للرقم ${phone}:\n${msg}`);
+                } else {
+                    if (badge) badge.innerText = "😊 غير متسلف";
+                    alert(`😊 لا توجد سلفة على هذا الرقم`);
+                }
+            } catch (e) {
+                if (badge) badge.innerText = "تعذر الفحص";
+                alert(`❌ خطأ في فحص السلفة: ${e.message}`);
+            }
+        }
+
+        // د) تسديد الرصيد المباشر
+        async function payDirectBalance() {
+            const phone = document.getElementById('mobileNumber').value;
+            const amount = document.getElementById('directBalanceInput').value;
+            if (!phone || !amount) return alert('الرجاء إدخال رقم الهاتف والمبلغ');
+
+            openOrderModal(`تسديد رصيد بمبلغ ${amount}`, amount, 'direct_bill');
+            currentActionExecution = async () => {
+                let url = "";
+                if (currentCompanyCode === 'ym') {
+                    url = `/api/provider/yemen-mobile?action=bill&mobile=${phone}&amount=${amount}`;
+                } else if (currentCompanyCode === 'you') {
+                    url = `/api/provider/you/bill?israsid=1&mobile=${phone}&num=${amount}&type=${currentSubFilter === 'فوترة' ? 'postpaid' : 'prepaid'}`;
+                } else if (currentCompanyCode === 'saba') {
+                    url = `/api/provider/sabaphone?type=units&mobile=${phone}&num=${amount}`;
+                } else if (currentCompanyCode === 'why') {
+                    url = `/api/provider/why?actionType=rasid&mobile=${phone}&num=${amount}&rasid=${amount}`;
+                } else if (currentCompanyCode === 'yem4g') {
+                    url = `/api/provider/yem4g?action=bill&mobile=${phone}&amount=${amount}&type=2`;
+                }
+
+                const res = await fetch(url);
+                const json = await res.json();
+                if (json.success) {
+                    alert(`✅ تم تسديد الرصيد بنجاح!\nالمتبقي: ${json.data?.remainAmount || ''}`);
+                    refreshBalance();
+                } else {
+                    alert(`⚠️ فشل التسديد: ${json.error || json.message}`);
+                }
+            };
+        }
+
+        // هـ) تسديد الجملة
+        async function submitGomla() {
+            const phone = document.getElementById('mobileNumber').value;
+            const qty = document.getElementById('gomlaQty').value;
+            if (!phone || !qty) return alert('الرجاء إدخال رقم الهاتف والكمية');
+
+            openOrderModal(`شحن جملة كمية: ${qty}`, qty, 'gomla');
+            currentActionExecution = async () => {
+                let url = "";
+                if (currentCompanyCode === 'ym') url = `/api/provider/yemen-mobile/gomla?mobile=${phone}&amount=${qty}`;
+                else if (currentCompanyCode === 'you') url = `/api/provider/you/gomla?mobile=${phone}&amount=${qty}`;
+                else if (currentCompanyCode === 'saba') url = `/api/provider/sabaphone/gomla?mobile=${phone}&amount=${qty}`;
+
+                const res = await fetch(url);
+                const json = await res.json();
+                if (json.success && (json.data?.resultCode === "0" || json.data?.resultCode === 0)) {
+                    alert(`✅ تم شحن الجملة بنجاح!`);
+                    refreshBalance();
+                } else {
+                    alert(`⚠️ فشل شحن الجملة: ${json.error || json.message}`);
+                }
+            };
+        }
+
+        // و) جلب رصيد الوكيل
+        async function refreshBalance(isSilent = false) {
+            const icon = document.getElementById('refreshIcon');
+            if (icon) icon.classList.add('animate-spin');
+
+            try {
+                const res = await fetch('/api/provider/agent/balance');
+                const json = await res.json();
+                if (json.success && json.data) {
+                    const balance = json.data.balance || json.data.availableCredit || "0.00";
+                    window.currentAgentBalance = balance;
+                    if (isBalanceOpen) {
+                        document.getElementById('balanceDisplay').innerText = balance;
+                    }
+                    if (!isSilent) isBalanceOpen = true;
+                    document.getElementById('balanceDisplay').innerText = balance;
+                }
+            } catch (err) {
+                console.error("خطأ في جلب رصيد الوكيل:", err);
+            } finally {
+                if (icon) icon.classList.remove('animate-spin');
+            }
+        }
+
+        function toggleBalance() {
+            isBalanceOpen = !isBalanceOpen;
+            const balanceDisplay = document.getElementById('balanceDisplay');
+            balanceDisplay.innerText = isBalanceOpen ? (window.currentAgentBalance || "0.00") : "*****";
+        }
+
+        function updateBalanceNet(val) {
+            document.getElementById('directBalanceNet').value = val ? (val / 1.195).toFixed(2) : '';
+        }
+
+        function shareViaWhatsapp() {
+            const phone = document.getElementById('confirmPhone').innerText;
+            const pkg = document.getElementById('confirmCategory').innerText;
+            window.open(`https://api.whatsapp.com/send?text=تم طلب ${pkg} للرقم ${phone}`, '_blank');
+        }
+
+        function shareViaSMS() {
+            const phone = document.getElementById('confirmPhone').innerText;
+            const pkg = document.getElementById('confirmCategory').innerText;
+            window.open(`sms:${phone}?body=تم تفعيل ${pkg}`, '_blank');
         }
     </script>
 </body>
 </html>
+
 

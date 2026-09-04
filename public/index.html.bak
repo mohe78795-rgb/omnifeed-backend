@@ -48,8 +48,8 @@
             <button class="close-btn" onclick="closeModal()">✕</button>
             <div class="modal-title">إدخال بيانات التحويل</div>
 
-            <input type="text" id="senderInput" class="operation-input" placeholder="رقم المرسل (مثال: 735429057)" oninput="validateForm()">
-            <input type="number" id="amountInput" class="operation-input" placeholder="المبلغ (مثال: 2100)" oninput="validateForm()">
+            <input type="text" id="senderInput" class="operation-input" placeholder="رقم الهاتف المسجل (مثال: 735429057)" oninput="validateForm()">
+            <input type="number" id="amountInput" class="operation-input" placeholder="مبلغ الحوالة (مثال: 2150)" oninput="validateForm()">
 
             <button class="submit-btn" id="submitBtn" onclick="verifyAndRecharge()" disabled>تأكيد وشحن الرصيد</button>
         </div>
@@ -96,7 +96,7 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    alert(`✅ ${result.message}\nرصيدك الحالي: ${result.newBalance}`);
+                    alert(`✅ ${result.message}\nرصيدك الحالي: ${result.newBalance} ريال`);
                     closeModal();
                     document.getElementById('senderInput').value = '';
                     document.getElementById('amountInput').value = '';

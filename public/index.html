@@ -18,7 +18,6 @@
             padding: 15px;
         }
 
-        /* رأس الصفحة العلوي */
         .header {
             display: flex;
             align-items: center;
@@ -34,7 +33,6 @@
             text-align: center;
         }
 
-        /* أزرار العملات */
         .currency-tabs {
             display: flex;
             gap: 10px;
@@ -59,7 +57,6 @@
             font-weight: bold;
         }
 
-        /* بطاقة الصورة الرئيسية */
         .custom-image-card {
             background: #fff;
             border: 1px solid #e1eaf0;
@@ -73,7 +70,6 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        /* النافذة المنبثقة (Modal) */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -205,24 +201,20 @@
 </head>
 <body>
 
-    <!-- رأس الصفحة -->
     <div class="header">
         <h1>تغذية الحساب</h1>
     </div>
 
-    <!-- أزرار العملات -->
     <div class="currency-tabs">
         <button class="tab active">ريال يمني</button>
         <button class="tab">ريال سعودي</button>
         <button class="tab">دولار امريكي</button>
     </div>
 
-    <!-- كارت الإيداع المباشر -->
     <button class="custom-image-card" onclick="openModal()">
         إيداع مباشر عبر جوالي 💳
     </button>
 
-    <!-- النافذة المنبثقة (Modal) -->
     <div class="modal-overlay" id="myModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">✕</button>
@@ -231,35 +223,30 @@
                 <h3>محفظة جوالي</h3>
             </div>
 
-            <!-- رقم المستلم -->
             <div class="point-box">
                 <button class="copy-btn" onclick="copyReceiverNumber()">📋</button>
                 <span id="receiverNumberText">رقم المستلم: 735429057 - محمد موسى</span>
             </div>
 
-            <!-- رقم العميل صاحب الحساب -->
             <input type="text" id="userPhoneInput" class="operation-input" value="735429057" placeholder="رقم حسابك (المسجل)" oninput="validateForm()">
 
-            <!-- المبلغ والعملة -->
             <div class="row-inputs">
                 <div class="input-group" style="flex: 1.8;">
                     <input type="number" id="amountInput" placeholder="المبلغ" oninput="validateForm()">
                 </div>
             </div>
 
-            <!-- رقم المرسل (محفظة جوالي) -->
             <input type="text" id="senderInput" class="operation-input" placeholder="رقم المرسل (مثال: 73xxxxxxx)" oninput="validateForm()">
 
-            <!-- زر التأكيد والشحن -->
             <button class="submit-btn" id="submitBtn" onclick="verifyAndRecharge()" disabled>تأكيد وشحن الرصيد</button>
         </div>
     </div>
 
-    <!-- رسالة إشعار -->
     <div class="toast" id="toastMsg"></div>
 
     <script>
-        const SERVER_URL = "http://localhost:3000"; // رابط سيرفرك المحلي أو أونلاين
+        // تحديد الرابط تلقائياً ليعمل محلياً أو بعد الرفع بنفس النطاق
+        const SERVER_URL = window.location.origin;
 
         function openModal() {
             document.getElementById('myModal').style.display = 'flex';
@@ -303,7 +290,7 @@
             const sender = document.getElementById('senderInput').value;
             const submitBtn = document.getElementById('submitBtn');
 
-            submitBtn.innerText = "جاري مطابقة الحوالة وتحديث الرصيد...";
+            submitBtn.innerText = "جاري المطابقة والشحن...";
             submitBtn.setAttribute('disabled', 'true');
 
             try {
@@ -330,7 +317,7 @@
                 }
             } catch (error) {
                 console.error("خطأ:", error);
-                alert("تعذر الاتصال بالسيرفر، تأكد من تشغيله.");
+                alert("تعذر الاتصال بالسيرفر");
             } finally {
                 submitBtn.innerText = "تأكيد وشحن الرصيد";
                 validateForm();

@@ -48,9 +48,8 @@
             <button class="close-btn" onclick="closeModal()">✕</button>
             <div class="modal-title">إدخال بيانات التحويل</div>
 
-            <!-- العميل يدخل فقط رقم المرسل والمبلغ -->
             <input type="text" id="senderInput" class="operation-input" placeholder="رقم المرسل (مثال: 735429057)" oninput="validateForm()">
-            <input type="number" id="amountInput" class="operation-input" placeholder="المبلغ (مثال: 2000)" oninput="validateForm()">
+            <input type="number" id="amountInput" class="operation-input" placeholder="المبلغ (مثال: 2100)" oninput="validateForm()">
 
             <button class="submit-btn" id="submitBtn" onclick="verifyAndRecharge()" disabled>تأكيد وشحن الرصيد</button>
         </div>

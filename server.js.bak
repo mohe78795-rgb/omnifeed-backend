@@ -10,13 +10,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==========================================
-// 1. تحديد وتخديم مجلد الواجهة (public)
-// ==========================================
 const PUBLIC_DIR = path.join(__dirname, 'public');
 app.use(express.static(PUBLIC_DIR));
 
-// قواعد البيانات المؤقتة في الذاكرة
 const users = [
   { name: 'عمر', phone: '333333333', pass: 'ه', bal: 0 },
   { name: 'محمد', phone: '735429057', pass: '123', bal: 0 }
@@ -25,25 +21,25 @@ const users = [
 const jawaliTransactions = [];
 const usedTransactions = [];
 
-// 🔒 رمز ورابط الأدمن آمن ومخفي داخل السيرفر
 const REMOTE_ADMIN_URL = "https://0zk30qr9iu.onrender.com/api/admin/user/update-balance";
 const SECURE_ADMIN_PASS = process.env.ADMIN_PASS || "SECURE_ADMIN_PASS_123";
 
-// ==========================================
-// 2. مسار عرض الواجهة الرئيسية تلقائياً
-// ==========================================
+// دالة لتنظيف واستخراج آخر 9 أرقام محلية فقط (مثال: 735429057)
+function cleanPhoneNumber(phone) {
+  if (!phone) return '';
+  const digitsOnly = phone.toString().replace(/\D/g, '');
+  return digitsOnly.slice(-9); // أخذ آخر 9 أرقام دائماً لتفادي أخطاء فتح الخط 0 أو +967
+}
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-// ==========================================
-// 3. مسار استقبال إشعارات جوالي (Webhook)
-// ==========================================
+// 📩 استقبال إشعار جوالي من الأتمتة
 app.post('/api/jawali', (req, res) => {
   try {
     let { amount, sender, raw, transid } = req.body;
 
-    // استخراج التلقائي من النص الخام (raw) في حال لم تمرر الأتمتة قيم صريحة
     if (raw && typeof raw === 'string') {
       if (!amount) {
         const amountMatch = raw.match(/مبلغ\s*([0-9,.]+)/i);
@@ -55,20 +51,23 @@ app.post('/api/jawali', (req, res) => {
       }
     }
 
+    const cleanSender = cleanPhoneNumber(sender);
+
     if (!transid) {
       transid = `JW-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     }
 
     const newTx = {
       amount: Number(amount) || 0,
-      sender: sender ? sender.toString().trim() : 'غير معروف',
+      sender: cleanSender || 'غير معروف',
+      rawSender: sender || '',
       transid,
       raw: raw || '',
       createdAt: new Date()
     };
 
     jawaliTransactions.push(newTx);
-    console.log("📩 تم تسجيل حوالة جوالي جديدة بنجاح:", newTx);
+    console.log("📩 تم تسجيل الحوالة في الذاكرة بنجاح:", newTx);
 
     return res.status(200).json({ status: 'success', message: 'تم حفظ الحوالة بنجاح', data: newTx });
   } catch (error) {
@@ -77,9 +76,7 @@ app.post('/api/jawali', (req, res) => {
   }
 });
 
-// ==========================================
-// 4. مسار مطابقة الحوالة والشحن المباشر
-// ==========================================
+// 💳 مطابقة الحوالة بطلب العميل
 app.post('/api/user/recharge', async (req, res) => {
   try {
     const { amount, sender } = req.body;
@@ -88,37 +85,42 @@ app.post('/api/user/recharge', async (req, res) => {
       return res.status(400).json({ success: false, message: 'رقم المرسل والمبلغ مطلوبان' });
     }
 
-    const cleanSender = sender.toString().trim();
+    const inputSenderClean = cleanPhoneNumber(sender);
+    const inputAmount = Number(amount);
 
-    // المطابقة البحثية عن أحدث حوالة قادمة بهذا الرقم
+    console.log(`🔍 جاري البحث عن حوالة برقم: ${inputSenderClean} بمبلغ: ${inputAmount}`);
+    console.log("📂 الحوالات المسجلة حالياً:", jawaliTransactions);
+
+    // البحث عن الحوالة بمطابقة آخر 9 أرقام والمبلغ
     const matchedJawaliTx = jawaliTransactions
-      .filter(tx => tx.sender.includes(cleanSender))
+      .filter(tx => tx.sender === inputSenderClean && Number(tx.amount) === inputAmount)
       .sort((a, b) => b.createdAt - a.createdAt)[0];
 
     if (!matchedJawaliTx) {
-      return res.status(404).json({ success: false, message: 'لم يتم العثور على حوالة بهذه البيانات' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'لم يتم العثور على حوالة بهذه البيانات، يرجى التأكد من وصول الرسالة النصية للأنظمة أو صحة المبلغ والمُرسِل.' 
+      });
     }
 
-    // التحقق من منع التكرار
+    // منع تكرار الحوالة
     const isAlreadyUsed = usedTransactions.some(tx => tx.transid === matchedJawaliTx.transid);
     if (isAlreadyUsed) {
-      return res.status(400).json({ success: false, message: 'تم استخدام هذه الحوالة من قبل!' });
+      return res.status(400).json({ success: false, message: 'تم استخدام هذه الحوالة وتأكيدها سابقاً!' });
     }
 
-    const finalAmount = matchedJawaliTx.amount || Number(amount);
-
-    let user = users.find(u => u.phone === cleanSender);
+    let user = users.find(u => cleanPhoneNumber(u.phone) === inputSenderClean);
     if (!user) {
-      user = { name: 'عميل جوالي', phone: cleanSender, bal: 0 };
+      user = { name: 'عميل جوالي', phone: inputSenderClean, bal: 0 };
       users.push(user);
     }
 
-    const newBalance = user.bal + finalAmount;
+    const newBalance = user.bal + inputAmount;
 
-    // حقن رمز الأدمن آمن ومخفي داخل السيرفر أثناء مراسلة الـ API الخارجي
+    // إرسال التحديث الآمن للسيرفر الخارجي
     const remoteResponse = await axios.post(REMOTE_ADMIN_URL, {
       adminPass: SECURE_ADMIN_PASS,
-      phone: cleanSender,
+      phone: inputSenderClean,
       newBalance: newBalance
     }, {
       headers: { 'Content-Type': 'application/json' }
@@ -128,14 +130,14 @@ app.post('/api/user/recharge', async (req, res) => {
       user.bal = newBalance;
       usedTransactions.push({
         transid: matchedJawaliTx.transid,
-        phone: cleanSender,
-        amount: finalAmount,
+        phone: inputSenderClean,
+        amount: inputAmount,
         usedAt: new Date()
       });
 
       return res.status(200).json({
         success: true,
-        message: `تم اعتماد الحوالة وشحن رصيدك بـ ${finalAmount} ريال بنجاح.`,
+        message: `تم اعتماد الحوالة وشحن رصيدك بـ ${inputAmount} ريال بنجاح.`,
         newBalance: user.bal
       });
     } else {
@@ -157,6 +159,5 @@ app.post('/api/user/recharge', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 السيرفر يعمل بنجاح على المنفذ: ${PORT}`);
-  console.log(`📁 يتم تخديم الواجهة من: ${PUBLIC_DIR}`);
 });
 

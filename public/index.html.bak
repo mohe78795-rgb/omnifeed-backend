@@ -5,27 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تغذية الحساب - جوالي</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: #f7f9fc; padding: 15px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #f7f9fc; padding: 15px; color: #333; }
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { font-size: 18px; color: #222; }
         .custom-image-card {
-            background: #fff; border: 1px solid #e1eaf0; width: 100%; padding: 20px;
+            background: #fff; border: 1px solid #e1eaf0; width: 100%; padding: 18px;
             cursor: pointer; border-radius: 12px; font-weight: bold; color: #ff5722;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04); text-align: center; font-size: 15px;
         }
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; padding: 15px;
+            background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; padding: 15px; z-index: 1000;
         }
-        .modal-content { background: #fff; width: 100%; max-width: 400px; border-radius: 20px; padding: 20px; position: relative; }
-        .close-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 18px; cursor: pointer; }
+        .modal-content { background: #fff; width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; position: relative; }
+        .close-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 18px; cursor: pointer; color: #666; }
+        .modal-title { margin-bottom: 15px; font-size: 16px; font-weight: bold; }
         .operation-input {
             width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;
             font-size: 14px; margin-bottom: 12px; text-align: right; outline: none;
         }
+        .operation-input:focus { border-color: #ff5722; }
         .submit-btn {
             width: 100%; background-color: #e2e8f0; color: #94a3b8; border: none;
-            border-radius: 10px; padding: 14px; font-weight: bold; cursor: not-allowed;
+            border-radius: 10px; padding: 14px; font-weight: bold; font-size: 14px; cursor: not-allowed;
         }
         .submit-btn.active { background-color: #ff5722; color: #fff; cursor: pointer; }
     </style>
@@ -43,11 +46,11 @@
     <div class="modal-overlay" id="myModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">✕</button>
-            <h3 style="margin-bottom: 15px;">إدخال بيانات التحويل</h3>
+            <div class="modal-title">إدخال بيانات التحويل</div>
 
             <!-- العميل يدخل فقط رقم المرسل والمبلغ -->
             <input type="text" id="senderInput" class="operation-input" placeholder="رقم المرسل (مثال: 735429057)" oninput="validateForm()">
-            <input type="number" id="amountInput" class="operation-input" placeholder="المبلغ (مثال: 5000)" oninput="validateForm()">
+            <input type="number" id="amountInput" class="operation-input" placeholder="المبلغ (مثال: 2000)" oninput="validateForm()">
 
             <button class="submit-btn" id="submitBtn" onclick="verifyAndRecharge()" disabled>تأكيد وشحن الرصيد</button>
         </div>

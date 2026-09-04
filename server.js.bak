@@ -43,23 +43,19 @@ app.post('/api/jawali', (req, res) => {
   try {
     let { amount, sender, raw, transid } = req.body;
 
+    // استخراج التلقائي من النص الخام (raw) في حال لم تمرر الأتمتة قيم صريحة
     if (raw && typeof raw === 'string') {
       if (!amount) {
-        const amountMatch = raw.match(/(?:YER|ريال)\s*([0-9,.]+)/i);
+        const amountMatch = raw.match(/مبلغ\s*([0-9,.]+)/i);
         if (amountMatch) amount = parseFloat(amountMatch[1].replace(/,/g, ''));
       }
-      if (!sender || sender === 'null' || sender === 'undefined') {
-        const senderMatch = raw.match(/(?:من|المرسل)\D*([7][0,1,3,7,8][0-9]{7})/);
-        if (senderMatch) {
-          sender = senderMatch[1];
-        } else {
-          const phoneMatch = raw.match(/\b7[01378][0-9]{7}\b/);
-          if (phoneMatch) sender = phoneMatch[0];
-        }
+      if (!sender) {
+        const senderMatch = raw.match(/من\s*(\d+)/i);
+        if (senderMatch) sender = senderMatch[1];
       }
     }
 
-    if (!transid || transid === 'undefined') {
+    if (!transid) {
       transid = `JW-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     }
 
@@ -72,10 +68,11 @@ app.post('/api/jawali', (req, res) => {
     };
 
     jawaliTransactions.push(newTx);
-    console.log("📩 تم تسجيل حوالة جوالي جديدة:", newTx);
+    console.log("📩 تم تسجيل حوالة جوالي جديدة بنجاح:", newTx);
 
-    return res.status(200).json({ status: 'success', message: 'تم حفظ الحوالة بنجاح' });
+    return res.status(200).json({ status: 'success', message: 'تم حفظ الحوالة بنجاح', data: newTx });
   } catch (error) {
+    console.error("❌ خطأ استقبال الحوالة:", error.message);
     return res.status(500).json({ status: 'error', message: error.message });
   }
 });
@@ -93,7 +90,7 @@ app.post('/api/user/recharge', async (req, res) => {
 
     const cleanSender = sender.toString().trim();
 
-    // البحث عن أحدث حوالة مطابقة
+    // المطابقة البحثية عن أحدث حوالة قادمة بهذا الرقم
     const matchedJawaliTx = jawaliTransactions
       .filter(tx => tx.sender.includes(cleanSender))
       .sort((a, b) => b.createdAt - a.createdAt)[0];
@@ -102,7 +99,7 @@ app.post('/api/user/recharge', async (req, res) => {
       return res.status(404).json({ success: false, message: 'لم يتم العثور على حوالة بهذه البيانات' });
     }
 
-    // منع تكرار الحوالة
+    // التحقق من منع التكرار
     const isAlreadyUsed = usedTransactions.some(tx => tx.transid === matchedJawaliTx.transid);
     if (isAlreadyUsed) {
       return res.status(400).json({ success: false, message: 'تم استخدام هذه الحوالة من قبل!' });
@@ -118,7 +115,7 @@ app.post('/api/user/recharge', async (req, res) => {
 
     const newBalance = user.bal + finalAmount;
 
-    // حقن رمز الأدمن من السيرفر مباشرة
+    // حقن رمز الأدمن آمن ومخفي داخل السيرفر أثناء مراسلة الـ API الخارجي
     const remoteResponse = await axios.post(REMOTE_ADMIN_URL, {
       adminPass: SECURE_ADMIN_PASS,
       phone: cleanSender,
@@ -149,7 +146,7 @@ app.post('/api/user/recharge', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('❌ خطأ المعالجة:', error.message);
+    console.error('❌ خطأ معالجة الشحن:', error.message);
     return res.status(500).json({
       success: false,
       message: 'حدث خطأ أثناء معالجة الحوالة',
@@ -159,7 +156,7 @@ app.post('/api/user/recharge', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 السيرفر يعمل على: http://localhost:${PORT}`);
-  console.log(`📁 مجلد الواجهة: ${PUBLIC_DIR}`);
+  console.log(`🚀 السيرفر يعمل بنجاح على المنفذ: ${PORT}`);
+  console.log(`📁 يتم تخديم الواجهة من: ${PUBLIC_DIR}`);
 });
 
